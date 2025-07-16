@@ -1,0 +1,39 @@
+using Unity.Entities;
+using UnityEngine;
+using Unity.Mathematics;
+using Unity.NetCode;
+
+public class LevelingAuthoring : MonoBehaviour
+{
+    public int maxExperience;
+    public int startLevel = 1;
+
+    public ModifierEntry[] modifiers;
+
+    [System.Serializable]
+    public struct ModifierEntry
+    {
+        public ModifierType type;
+        public float value;
+    }
+    public class Baker : Baker<LevelingAuthoring>
+    {
+        public override void Bake(LevelingAuthoring authoring)
+        {
+            Entity entity = GetEntity(TransformUsageFlags.Dynamic);
+            AddComponent(entity, new MaxExperience { value = authoring.maxExperience });
+            AddComponent(entity, new Level { current = authoring.startLevel, previous = authoring.startLevel });
+            AddComponent(entity, new CurrentExperience { value = 0 });
+            AddBuffer<ExperienceBufferElement>(entity);
+            AddBuffer<GetExperienceThisTick>(entity);
+
+            // Create DynamicBuffer for LevelModifier
+            var buffer = AddBuffer<LevelModifier>(entity);
+            foreach (var entry in authoring.modifiers)
+            {
+                //modificadores que ao passar de level aumentam alguma variável
+                buffer.Add(new LevelModifier { Type = entry.type, Value = entry.value });
+            }
+        }
+    }
+}
