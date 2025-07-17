@@ -20,6 +20,8 @@ public struct DashProperties : IComponentData
     public uint cooldown;
     public uint duration;
     public float speed;
+    [GhostField] public bool canDash;
+    [GhostField] public bool isDashing;
 }
 [GhostComponent(PrefabType = GhostPrefabType.AllPredicted)]
 public struct DashCooldown : ICommandData

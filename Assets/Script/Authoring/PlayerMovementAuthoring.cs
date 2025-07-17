@@ -23,7 +23,9 @@ public class PlayerMovementAuthoring : MonoBehaviour
             {
                 duration = (uint)(authoring.dashDuration * authoring.simulationTickRate),
                 cooldown = (uint)(authoring.dashCooldown * authoring.simulationTickRate),
-                speed = authoring.dashSpeed
+                speed = authoring.dashSpeed,
+                canDash = true,
+                isDashing = false,
             });
             AddComponent(entity, new DashVector { });
             AddBuffer<DashCooldown>(entity);

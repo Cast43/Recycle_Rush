@@ -77,19 +77,11 @@ public partial struct PlayerMoveJob : IJobEntity
 {
     [ReadOnly] public NetworkTick currentTick;
 
-    public void Execute(in MovementPlayer movement, ref PhysicsVelocity physicsVelocity, ref LocalTransform localTransform, in MoveSpeed speed, DynamicBuffer<DashDuration> dashDuration)
+    public void Execute(in MovementPlayer movement, in DashProperties dashProperties, ref PhysicsVelocity physicsVelocity, ref LocalTransform localTransform, in MoveSpeed speed)
     {
         // return;
         //enquanto estiver no dash não pode andar
-        if (!dashDuration.IsEmpty)
-        {
-            if (!dashDuration.GetDataAtTick(currentTick, out var dashDurationTick))
-            {
-                dashDurationTick.value = NetworkTick.Invalid;
-            }
-            bool inDash = !dashDurationTick.value.IsValid || !currentTick.IsNewerThan(dashDurationTick.value);
-            if (inDash) return;
-        }
+        if (dashProperties.isDashing) return;
 
         physicsVelocity.Angular = float3.zero;
         physicsVelocity.Linear = movement.moveVector * speed.value;
