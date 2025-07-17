@@ -8,6 +8,7 @@ using Unity.Collections;
 using UnityEngine;
 
 [UpdateInGroup(typeof(PredictedSimulationSystemGroup))]
+
 partial struct MovementSystem : ISystem
 {
     [BurstCompile]
@@ -41,7 +42,6 @@ partial struct MovementSystem : ISystem
     }
 }
 
-// [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
 public partial struct MoveJob : IJobEntity
 {
     [ReadOnly] public NetworkTick currentTick;
@@ -71,6 +71,7 @@ public partial struct MoveJob : IJobEntity
         localTransform.Rotation = quaternion.identity;
     }
 }
+[UpdateAfter(typeof(PlayerDashSystem))]
 public partial struct PlayerMoveJob : IJobEntity
 //como o player usa IInputComponentData deve existir um job de moviemnto apenas para ele
 {
@@ -78,6 +79,7 @@ public partial struct PlayerMoveJob : IJobEntity
 
     public void Execute(in MovementPlayer movement, ref PhysicsVelocity physicsVelocity, ref LocalTransform localTransform, in MoveSpeed speed, DynamicBuffer<DashDuration> dashDuration)
     {
+        // return;
         //enquanto estiver no dash não pode andar
         if (!dashDuration.IsEmpty)
         {
@@ -103,6 +105,7 @@ public partial struct RotationJob : IJobEntity
 
     public void Execute(in Rotation rotation, ref LocalTransform localTransform, in Parent parent)
     {
+        return;
         // return;
         Direction direction = directionLookup[parent.Value];
 

@@ -54,7 +54,7 @@ public partial struct SpawnEnemySystem : ISystem
         Entity enemy = enemyBuffer[enemyIndex].prefab;
         float randomX = UnityEngine.Random.Range(-10, +10);
         float randomZ = UnityEngine.Random.Range(-10, +10);
-        float3 randomPosition = new float3(randomX, 1, randomZ);
+        float3 randomPosition = new float3(randomX, 0, randomZ);
 
         SpawnOnPosition(ECB, enemy, randomPosition);
         // Debug.Log("Spawn Enemy");

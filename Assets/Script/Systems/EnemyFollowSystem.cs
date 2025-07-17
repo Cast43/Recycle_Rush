@@ -50,6 +50,7 @@ public partial struct InputEnemyJob : IJobEntity
             inputVector = transformLookup[target.value].Position - localTransform.Position;
         }
 
+        inputVector.y = 0;
         inputVector = math.normalizesafe(inputVector);
         movement.moveVector = inputVector;
         // Debug.Log(math.lengthsq(inputVector));
