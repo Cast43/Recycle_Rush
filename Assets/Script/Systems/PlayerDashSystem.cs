@@ -31,15 +31,11 @@ partial struct PlayerDashSystem : ISystem
         state.Dependency = h2;
     }
 
-    public partial struct SetDashVector : IJobEntity
+    public partial struct VerifyCanDash : IJobEntity
     {
         [ReadOnly] public NetworkTick currentTick;
-
         public void Execute(ref DashVector dash, ref DynamicBuffer<DashCooldown> dashCooldown, in DashProperties dashProperties, in LocalTransform localTransform, in MovementPlayer movementPlayer, in PlayerInput playerInput, DynamicBuffer<DashDuration> dashDuration)
         {
-            if (!playerInput.dash.IsSet) return; //verifica se foi apertado o botao de dash
-            dash.dashVector = movementPlayer.moveVector;
-
             //verifica se ja não está no dash
             if (!dashDuration.IsEmpty)
             {
@@ -60,9 +56,21 @@ partial struct PlayerDashSystem : ISystem
             bool canDash = !cooldownExpirationTick.value.IsValid || currentTick.IsNewerThan(cooldownExpirationTick.value);
 
             if (!canDash) return;
-            Debug.Log("candash " + canDash);
-            //////
-            /// 
+        }
+    }
+    public partial struct SetDashVector : IJobEntity
+    {
+        [ReadOnly] public NetworkTick currentTick;
+
+        public void Execute(ref DashVector dash, ref DynamicBuffer<DashCooldown> dashCooldown, in DashProperties dashProperties, in LocalTransform localTransform, in MovementPlayer movementPlayer, in PlayerInput playerInput, DynamicBuffer<DashDuration> dashDuration)
+        {
+            if (!playerInput.dash.IsSet) return; //verifica se foi apertado o botao de dash
+            if () return;
+            if () return;
+
+            dash.dashVector = movementPlayer.moveVector;
+            Debug.Log("move vector " + movementPlayer.moveVector);
+            // Debug.Log("candash " + canDash);
 
             //essa parte do código da problema junto com a parte de cima
             //adiciona um tempo até poder usar o dash novamente

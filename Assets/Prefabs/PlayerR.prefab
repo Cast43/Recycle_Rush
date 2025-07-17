@@ -264,7 +264,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveSpeed: 5
   dashSpeed: 10
-  dashDuration: 0.5
+  dashDuration: 5
   dashCooldown: 2
   netCodeConfig: {fileID: 11400000, guid: 75d8a62403cd4664593908df3234abf7, type: 2}
 --- !u!114 &1900719457097203956
