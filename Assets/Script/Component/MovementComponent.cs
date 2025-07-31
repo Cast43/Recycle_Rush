@@ -3,6 +3,7 @@ using UnityEngine;
 using Unity.Mathematics;
 using Unity.NetCode;
 
+[GhostComponent(PrefabType = GhostPrefabType.AllPredicted)]
 public struct MovementPlayer : IInputComponentData
 {
     public float3 moveVector;
@@ -35,9 +36,11 @@ public struct DashDuration : ICommandData
     public NetworkTick Tick { get; set; }
     public NetworkTick value;
 }
-public struct DashVector : IComponentData
+[GhostComponent(PrefabType = GhostPrefabType.AllPredicted)]
+public struct DashCommand : ICommandData
 {
-    public float3 dashVector;
+    public NetworkTick Tick { get; set; }
+    public float3 DashDirection;
 }
 
 public struct Direction : IComponentData

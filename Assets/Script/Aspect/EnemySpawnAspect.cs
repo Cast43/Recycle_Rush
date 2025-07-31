@@ -3,12 +3,18 @@ using Unity.Entities;
 public readonly partial struct EnemySpawnAspect : IAspect
 {
     private readonly RefRW<EnemiesSpawnTimers> _enemySpawnTimers;
+    private readonly RefRW<WaveCount> waveCount;
     private readonly RefRO<EnemiesSpawnProperties> _enemySpawnProperties;
 
     public int CountSpawnedInWave
     {
         get => _enemySpawnTimers.ValueRO.CountSpawnedInWave;
         set => _enemySpawnTimers.ValueRW.CountSpawnedInWave = value;
+    }
+    public int WaveCount
+    {
+        get => waveCount.ValueRO.value;
+        set => waveCount.ValueRW.value = value;
     }
 
     private float TimeToNextEnemy
@@ -58,4 +64,8 @@ public readonly partial struct EnemySpawnAspect : IAspect
         CountSpawnedInWave = 0;
     }
 
+    public void IncrementWaveCount()
+    {
+        waveCount.ValueRW.value++;
+    }
 }

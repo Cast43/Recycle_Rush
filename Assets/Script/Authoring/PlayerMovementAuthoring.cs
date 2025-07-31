@@ -27,7 +27,7 @@ public class PlayerMovementAuthoring : MonoBehaviour
                 canDash = true,
                 isDashing = false,
             });
-            AddComponent(entity, new DashVector { });
+            AddBuffer<DashCommand>(entity);
             AddBuffer<DashCooldown>(entity);
             AddBuffer<DashDuration>(entity);
         }

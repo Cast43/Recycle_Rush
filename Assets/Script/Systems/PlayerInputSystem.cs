@@ -18,18 +18,20 @@ partial struct PlayerInputSystem : ISystem
     public void OnUpdate(ref SystemState state)
     {
         float3 inputVector = new float3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical"));
+        // Debug.Log($"InputVector: {inputVector}  Magnitude: {math.length(inputVector)}");
         inputVector = math.normalizesafe(inputVector);
-        bool shoot = Input.GetMouseButtonDown(0);
-        bool dash = Input.GetMouseButtonDown(1);
 
-        var job = new PlayerInputJob
+        bool shoot = Input.GetButton("Fire1");
+        bool dash = Input.GetButton("Fire2");
+
+        var inputJob = new PlayerInputJob
         {
             inputVector = inputVector,
             shoot = shoot,
             dash = dash,
         };
 
-        state.Dependency = job.ScheduleParallel(state.Dependency);
+        state.Dependency = inputJob.ScheduleParallel(state.Dependency);
 
         // foreach (
         //     (RefRW<PlayerInput> playerInput,
@@ -78,7 +80,9 @@ public partial struct PlayerInputJob : IJobEntity
             playerInput.shoot = default;
 
         if (dash)
+        {
             playerInput.dash.Set();
+        }
         else
             playerInput.dash = default;
 

@@ -18,6 +18,10 @@ public class HealthAuthoring : MonoBehaviour
             AddComponent(entity, new MaxHealth { value = authoring.MaxLife });
             AddBuffer<DamageBufferElement>(entity);
             AddBuffer<DamageThisTick>(entity);
+
+            // AddComponent(entity, new CurseStackEffect { value = 0, maxStack = 3 });
+            // AddBuffer<CurseDuration>(entity);
+
         }
     }
 }

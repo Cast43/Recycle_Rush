@@ -23,20 +23,19 @@ partial struct PlayerDashSystem : ISystem
         NetworkTime networkTime = SystemAPI.GetSingleton<NetworkTime>();
         SetDashVector setDashVector = new SetDashVector { currentTick = networkTime.ServerTick };
         VerifyCanDash verifyCanDash = new VerifyCanDash { currentTick = networkTime.ServerTick };
-        PlayerDashJob playerDashJob = new PlayerDashJob { };
+        PlayerDashJob playerDashJob = new PlayerDashJob { currentTick = networkTime.ServerTick };
 
         var h1 = setDashVector.ScheduleParallel(state.Dependency);
         var h2 = verifyCanDash.ScheduleParallel(h1);
         var h3 = playerDashJob.ScheduleParallel(h2);
-        // state.Dependency = setDashVector.ScheduleParallel(state.Dependency);
-        // state.Dependency = playerDashJob.ScheduleParallel(state.Dependency);
+
         state.Dependency = h3;
     }
-
     public partial struct VerifyCanDash : IJobEntity
     {
         [ReadOnly] public NetworkTick currentTick;
-        public void Execute(ref DashVector dash, ref DynamicBuffer<DashCooldown> dashCooldown, ref DashProperties dashProperties, in LocalTransform localTransform, in MovementPlayer movementPlayer, in PlayerInput playerInput, DynamicBuffer<DashDuration> dashDuration)
+        public void Execute(ref DashProperties dashProperties, in LocalTransform localTransform, in PlayerInput playerInput,
+                            DynamicBuffer<DashDuration> dashDuration, DynamicBuffer<DashCooldown> dashCooldown)
         {
             //verifica se ja não está no dash
             if (!dashDuration.IsEmpty)
@@ -60,19 +59,24 @@ partial struct PlayerDashSystem : ISystem
 
         }
     }
-    [UpdateAfter(typeof(VerifyCanDash))]
     public partial struct SetDashVector : IJobEntity
     {
         [ReadOnly] public NetworkTick currentTick;
 
-        public void Execute(ref DashVector dashVector, ref DynamicBuffer<DashCooldown> dashCooldown, in DashProperties dashProperties, in LocalTransform localTransform, in MovementPlayer movementPlayer, in PlayerInput playerInput, ref DynamicBuffer<DashDuration> dashDuration)
+        public void Execute(in DashProperties dashProperties, in LocalTransform localTransform, in PlayerInput playerInput, in MovementPlayer movementPlayer,
+                           DynamicBuffer<DashCommand> dashCommandBuffer, DynamicBuffer<DashDuration> dashDuration, DynamicBuffer<DashCooldown> dashCooldown)
         {
             if (!playerInput.dash.IsSet) return; //verifica se foi apertado o botao de dash
             if (dashProperties.isDashing) return;
             if (!dashProperties.canDash) return;
             if (math.lengthsq(movementPlayer.moveVector) == 0) return;
 
-            dashVector.dashVector = movementPlayer.moveVector;
+            var newDashCommand = new DashCommand
+            {
+                Tick = currentTick,
+                DashDirection = movementPlayer.moveVector
+            };
+            dashCommandBuffer.AddCommandData(newDashCommand);
 
             //adiciona um tempo até poder usar o dash novamente
             var newCooldownTickDash = currentTick;
@@ -89,13 +93,16 @@ partial struct PlayerDashSystem : ISystem
     [UpdateAfter(typeof(SetDashVector))]
     public partial struct PlayerDashJob : IJobEntity
     {
+        [ReadOnly] public NetworkTick currentTick;
 
-        public void Execute(ref PhysicsVelocity physicsVelocity, ref LocalTransform localTransform, DynamicBuffer<DashDuration> dashDuration, in PlayerInput playerInput, in DashVector dashVector, in DashProperties dashProperties)
+        public void Execute(ref PhysicsVelocity physicsVelocity, ref LocalTransform localTransform, in PlayerInput playerInput, in DashProperties dashProperties
+                            , DynamicBuffer<DashCommand> dashCommandBuffer)
         {
             if (!dashProperties.isDashing) return;
+            if (!dashCommandBuffer.GetDataAtTick(currentTick, out var dashCommand)) return;
 
             physicsVelocity.Angular = float3.zero;
-            physicsVelocity.Linear = dashVector.dashVector * dashProperties.speed;
+            physicsVelocity.Linear = dashCommand.DashDirection * dashProperties.speed;
             localTransform.Rotation = quaternion.identity;
         }
     }

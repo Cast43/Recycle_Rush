@@ -97,7 +97,6 @@ public partial struct RotationJob : IJobEntity
 
     public void Execute(in Rotation rotation, ref LocalTransform localTransform, in Parent parent)
     {
-        return;
         // return;
         Direction direction = directionLookup[parent.Value];
 

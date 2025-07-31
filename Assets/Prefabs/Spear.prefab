@@ -90,6 +90,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveSpeed: 4
   ally: 1
+  netCodeConfig: {fileID: 11400000, guid: 75d8a62403cd4664593908df3234abf7, type: 2}
 --- !u!114 &7648337690694835545
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -79,7 +79,7 @@ partial struct ApplyExperienceSystem : ISystem
                         }
                         break;
                     case ModifierType.IncreaseSpeed:
-                        if (state.EntityManager.HasComponent<MovementPlayer>(entity))
+                        if (state.EntityManager.HasComponent<PlayerInput>(entity))
                         {
                             var ms = state.EntityManager.GetComponentData<MoveSpeed>(entity);
                             ms.value += mod.Value * lvl;

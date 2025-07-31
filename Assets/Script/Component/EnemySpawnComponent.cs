@@ -14,3 +14,8 @@ public struct EnemiesSpawnTimers : IComponentData
     public float timeToNextEnemy;
     public int CountSpawnedInWave;
 }
+
+public struct WaveCount : IComponentData
+{
+    public int value;
+}

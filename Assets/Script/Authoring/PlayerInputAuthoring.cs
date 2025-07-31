@@ -20,5 +20,5 @@ public class PlayerInputAuthoring : MonoBehaviour
 public struct PlayerInput : IInputComponentData
 {
     public InputEvent shoot; //pensar sobre isso
-    [GhostField] public InputEvent dash;
+    public InputEvent dash;
 }

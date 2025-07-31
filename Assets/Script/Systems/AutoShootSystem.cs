@@ -64,21 +64,6 @@ partial struct AutoShootSystem : ISystem
             float3 spawnPos = transformLookup[entity].Position + attackProperties.firePointOffset;
             float3 targetPos = transformLookup[target.value].Position;
 
-            // Busca o prefab pelo nome só quando for atirar
-            // FixedString64Bytes projectileName = shootAttackProperties[entity].throwableName;
-            // Entity projectilePrefab = Entity.Null;
-
-            // for (int i = 0; i < throwableBuffer.Length; i++)
-            // {
-            //     if (throwableBuffer[i].name.Equals(projectileName))
-            //     {
-            //         projectilePrefab = throwableBuffer[i].prefab;
-            //         break;
-            //     }
-            // }
-            // if (projectilePrefab == Entity.Null)
-            //     return; // Não encontrou o projétil, não instancia nada
-
             // Criar entidade da flecha
             // Direção da flecha baseada no olhar do jogador
             Entity arrowEntity = ECB.Instantiate(sortKey, shootAttackProperties[entity].attackPrefab);
