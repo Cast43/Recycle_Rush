@@ -10,13 +10,6 @@ public struct EnemysPrefab
     public GameObject prefab;
 }
 
-[System.Serializable]
-public struct ThrowablesPrefab
-{
-    public string name;
-    public GameObject prefab;
-}
-
 // Buffer element para inimigos
 [InternalBufferCapacity(4)]
 public struct EnemyPrefabElement : IBufferElementData

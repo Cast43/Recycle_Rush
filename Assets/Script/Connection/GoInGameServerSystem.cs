@@ -16,6 +16,7 @@ partial struct GoInGameServerSystem : ISystem
     {
         playersCount = 0;
         state.RequireForUpdate<EntitiesReferences>();
+        //precisa dessa merda pra funcionar o rpc
         state.RequireForUpdate<ReceiveRpcCommandRequest>();
         state.RequireForUpdate<NetworkId>();
         EntityQueryBuilder entityQueryBuilder = new EntityQueryBuilder(Allocator.Temp).WithAll<GoInGameRequestRpc>().WithAll<ReceiveRpcCommandRequest>();
@@ -69,6 +70,11 @@ partial struct GoInGameServerSystem : ISystem
                 NetworkId = networkId.Value,
             });
 
+            entityCommandBuffer.AddComponent(playerObjectEntity, new ConnectionEntity
+            {
+                //atribui o valor do id do player
+                Value = receiveRpcCommandRequest.ValueRO.SourceConnection,
+            });
             //faz com que o player seja excluido se desconectado adicionando ele no link group
             entityCommandBuffer.AppendToBuffer(receiveRpcCommandRequest.ValueRO.SourceConnection, new LinkedEntityGroup
             {

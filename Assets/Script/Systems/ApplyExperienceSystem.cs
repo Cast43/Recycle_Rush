@@ -43,10 +43,11 @@ partial struct ApplyExperienceSystem : ISystem
             {
                 level.ValueRW.previous = level.ValueRO.current;
                 ECB.AddComponent<LevelUpTag>(entity);
+                ECB.AddComponent<RequestChooseEffect>(entity);
             }
         }
-
-        foreach (var (level, buffer, entity) in SystemAPI.Query<RefRO<Level>, DynamicBuffer<LevelModifier>>().WithAll<LevelUpTag>().WithEntityAccess())
+        //passou de level
+        foreach (var (level, connection, buffer, entity) in SystemAPI.Query<RefRO<Level>, RefRO<ConnectionEntity>, DynamicBuffer<LevelModifier>>().WithAll<LevelUpTag>().WithEntityAccess())
         {
             int lvl = level.ValueRO.current;
             // Apply each modifier according to current level
@@ -94,6 +95,26 @@ partial struct ApplyExperienceSystem : ISystem
                         break;
                 }
             }
+
+            // var networkIdLookup = SystemAPI.GetComponentLookup<NetworkId>();
+            // var networkId = networkIdLookup[entity];
+
+            // manda um rpc para o player escolher os efeitos a adição de efeitos
+            // Enviar RPC para esse cliente
+            var clientEntityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+
+            // Pega o NetworkId do cliente local
+            var query = clientEntityManager.CreateEntityQuery(
+                typeof(NetworkId),
+                typeof(NetworkStreamInGame)
+            );
+            NetworkId netId = query.GetSingleton<NetworkId>();
+
+            var rpc = new ShowAddEffectRPC { ClientNetId = netId.Value };
+            // state.EntityManager.CreateEntity(typeof(ShowAddEffectRPC));
+            var rpcEntity = ECB.CreateEntity();
+            ECB.AddComponent(rpcEntity, rpc);
+            ECB.AddComponent(rpcEntity, new SendRpcCommandRequest { TargetConnection = connection.ValueRO.Value });
             // Remove tag
             ECB.RemoveComponent<LevelUpTag>(entity);
         }

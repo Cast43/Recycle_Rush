@@ -17,9 +17,12 @@ partial struct PlayerInputSystem : ISystem
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
+
+
         float3 inputVector = new float3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical"));
         // Debug.Log($"InputVector: {inputVector}  Magnitude: {math.length(inputVector)}");
         inputVector = math.normalizesafe(inputVector);
+
 
         bool shoot = Input.GetButton("Fire1");
         bool dash = Input.GetButton("Fire2");
@@ -61,14 +64,21 @@ partial struct PlayerInputSystem : ISystem
     }
 }
 
+// [WithNone(typeof(NeedRessurection))]
 public partial struct PlayerInputJob : IJobEntity
 {
     public float3 inputVector;
     public bool shoot;
     public bool dash;
 
-    public void Execute(ref PlayerInput playerInput, ref MovementPlayer movement, ref Direction direction, in GhostOwnerIsLocal owner)
+    public void Execute(ref PlayerInput playerInput, ref MovementPlayer movement, ref Direction direction, CurrentHealth currentHealth, in GhostOwnerIsLocal owner)
     {
+        if (currentHealth.value <= 0)
+        {
+            inputVector = float3.zero;
+            shoot = false;
+            dash = false;
+        }
         movement.moveVector = inputVector;
         if (math.lengthsq(inputVector) > 0)
         {

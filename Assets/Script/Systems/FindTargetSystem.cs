@@ -13,6 +13,7 @@ using UnityEngine;
 [UpdateInGroup(typeof(PhysicsSystemGroup))] // nunca altera essa merda isso faz funcionar
 [UpdateAfter(typeof(PhysicsSimulationGroup))]
 [UpdateBefore(typeof(ExportPhysicsWorld))]
+[WithNone(typeof(NeedRessurection))]
 // [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))] // nunca altera essa merda isso faz funcionar
 // [UpdateAfter(typeof(ExportPhysicsWorld))]
 // [UpdateBefore(typeof(PhysicsSystemGroup))]
@@ -66,7 +67,9 @@ partial struct FindTargetSystem : ISystem
         {
             collisionWorld = collisionWorld,
             collisionFilter = collisionFilter,
-            teamLookup = teamLookup
+            teamLookup = teamLookup,
+            currentHealthLookup = SystemAPI.GetComponentLookup<CurrentHealth>(),
+
         }
         .ScheduleParallel(state.Dependency);
     }
@@ -80,11 +83,11 @@ public partial struct FindJob : IJobEntity
     [ReadOnly] public CollisionWorld collisionWorld;
     [ReadOnly] public CollisionFilter collisionFilter;
     [ReadOnly] public ComponentLookup<Team> teamLookup;
+    [ReadOnly] public ComponentLookup<CurrentHealth> currentHealthLookup;
 
     [BurstCompile]
     public void Execute(in LocalTransform localTransform, in TargetRadius targetRadius, ref TargetEntity target, in TargetFind targetFind, Entity entity)
     {
-
         NativeList<DistanceHit> hits = new NativeList<DistanceHit>(Allocator.TempJob);
         // if (collisionWorld.OverlapSphere(localTransform.Position, targetRadius.value, ref hits, CollisionFilter.Default))
         // {
@@ -114,6 +117,14 @@ public partial struct FindJob : IJobEntity
                 // Debug.Log(hit.Entity);
                 // if (unit.faction == targetFind.value)
                 {
+                    if (currentHealthLookup.HasComponent(hit.Entity))
+                    {
+                        var currentHealth = currentHealthLookup[hit.Entity];
+                        if (currentHealth.value <= 0)
+                        {
+                            continue;
+                        }
+                    }
                     if (hit.Distance < closestDistance)
                     {
                         closestDistance = hit.Distance;
@@ -122,6 +133,14 @@ public partial struct FindJob : IJobEntity
                 }
             }
             target.value = closestEntity;
+            if (currentHealthLookup.HasComponent(entity))
+            {
+                var currentHealth = currentHealthLookup[entity];
+                if (currentHealth.value <= 0)
+                {
+                    target.value = Entity.Null;
+                }
+            }
         }
         else
         {

@@ -3,18 +3,18 @@ using Unity.Entities;
 public readonly partial struct EnemySpawnAspect : IAspect
 {
     private readonly RefRW<EnemiesSpawnTimers> _enemySpawnTimers;
-    private readonly RefRW<WaveCount> waveCount;
+    private readonly RefRW<WaveProperties> waveProperties;
     private readonly RefRO<EnemiesSpawnProperties> _enemySpawnProperties;
 
-    public int CountSpawnedInWave
+    public int CountEntitiesSpawned
     {
-        get => _enemySpawnTimers.ValueRO.CountSpawnedInWave;
-        set => _enemySpawnTimers.ValueRW.CountSpawnedInWave = value;
+        get => waveProperties.ValueRO.countEntitiesSpawned;
+        set => waveProperties.ValueRW.countEntitiesSpawned = value;
     }
     public int WaveCount
     {
-        get => waveCount.ValueRO.value;
-        set => waveCount.ValueRW.value = value;
+        get => waveProperties.ValueRO.WaveCount;
+        set => waveProperties.ValueRW.WaveCount = value;
     }
 
     private float TimeToNextEnemy
@@ -30,11 +30,12 @@ public readonly partial struct EnemySpawnAspect : IAspect
     }
 
     private int CountToSpawnInWave => _enemySpawnProperties.ValueRO.CountToSpawnInWave;
+    public int CountMaxEntitiesToSpawn => waveProperties.ValueRO.countMaxEntitiesToSpawn;
     private float timeBetweenEnemies => _enemySpawnProperties.ValueRO.timeBetweenEnemies;
     private float timeBetweenWaves => _enemySpawnProperties.ValueRO.timeBetweenWaves;
 
     public bool shouldSpawn => timeToNextWave <= 0f && TimeToNextEnemy <= 0f;
-    public bool isWaveSpaned => CountSpawnedInWave >= CountToSpawnInWave;
+    public bool isWaveSpaned => CountEntitiesSpawned >= CountToSpawnInWave;
 
     public void DecrementedTimers(float deltaTime)
     {
@@ -59,13 +60,18 @@ public readonly partial struct EnemySpawnAspect : IAspect
         TimeToNextEnemy = timeBetweenEnemies;
     }
 
-    public void ResetSpawnCounter()
+    public void ResetEntitySpawnCounter()
     {
-        CountSpawnedInWave = 0;
+        CountEntitiesSpawned = 0;
     }
 
     public void IncrementWaveCount()
     {
-        waveCount.ValueRW.value++;
+        waveProperties.ValueRW.WaveCount++;
     }
+    public void IncrementEntitiesCount()
+    {
+        waveProperties.ValueRW.countEntitiesSpawned++;
+    }
+
 }

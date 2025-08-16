@@ -8,7 +8,6 @@ using Unity.Collections;
 using UnityEngine;
 
 [UpdateInGroup(typeof(PredictedSimulationSystemGroup))]
-
 partial struct MovementSystem : ISystem
 {
     [BurstCompile]
@@ -71,6 +70,7 @@ public partial struct MoveJob : IJobEntity
         localTransform.Rotation = quaternion.identity;
     }
 }
+[WithNone(typeof(DestroyEntityTag))]
 [UpdateAfter(typeof(PlayerDashSystem))]
 public partial struct PlayerMoveJob : IJobEntity
 //como o player usa IInputComponentData deve existir um job de moviemnto apenas para ele

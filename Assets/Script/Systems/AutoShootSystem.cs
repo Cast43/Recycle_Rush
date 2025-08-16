@@ -8,6 +8,7 @@ using Unity.Collections;
 
 [UpdateInGroup(typeof(LateSimulationSystemGroup))]
 [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
+[WithNone(typeof(NeedRessurection))]
 partial struct AutoShootSystem : ISystem
 {
     [BurstCompile]
@@ -61,17 +62,18 @@ partial struct AutoShootSystem : ISystem
 
             if (!canAttack) return;
 
-            float3 spawnPos = transformLookup[entity].Position + attackProperties.firePointOffset;
+            float3 spawnPos = transformLookup[entity].Position;
             float3 targetPos = transformLookup[target.value].Position;
+            spawnPos = new float3(spawnPos.x, 0, spawnPos.z);
+            targetPos = new float3(targetPos.x, 0, targetPos.z);
 
             // Criar entidade da flecha
             // Direção da flecha baseada no olhar do jogador
-            Entity arrowEntity = ECB.Instantiate(sortKey, shootAttackProperties[entity].attackPrefab);
-            // float3 targetDir = transformLookup[target.value].Position;
-            // float3 localPos = transformLookup[entity].Position;
+            var shootProperties = shootAttackProperties[entity];
+            Entity arrowEntity = ECB.Instantiate(sortKey, shootProperties.attackPrefab);
             float3 shootDirection = math.normalizesafe(targetPos - spawnPos);
 
-            ECB.SetComponent(sortKey, arrowEntity, LocalTransform.FromPositionRotation(spawnPos,
+            ECB.SetComponent(sortKey, arrowEntity, LocalTransform.FromPositionRotation(spawnPos + shootProperties.firePointOffset,
                 quaternion.LookRotationSafe(targetPos - spawnPos, math.up())));
             // Apenas modificar a direção sem sobrescrever os outros valores
             ECB.SetComponent(sortKey, arrowEntity, new Team { faction = unit.faction }); //modifica apenas uma variável sem sobreescrever tudo

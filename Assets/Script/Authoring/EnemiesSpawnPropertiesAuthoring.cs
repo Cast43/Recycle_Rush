@@ -7,6 +7,8 @@ public class EnemiesSpawnPropertiesAuthoring : MonoBehaviour
     public float timeBetweenWaves;
     public float timeBetweenEnemies;
     public int CountToSpawnInWave;
+    public int waveStart;
+    public int maxEntitiesToSpawnInWave = 10;
     public class Baker : Baker<EnemiesSpawnPropertiesAuthoring>
     {
         public override void Bake(EnemiesSpawnPropertiesAuthoring authoring)
@@ -22,7 +24,12 @@ public class EnemiesSpawnPropertiesAuthoring : MonoBehaviour
             {
                 timeToNextWave = authoring.timeBetweenWaves,
                 timeToNextEnemy = 0f,
-                CountSpawnedInWave = 0,
+            });
+            AddComponent(entity, new WaveProperties
+            {
+                WaveCount = authoring.waveStart,
+                countEntitiesSpawned = 0,
+                countMaxEntitiesToSpawn = authoring.maxEntitiesToSpawnInWave,
             });
         }
     }

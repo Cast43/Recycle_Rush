@@ -101,6 +101,8 @@ GameObject:
   - component: {fileID: 6168186249738006989}
   - component: {fileID: 6511002889330465114}
   - component: {fileID: 5248659549891363593}
+  - component: {fileID: -7285337513843027083}
+  - component: {fileID: -2049044603063214820}
   m_Layer: 3
   m_Name: PlayerR
   m_TagString: Untagged
@@ -295,7 +297,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   firePointOffset:
     x: 0
-    y: 0
+    y: 0.5
     z: 0
   attackCooldownTime: 3
   attackPrefab: {fileID: 7074913954056216728, guid: fe1776e47e77f8a4dabe22cacb5239f7, type: 3}
@@ -334,8 +336,33 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7280f576d2e4bbf42b14f162b187e31d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  effectPrefabs:
-  - {fileID: 23023812224790087, guid: 6bd6df149e1b8c24b92d828d4a819b2d, type: 3}
+  effectPrefabs: []
+--- !u!114 &-7285337513843027083
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4411393761261615811}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: daa9dbd2ea596504db47edf0df4919e7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  radius: 1
+--- !u!114 &-2049044603063214820
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4411393761261615811}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4b384c89debb8040818279960520d1d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ressurectArea: {fileID: 6325963259828825667, guid: 985054cbc71f4d24ba18a5f90f1e447d, type: 3}
 --- !u!1 &6728840892501591999
 GameObject:
   m_ObjectHideFlags: 0

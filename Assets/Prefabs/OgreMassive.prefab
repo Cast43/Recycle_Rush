@@ -373,6 +373,7 @@ GameObject:
   - component: {fileID: 3531520657241630105}
   - component: {fileID: -5131176795595315888}
   - component: {fileID: 4094418133499640798}
+  - component: {fileID: -8833622661249094351}
   m_Layer: 3
   m_Name: OgreMassive
   m_TagString: Untagged
@@ -585,3 +586,16 @@ MonoBehaviour:
   attackPrefab: {fileID: 2573940545315176795, guid: cbec5825dd98bb148976b443bc2cc65b, type: 3}
   timeToDontMove: 1
   netCodeConfig: {fileID: 11400000, guid: 75d8a62403cd4664593908df3234abf7, type: 2}
+--- !u!114 &-8833622661249094351
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8275031677903195487}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dbac3fbcd2488ed4fa34dea478203360, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  experience: {fileID: 1953607005591944673, guid: 34973389b49e60c419dc0d2f6506879e, type: 3}

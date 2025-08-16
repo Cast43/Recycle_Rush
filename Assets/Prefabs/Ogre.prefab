@@ -372,6 +372,7 @@ GameObject:
   - component: {fileID: 9171828842725120963}
   - component: {fileID: 3531520657241630105}
   - component: {fileID: -5131176795595315888}
+  - component: {fileID: 6562287215199196929}
   m_Layer: 3
   m_Name: Ogre
   m_TagString: Untagged
@@ -564,3 +565,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   moveSpeed: 2
+--- !u!114 &6562287215199196929
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8275031677903195487}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dbac3fbcd2488ed4fa34dea478203360, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  experience: {fileID: 1953607005591944673, guid: 34973389b49e60c419dc0d2f6506879e, type: 3}

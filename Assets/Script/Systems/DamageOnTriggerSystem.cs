@@ -7,9 +7,9 @@ using Unity.Transforms;
 using Unity.Collections;
 using UnityEngine;
 
+// [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
 [UpdateInGroup(typeof(PhysicsSystemGroup))] // nunca altera essa merda isso faz funcionar
 [UpdateAfter(typeof(PhysicsSimulationGroup))]
-// [UpdateBefore(typeof(AfterPhysicsSystemGroup))]
 
 public partial struct DamageOnTriggerSystem : ISystem
 {
@@ -17,14 +17,18 @@ public partial struct DamageOnTriggerSystem : ISystem
     public void OnCreate(ref SystemState state)
     {
         state.RequireForUpdate<SimulationSingleton>();
-        state.RequireForUpdate<EndSimulationEntityCommandBufferSystem.Singleton>();
+        // state.RequireForUpdate<EndFixedStepSimulationEntityCommandBufferSystem.Singleton>();
     }
 
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
-        BeginSimulationEntityCommandBufferSystem.Singleton ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();
+        var ecbSingleton = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>();
         EntityCommandBuffer ECB = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
+        SimulationSingleton simulationSingleton = SystemAPI.GetSingleton<SimulationSingleton>();
+        NetworkTick currentTick = SystemAPI.GetSingleton<NetworkTime>().ServerTick;
+        //existe durante o frame atual e guarda colisões no mesmo frame
+        // var alreadyDamagedThisFrame = new NativeHashSet<Entity>(16, Allocator.TempJob);
 
         var damageOnTriggerJob = new BulletDamageOnTriggerJob
         {
@@ -35,12 +39,14 @@ public partial struct DamageOnTriggerSystem : ISystem
             destroyLookup = SystemAPI.GetComponentLookup<DestroyEntityTag>(true),
             alreadyDamagedLookup = SystemAPI.GetBufferLookup<AlreadyDamagedEntity>(true),
             damageBufferLookup = SystemAPI.GetBufferLookup<DamageBufferElement>(true),
+            currentTick = currentTick,
             ECB = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged),
         };
-        SimulationSingleton simulationSingleton = SystemAPI.GetSingleton<SimulationSingleton>();
         state.Dependency = damageOnTriggerJob.Schedule(simulationSingleton, state.Dependency);
-        // damageOnTriggerJob.Schedule();
-        // state.Dependency.Complete();
+        state.Dependency.Complete(); // Espera job acabar antes de aplicar ECB (para segurança)
+
+        // ECB.Playback(state.EntityManager);
+        // ECB.Dispose();
     }
 }
 
@@ -55,6 +61,7 @@ public partial struct BulletDamageOnTriggerJob : ITriggerEventsJob
     [ReadOnly] public ComponentLookup<DestroyEntityTag> destroyLookup;
     [ReadOnly] public BufferLookup<AlreadyDamagedEntity> alreadyDamagedLookup;
     [ReadOnly] public BufferLookup<DamageBufferElement> damageBufferLookup;
+    [ReadOnly] public NetworkTick currentTick;
     public EntityCommandBuffer ECB;
     public void Execute(TriggerEvent triggerEvent)
     {
@@ -78,12 +85,12 @@ public partial struct BulletDamageOnTriggerJob : ITriggerEventsJob
             return;
         }
 
-        // dont aply damage multiple times
         var alreadyDamagedBuffer = alreadyDamagedLookup[damageDealingEntity];
         foreach (var alreadyDamagedEntity in alreadyDamagedBuffer)
         {
             // Debug.Log(alreadyDamagedEntity.value);
             if (alreadyDamagedEntity.value.Equals(damageRecievingEntity)) return;
+            // Debug.Log(alreadyDamagedEntity.value);
         }
         //ignore friendly fire
         if (teamLookup.TryGetComponent(damageDealingEntity, out var damageDealingTeam) &&
@@ -94,17 +101,13 @@ public partial struct BulletDamageOnTriggerJob : ITriggerEventsJob
         var damageOnTrigger = damageOnTriggerLookup[damageDealingEntity];
         var arrowOwner = ownerLookup[damageDealingEntity];
 
-    //alterar isso porque deve resolver o destroy entity System pq se nao quando qualquer coisa for destruida ela vai tentar 
-    //adicionar uma coisa no buffer e vai bugar
-        if (!destroyLookup.HasComponent(damageRecievingEntity))
-        {
-            ECB.AppendToBuffer(damageRecievingEntity, new DamageBufferElement { value = damageOnTrigger.value, owner = arrowOwner.Value });
-        }
-        if (!destroyLookup.HasComponent(damageDealingEntity))
-        {
-            ECB.AppendToBuffer(damageDealingEntity, new AlreadyDamagedEntity { value = damageRecievingEntity });
-        }
-        // Debug.Log(damageDealingEntity);
+        //alterar isso porque deve resolver o destroy entity System pq se nao quando qualquer coisa for destruida ela vai tentar 
+        //adicionar uma coisa no buffer e vai bugar
+        // if (!destroyLookup.HasComponent(damageRecievingEntity))
+        // dont aply damage multiple times
+
+        ECB.AppendToBuffer(damageDealingEntity, new AlreadyDamagedEntity { value = damageRecievingEntity });
+        ECB.AppendToBuffer(damageRecievingEntity, new DamageBufferElement { value = damageOnTrigger.value, owner = arrowOwner.Value });
     }
 }
 

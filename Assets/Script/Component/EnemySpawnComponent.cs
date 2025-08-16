@@ -12,10 +12,11 @@ public struct EnemiesSpawnTimers : IComponentData
 {
     public float timeToNextWave;
     public float timeToNextEnemy;
-    public int CountSpawnedInWave;
 }
 
-public struct WaveCount : IComponentData
+public struct WaveProperties : IComponentData
 {
-    public int value;
+    public int WaveCount;
+    public int countEntitiesSpawned;
+    public int countMaxEntitiesToSpawn;
 }

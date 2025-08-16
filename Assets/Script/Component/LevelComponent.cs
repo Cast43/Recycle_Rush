@@ -2,6 +2,16 @@ using Unity.Entities;
 using Unity.NetCode;
 using Unity.Mathematics;
 
+
+public struct DropExperienceEntity : IComponentData
+{
+    public Entity value;
+}
+public struct GetExperienceInArea : IComponentData
+{
+    [GhostField] public float radius;
+}
+
 public struct MaxExperience : IComponentData
 {
     public int value;
@@ -28,7 +38,10 @@ public struct GiveExperience : IComponentData
 {
     [GhostField] public int value;
 }
-
+public struct AlreadyGiveExperienceEntity : IBufferElementData
+{
+    public Entity value;
+}
 [GhostComponent(PrefabType = GhostPrefabType.AllPredicted)]
 public struct ExperienceBufferElement : IBufferElementData
 //tendo experiencia acumulada eu chamo o get experience no tick

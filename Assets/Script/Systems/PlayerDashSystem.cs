@@ -21,7 +21,11 @@ partial struct PlayerDashSystem : ISystem
     {
 
         NetworkTime networkTime = SystemAPI.GetSingleton<NetworkTime>();
-        SetDashVector setDashVector = new SetDashVector { currentTick = networkTime.ServerTick };
+        SetDashVector setDashVector = new SetDashVector
+        {
+            currentTick = networkTime.ServerTick,
+            currentHealthLookup = SystemAPI.GetComponentLookup<CurrentHealth>(),
+        };
         VerifyCanDash verifyCanDash = new VerifyCanDash { currentTick = networkTime.ServerTick };
         PlayerDashJob playerDashJob = new PlayerDashJob { currentTick = networkTime.ServerTick };
 
@@ -62,19 +66,31 @@ partial struct PlayerDashSystem : ISystem
     public partial struct SetDashVector : IJobEntity
     {
         [ReadOnly] public NetworkTick currentTick;
+        [ReadOnly] public ComponentLookup<CurrentHealth> currentHealthLookup;
 
         public void Execute(in DashProperties dashProperties, in LocalTransform localTransform, in PlayerInput playerInput, in MovementPlayer movementPlayer,
-                           DynamicBuffer<DashCommand> dashCommandBuffer, DynamicBuffer<DashDuration> dashDuration, DynamicBuffer<DashCooldown> dashCooldown)
+                           DynamicBuffer<DashCommand> dashCommandBuffer, DynamicBuffer<DashDuration> dashDuration, DynamicBuffer<DashCooldown> dashCooldown, Entity entity)
         {
             if (!playerInput.dash.IsSet) return; //verifica se foi apertado o botao de dash
             if (dashProperties.isDashing) return;
             if (!dashProperties.canDash) return;
             if (math.lengthsq(movementPlayer.moveVector) == 0) return;
 
+            float3 newDashDir = movementPlayer.moveVector;
+            if (currentHealthLookup.HasComponent(entity))
+            {
+                var currentHealth = currentHealthLookup[entity];
+                if (currentHealth.value <= 0)
+                {
+                    // Debug.Log("teste");
+                    newDashDir = float3.zero;
+                }
+            }
+
             var newDashCommand = new DashCommand
             {
                 Tick = currentTick,
-                DashDirection = movementPlayer.moveVector
+                DashDirection = newDashDir
             };
             dashCommandBuffer.AddCommandData(newDashCommand);
 

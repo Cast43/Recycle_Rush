@@ -91,6 +91,7 @@ MonoBehaviour:
   moveSpeed: 2.5
   ally: 1
   netCodeConfig: {fileID: 11400000, guid: 75d8a62403cd4664593908df3234abf7, type: 2}
+  effectPrefabs: []
 --- !u!114 &1613602197421416149
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -136,8 +137,8 @@ BoxCollider:
   m_ProvidesContacts: 1
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.9, y: 1.9, z: 1.9}
-  m_Center: {x: 0, y: 1, z: 0}
+  m_Size: {x: 1.2, y: 1.2, z: 1.2}
+  m_Center: {x: 0, y: 0.7, z: 0}
 --- !u!54 &3618561546736158247
 Rigidbody:
   m_ObjectHideFlags: 0

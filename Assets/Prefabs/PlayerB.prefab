@@ -99,7 +99,10 @@ GameObject:
   - component: {fileID: 7502890575860471494}
   - component: {fileID: 1900719457097203956}
   - component: {fileID: 6168186249738006989}
+  - component: {fileID: -1984916485959386395}
   - component: {fileID: -3475810099924927038}
+  - component: {fileID: -4669703099547100025}
+  - component: {fileID: 322780033610864457}
   m_Layer: 3
   m_Name: PlayerB
   m_TagString: Untagged
@@ -294,12 +297,33 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   firePointOffset:
     x: 0
-    y: 0
+    y: 0.5
     z: 0
   attackCooldownTime: 3
   attackPrefab: {fileID: 7074913954056216728, guid: fe1776e47e77f8a4dabe22cacb5239f7, type: 3}
   timeToDontMove: 0
   netCodeConfig: {fileID: 11400000, guid: 75d8a62403cd4664593908df3234abf7, type: 2}
+--- !u!114 &-1984916485959386395
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4411393761261615811}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 99b58e1404eaa174390dda7f29787635, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxExperience: 100
+  startLevel: 0
+  modifiers:
+  - type: 0
+    value: 1
+  - type: 2
+    value: 0.05
+  - type: 3
+    value: 0.05
 --- !u!114 &-3475810099924927038
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -313,6 +337,32 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   effectPrefabs: []
+--- !u!114 &-4669703099547100025
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4411393761261615811}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: daa9dbd2ea596504db47edf0df4919e7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  radius: 1
+--- !u!114 &322780033610864457
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4411393761261615811}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4b384c89debb8040818279960520d1d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ressurectArea: {fileID: 6325963259828825667, guid: 985054cbc71f4d24ba18a5f90f1e447d, type: 3}
 --- !u!1 &6728840892501591999
 GameObject:
   m_ObjectHideFlags: 0

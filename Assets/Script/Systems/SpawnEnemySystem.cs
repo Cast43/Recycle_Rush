@@ -19,16 +19,26 @@ public partial struct SpawnEnemySystem : ISystem
         float deltaTime = SystemAPI.Time.DeltaTime;
         foreach (var minionSpawnAspect in SystemAPI.Query<EnemySpawnAspect>())
         {
+            if (minionSpawnAspect.CountMaxEntitiesToSpawn == 0)
+            {
+                Debug.Log("coloca um valor em maxEntitiesToSpawnInWave se não gera um loop infinito");
+                return;
+            }
+            if (minionSpawnAspect.CountEntitiesSpawned >= minionSpawnAspect.CountMaxEntitiesToSpawn)
+            {
+                Debug.Log("terminou a wave");
+                minionSpawnAspect.IncrementWaveCount();
+                minionSpawnAspect.ResetEntitySpawnCounter();
+            }
             minionSpawnAspect.DecrementedTimers(deltaTime);
             if (minionSpawnAspect.shouldSpawn)
             {
                 SpawnRandonly(ref state);
-                minionSpawnAspect.CountSpawnedInWave++;
+                minionSpawnAspect.IncrementEntitiesCount();
                 if (minionSpawnAspect.isWaveSpaned)
                 {
                     minionSpawnAspect.ResetEnemyTimer();
                     minionSpawnAspect.ResetWaveTimer();
-                    minionSpawnAspect.ResetSpawnCounter();
                 }
                 else
                 {

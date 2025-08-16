@@ -7,6 +7,12 @@ using Unity.Collections;
 //foi utilizado uma tecnica que cria novos gameObjects relacionados aos efeitos e os seus alvos
 //assim os sistemas dos efeitos procuram esses objetos com os efeitos e não os inimigos
 
+
+public struct GlobalEffectPrefab : IBufferElementData
+{
+    public Entity Prefab;
+    public FixedString64Bytes name;
+}
 public struct EffectPrefab : IBufferElementData
 {
     public Entity Prefab; // vai apontar para uma Entity Prefab que já tem o PoisonEffect, BurnEffect etc.

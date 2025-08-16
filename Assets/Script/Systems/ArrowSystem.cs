@@ -7,7 +7,6 @@ using Unity.NetCode;
 using UnityEngine;
 using Unity.Collections;
 
-[WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(PredictedSimulationSystemGroup))]
 partial struct ArrowSystem : ISystem
 {
@@ -21,10 +20,18 @@ partial struct ArrowSystem : ISystem
         PhysicsWorldSingleton physicsWorldSingleton = SystemAPI.GetSingleton<PhysicsWorldSingleton>();
         CollisionWorld collisionWorld = physicsWorldSingleton.CollisionWorld;
 
-        state.Dependency = new ArrowJob
+        foreach (var (physicsVelocity, arrow, direction, localTransform, arrowEntity) in
+                SystemAPI.Query<RefRW<PhysicsVelocity>, RefRO<Arrow>, RefRO<Direction>, RefRO<LocalTransform>>().WithAll<Simulate>().WithEntityAccess())
         {
-            transformLookup = SystemAPI.GetComponentLookup<LocalTransform>(true),
-        }.ScheduleParallel(state.Dependency);
+            physicsVelocity.ValueRW.Linear = direction.ValueRO.lookDirection * arrow.ValueRO.moveSpeed;
+            physicsVelocity.ValueRW.Angular = float3.zero;
+
+        }
+
+        // state.Dependency = new ArrowJob
+        // {
+        //     transformLookup = SystemAPI.GetComponentLookup<LocalTransform>(true),
+        // }.ScheduleParallel(state.Dependency);
     }
 }
 
