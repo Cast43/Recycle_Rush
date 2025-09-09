@@ -10,14 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 15003, guid: 0000000000000000e000000000000000, type: 0}
-  m_Name: New Windows Profile
+  m_Name: New Linux Profile
   m_EditorClassIdentifier: 
   m_AssetVersion: 1
-  m_BuildTarget: 19
+  m_BuildTarget: 24
   m_Subtarget: 2
-  m_PlatformId: 4e3c793746204150860bf175a9a41a05
+  m_PlatformId: cb423bfea44b4d658edb8bc5d91a3024
   m_PlatformBuildProfile:
-    rid: 703207192456331534
+    rid: 919142333893312775
   m_OverrideGlobalSceneList: 1
   m_Scenes:
   - m_enabled: 1
@@ -133,7 +133,7 @@ MonoBehaviour:
     - line: '|   xboxEnableFitness: 0'
     - line: '|   visibleInBackground: 1'
     - line: '|   allowFullscreenSwitch: 1'
-    - line: '|   fullscreenMode: 1'
+    - line: '|   fullscreenMode: 3'
     - line: '|   xboxSpeechDB: 0'
     - line: '|   xboxEnableHeadOrientation: 0'
     - line: '|   xboxEnableGuest: 0'
@@ -547,7 +547,9 @@ MonoBehaviour:
     - line: '|       m_SubKind: '
     - line: '|   m_BuildTargetBatching: []'
     - line: '|   m_BuildTargetShaderSettings: []'
-    - line: '|   m_BuildTargetGraphicsJobs: []'
+    - line: '|   m_BuildTargetGraphicsJobs:'
+    - line: '|   - m_BuildTarget: LinuxStandaloneSupport'
+    - line: '|     m_GraphicsJobs: 1'
     - line: '|   m_BuildTargetGraphicsJobMode: []'
     - line: '|   m_BuildTargetGraphicsAPIs:'
     - line: '|   - m_BuildTarget: iOSSupport'
@@ -845,15 +847,13 @@ MonoBehaviour:
     - line: '|   webGLWebAssemblyBigInt: 0'
     - line: '|   webGLCloseOnQuit: 0'
     - line: '|   webWasm2023: 0'
-    - line: '|   scriptingDefineSymbols:'
-    - line: '|     Standalone: '
+    - line: '|   scriptingDefineSymbols: {}'
     - line: '|   additionalCompilerArguments: {}'
     - line: '|   platformArchitecture: {}'
     - line: '|   scriptingBackend:'
     - line: '|     Android: 1'
     - line: '|     Standalone: 0'
-    - line: '|   il2cppCompilerConfiguration:'
-    - line: '|     Standalone: 0'
+    - line: '|   il2cppCompilerConfiguration: {}'
     - line: '|   il2cppCodeGeneration: {}'
     - line: '|   il2cppStacktraceInformation: {}'
     - line: '|   managedStrippingLevel: {}'
@@ -866,7 +866,7 @@ MonoBehaviour:
     - line: '|   gcIncremental: 1'
     - line: '|   gcWBarrierValidation: 0'
     - line: '|   apiCompatibilityLevelPerPlatform: {}'
-    - line: '|   editorAssembliesCompatibilityLevel: 1'
+    - line: '|   editorAssembliesCompatibilityLevel: 2'
     - line: '|   m_RenderingPath: 1'
     - line: '|   m_MobileRenderingPath: 1'
     - line: '|   metroPackageName: Rougue'
@@ -966,8 +966,8 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 703207192456331534
-      type: {class: WindowsPlatformSettings, ns: UnityEditor.WindowsStandalone, asm: UnityEditor.WindowsStandalone.Extensions}
+    - rid: 919142333893312775
+      type: {class: LinuxPlatformSettings, ns: UnityEditor.LinuxStandalone, asm: UnityEditor.LinuxStandalone.Extensions}
       data:
         m_Development: 0
         m_ConnectProfiler: 0
@@ -980,9 +980,3 @@ MonoBehaviour:
         m_ExplicitArrayBoundsChecks: 0
         m_CompressionType: 0
         m_InstallInBuildFolder: 0
-        m_WindowsBuildAndRunDeployTarget: 0
-        m_Architecture: 0
-        m_CreateSolution: 0
-        m_CopyPDBFiles: 0
-        m_WindowsDevicePortalAddress: 
-        m_WindowsDevicePortalUsername: 

@@ -44,7 +44,6 @@ public partial struct DropExperienceJob : IJobEntity
     {
         if (currentHealth.value <= 0)
         {
-            Debug.Log(entity);
             var dropEntity = ECB.Instantiate(sortKey, dropExperience.value);
             ECB.SetComponent(sortKey, dropEntity, LocalTransform.FromPosition(localTransform.Position + new float3(0, 0.5f, 0)));
         }

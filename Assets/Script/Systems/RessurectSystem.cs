@@ -42,7 +42,6 @@ partial struct RessurectSystem : ISystem
 
             if (endRessurectDuration)
             {
-                // Debug.Log("acabou o tempo de ressurect");
                 ECB.AddComponent<DestroyEntityTag>(ressurectDurationElement.ressurectedEntity);
                 ECB.AddComponent<DestroyEntityTag>(entity);
             }
@@ -83,7 +82,6 @@ partial struct RessurectSystem : ISystem
                                 if (team.faction == ressurectProperties.ValueRO.team)
                                 {
                                     var ressurectionTimeAreaLookup = SystemAPI.GetBufferLookup<TimeInRessurectionArea>();
-                                    Debug.Log(hitEntity);
                                     //veririca se o aliados já estava na area ressucitando para não adicionar novamente o buffer
                                     if (SystemAPI.HasBuffer<TimeInRessurectionArea>(hitEntity))
                                     {
@@ -91,7 +89,6 @@ partial struct RessurectSystem : ISystem
                                         //verificação para adicionar o time apenas 1 vez
                                         if (ressurectionTimeArea.IsEmpty)
                                         {
-                                            // Debug.Log(hit.Entity);
                                             var NewinAreaTick = currentTick;
                                             NewinAreaTick.Add(ressurectProperties.ValueRO.minTimeInArea);
                                             ressurectionTimeArea.AddCommandData(new TimeInRessurectionArea
@@ -132,7 +129,6 @@ partial struct RessurectSystem : ISystem
                 bool canRessurect = !timeInAreaBufferElement.value.IsValid || currentTick.IsNewerThan(timeInAreaBufferElement.value);
                 if (canRessurect)
                 {
-                    // Debug.Log("ressurected");
                     ECB.AddComponent<ResetLife>(timeInAreaBufferElement.ressurectedEntity);
                     ECB.AddComponent<DestroyEntityTag>(timeInAreaBufferElement.areaCollider);
                     ECB.RemoveComponent<TimeInRessurectionArea>(entity);
@@ -144,7 +140,6 @@ partial struct RessurectSystem : ISystem
                 //se está muito longe da colisão
                 if (math.distance(localTransform.ValueRO.Position, colliderPos.Position) > ressurectProperties.radius)
                 {
-                    // Debug.Log("getOutArea");
                     ECB.RemoveComponent<TimeInRessurectionArea>(entity);
                 }
             }
@@ -152,7 +147,6 @@ partial struct RessurectSystem : ISystem
         //volta a vida do jogador ao normal
         foreach (var (localTransform, resetLife, currentHealth, maxHealth, entity) in SystemAPI.Query<RefRO<LocalTransform>, RefRO<ResetLife>, RefRW<CurrentHealth>, RefRO<MaxHealth>>().WithEntityAccess().WithNone<DestroyEntityTag>())
         {
-            // Debug.Log("Back to Life");
             ECB.SetComponent(entity, new CurrentHealth { value = maxHealth.ValueRO.value, onHealthChanged = false });
             ECB.RemoveComponent<ResetLife>(entity);
             ECB.RemoveComponent<NeedRessurection>(entity);

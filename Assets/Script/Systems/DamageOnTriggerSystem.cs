@@ -16,6 +16,7 @@ public partial struct DamageOnTriggerSystem : ISystem
     [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
+        state.RequireForUpdate<NetworkTime>();
         state.RequireForUpdate<SimulationSingleton>();
         // state.RequireForUpdate<EndFixedStepSimulationEntityCommandBufferSystem.Singleton>();
     }

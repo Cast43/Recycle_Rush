@@ -101,15 +101,11 @@ partial struct ApplyExperienceSystem : ISystem
 
             // manda um rpc para o player escolher os efeitos a adição de efeitos
             // Enviar RPC para esse cliente
-            var clientEntityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
-
+            //arrumar outro método pra achar o mundo do cliente esse está dando bug na build
             // Pega o NetworkId do cliente local
-            var query = clientEntityManager.CreateEntityQuery(
-                typeof(NetworkId),
-                typeof(NetworkStreamInGame)
-            );
-            NetworkId netId = query.GetSingleton<NetworkId>();
+            NetworkId netId = SystemAPI.GetSingleton<NetworkId>();
 
+            // Cria o RPC usando o NetworkId
             var rpc = new ShowAddEffectRPC { ClientNetId = netId.Value };
             // state.EntityManager.CreateEntity(typeof(ShowAddEffectRPC));
             var rpcEntity = ECB.CreateEntity();

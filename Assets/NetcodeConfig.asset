@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: abd30ee0214cf6a45b2d76765a4615b1, type: 3}
   m_Name: NetcodeConfig
   m_EditorClassIdentifier: 
-  IsGlobalConfig: 1
+  IsGlobalConfig: 0
   EnableClientServerBootstrap: 1
   ClientServerTickRate:
     SimulationTickRate: 15

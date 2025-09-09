@@ -15,6 +15,7 @@ public partial struct EffectOnTriggerSystem : ISystem
     [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
+        state.RequireForUpdate<NetworkTime>();
         state.RequireForUpdate<SimulationSingleton>();
         state.RequireForUpdate<EndSimulationEntityCommandBufferSystem.Singleton>();
     }

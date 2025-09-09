@@ -28,7 +28,6 @@ partial struct GoInGameClientSystem : ISystem
         foreach ((RefRO<NetworkId> networkId, Entity entity) in SystemAPI.Query<RefRO<NetworkId>>().WithNone<NetworkStreamInGame>().WithEntityAccess())
         {
             entityCommandBuffer.AddComponent<NetworkStreamInGame>(entity);
-            Debug.Log("Connected! " + entity + " :: " + networkId.ValueRO.Value);
 
             Entity rpcEntity = entityCommandBuffer.CreateEntity();
             entityCommandBuffer.AddComponent<GoInGameRequestRpc>(rpcEntity);
