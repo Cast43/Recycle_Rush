@@ -24,6 +24,8 @@ partial struct GoInGameClientSystem : ISystem
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
+        // Debug.Log($"teste");
+
         EntityCommandBuffer entityCommandBuffer = new EntityCommandBuffer(Unity.Collections.Allocator.Temp);
         foreach ((RefRO<NetworkId> networkId, Entity entity) in SystemAPI.Query<RefRO<NetworkId>>().WithNone<NetworkStreamInGame>().WithEntityAccess())
         {

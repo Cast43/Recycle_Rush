@@ -6,13 +6,13 @@ using UnityEngine;
 [UpdateInGroup(typeof(PredictedSimulationSystemGroup), OrderLast = true)]
 public partial struct CalculateFrameExperienceSystem : ISystem
 {
-    [BurstCompile]
+    // [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
         state.RequireForUpdate<NetworkTime>();
     }
 
-    [BurstCompile]
+    // [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
         NetworkTick currentTick = SystemAPI.GetSingleton<NetworkTime>().ServerTick;

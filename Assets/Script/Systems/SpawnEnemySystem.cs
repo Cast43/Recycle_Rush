@@ -13,7 +13,7 @@ public partial struct SpawnEnemySystem : ISystem
 
     }
 
-    [BurstCompile]
+    // [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
         float deltaTime = SystemAPI.Time.DeltaTime;

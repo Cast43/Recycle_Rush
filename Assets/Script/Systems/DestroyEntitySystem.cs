@@ -16,7 +16,7 @@ partial struct DestroyEntitySystem : ISystem
         state.RequireForUpdate<NetworkTime>();
     }
 
-    [BurstCompile]
+    // [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
         NetworkTime networkTime = SystemAPI.GetSingleton<NetworkTime>();
@@ -24,19 +24,19 @@ partial struct DestroyEntitySystem : ISystem
         if (!networkTime.IsFirstPredictionTick) return;
         NetworkTick currentTick = networkTime.ServerTick;
 
-        // EndSimulationEntityCommandBufferSystem.Singleton ecbSingleton = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>();
-        // EntityCommandBuffer ECB = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
+        EndSimulationEntityCommandBufferSystem.Singleton ecbSingleton = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>();
+        EntityCommandBuffer ECB = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
 
         foreach (var (transform, entity) in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<DestroyEntityTag, Simulate>().WithEntityAccess())
         {
-            // if (state.World.IsServer())
+            if (state.World.IsServer())
             {
-                state.EntityManager.DestroyEntity(entity);
+                ECB.DestroyEntity(entity);
             }
-            // else
-            // {
-            //     transform.ValueRW.Position = new float3(1000f, 1000f, 1000f);
-            // }
+            else
+            {
+                transform.ValueRW.Position = new float3(1000f, 1000f, 1000f);
+            }
 
         }
     }

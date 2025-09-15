@@ -7,14 +7,14 @@ using UnityEngine;
 [WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation | WorldSystemFilterFlags.ThinClientSimulation)]
 partial struct AddEffectUIClientRPCSystem : ISystem
 {
-    [BurstCompile]
+    // [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
         EntityQueryBuilder entityQueryBuilder = new EntityQueryBuilder(Allocator.Temp).WithAll<ShowAddEffectRPC>().WithAll<ReceiveRpcCommandRequest>();
         state.RequireForUpdate(state.GetEntityQuery(entityQueryBuilder));
         entityQueryBuilder.Dispose();
     }
-    [BurstCompile]
+    // [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
         EntityCommandBuffer ECB = new EntityCommandBuffer(Unity.Collections.Allocator.Temp);

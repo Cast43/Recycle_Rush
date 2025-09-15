@@ -16,7 +16,7 @@ partial struct MovementSystem : ISystem
         state.RequireForUpdate<NetworkTime>();
     }
 
-    [BurstCompile]
+    // [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
         NetworkTime networkTime = SystemAPI.GetSingleton<NetworkTime>();

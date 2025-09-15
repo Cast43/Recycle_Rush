@@ -10,7 +10,7 @@ using Unity.Mathematics;
 [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
 partial struct GoInGameServerSystem : ISystem
 {
-    public static int playersCount;
+    public int playersCount;
     [BurstCompile]
     public void OnCreate(ref SystemState state)
     {

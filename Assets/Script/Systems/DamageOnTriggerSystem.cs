@@ -13,7 +13,7 @@ using UnityEngine;
 
 public partial struct DamageOnTriggerSystem : ISystem
 {
-    [BurstCompile]
+    // [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
         state.RequireForUpdate<NetworkTime>();
@@ -21,7 +21,7 @@ public partial struct DamageOnTriggerSystem : ISystem
         // state.RequireForUpdate<EndFixedStepSimulationEntityCommandBufferSystem.Singleton>();
     }
 
-    [BurstCompile]
+    // [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
         var ecbSingleton = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>();

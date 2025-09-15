@@ -10,7 +10,7 @@ using Unity.Collections;
 [UpdateInGroup(typeof(PredictedSimulationSystemGroup))]
 partial struct ArrowSystem : ISystem
 {
-    [BurstCompile]
+    // [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
         BeginSimulationEntityCommandBufferSystem.Singleton ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();

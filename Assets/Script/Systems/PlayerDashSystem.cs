@@ -16,7 +16,7 @@ partial struct PlayerDashSystem : ISystem
         state.RequireForUpdate<NetworkTime>();
     }
 
-    [BurstCompile]
+    // [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
 

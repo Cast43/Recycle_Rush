@@ -16,7 +16,7 @@ partial struct DestroyOnTriggerSystem : ISystem
         state.RequireForUpdate<EndSimulationEntityCommandBufferSystem.Singleton>();
     }
 
-    [BurstCompile]
+    // [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
         BeginSimulationEntityCommandBufferSystem.Singleton ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();

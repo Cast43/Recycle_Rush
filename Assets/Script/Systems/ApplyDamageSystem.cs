@@ -12,19 +12,18 @@ using UnityEngine;
 [WithNone(typeof(DestroyEntityTag))]
 partial struct ApplyDamageSystem : ISystem
 {
-    [BurstCompile]
+    // [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
         state.RequireForUpdate<NetworkTime>();
 
     }
 
-    [BurstCompile]
+    // [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
         // bool isServer = state.WorldUnmanaged.IsServer();
         // bool isClient = state.WorldUnmanaged.IsClient();
-
         NetworkTick currentTick = SystemAPI.GetSingleton<NetworkTime>().ServerTick;
         // BeginSimulationEntityCommandBufferSystem.Singleton ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();
         // EntityCommandBuffer ECB = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);       

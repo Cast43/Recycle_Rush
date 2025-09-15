@@ -20,7 +20,7 @@ public partial struct EnemyMeleeSystem : ISystem
         state.RequireForUpdate<BeginSimulationEntityCommandBufferSystem.Singleton>();
     }
 
-    [BurstCompile]
+    // [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
         // Limpa todos os buffers de AlreadyDamagedEntity antes de processar as colisões

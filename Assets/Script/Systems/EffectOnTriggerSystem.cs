@@ -12,7 +12,7 @@ using UnityEngine;
 [UpdateAfter(typeof(PhysicsSimulationGroup))]
 public partial struct EffectOnTriggerSystem : ISystem
 {
-    [BurstCompile]
+    // [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
         state.RequireForUpdate<NetworkTime>();
@@ -20,7 +20,7 @@ public partial struct EffectOnTriggerSystem : ISystem
         state.RequireForUpdate<EndSimulationEntityCommandBufferSystem.Singleton>();
     }
 
-    [BurstCompile]
+    // [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
         BeginSimulationEntityCommandBufferSystem.Singleton ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();

@@ -1,12 +1,12 @@
-using Unity.NetCode;
 using UnityEngine;
+using Unity.Entities;
+using Unity.NetCode;
+using Unity.Networking.Transport.Relay;
 
-
-//automaticamente bootstrap o jogo. não precisa existir um game objecto para funcionar
+// Este é o script que o componente 'Override Automatic Netcode Bootstrap' deve usar.
 [UnityEngine.Scripting.Preserve]
 public class GameBootstrap : ClientServerBootstrap
 {
-    //esse script da o auto start bom para testes
     public override bool Initialize(string defaultWorldName)
     {
         // AutoConnectPort = 7979;

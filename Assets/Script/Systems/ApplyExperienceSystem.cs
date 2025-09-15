@@ -9,14 +9,14 @@ using UnityEngine;
 [UpdateAfter(typeof(CalculateFrameExperienceSystem))]
 partial struct ApplyExperienceSystem : ISystem
 {
-    [BurstCompile]
+    // [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
         state.RequireForUpdate<NetworkTime>();
 
     }
 
-    [BurstCompile]
+    // [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
         NetworkTick currentTick = SystemAPI.GetSingleton<NetworkTime>().ServerTick;

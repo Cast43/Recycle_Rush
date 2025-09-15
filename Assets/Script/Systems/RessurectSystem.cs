@@ -18,7 +18,7 @@ partial struct RessurectSystem : ISystem
         state.RequireForUpdate<NetworkTime>();
     }
 
-    [BurstCompile]
+    // [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
 

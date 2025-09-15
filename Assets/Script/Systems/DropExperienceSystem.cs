@@ -12,20 +12,19 @@ using UnityEngine;
 [UpdateInGroup(typeof(PredictedSimulationSystemGroup))]
 public partial struct DropExperienceSystem : ISystem
 {
-    [BurstCompile]
+    // [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
-        BeginSimulationEntityCommandBufferSystem.Singleton ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();
-
+        // BeginSimulationEntityCommandBufferSystem.Singleton ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();
         // foreach (var (dropExperience, currentHealth, localTransform, entity) in SystemAPI.Query<RefRO<DropExperienceEntity>, RefRO<CurrentHealth>, RefRO<LocalTransform>>().WithEntityAccess())
-        {
-            // if (currentHealth.ValueRO.value <= 0)
-            {
-                // var dropEntity = ECB.Instantiate(dropExperience.ValueRO.value);
-                // ECB.SetComponent(dropEntity, LocalTransform.FromPosition(localTransform.ValueRO.Position + new float3(0, 0.5f, 0)));
-                // ECB.AddComponent<DestroyEntityTag>(entity);
-            }
-        }
+        // {
+        //     if (currentHealth.ValueRO.value <= 0)
+        //     {
+        //         var dropEntity = ECB.Instantiate(dropExperience.ValueRO.value);
+        //         ECB.SetComponent(dropEntity, LocalTransform.FromPosition(localTransform.ValueRO.Position + new float3(0, 0.5f, 0)));
+        //         ECB.AddComponent<DestroyEntityTag>(entity);
+        //     }
+        // }
         // state.Dependency = new DropExperienceJob
         // {
         //     ECB = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged).AsParallelWriter(),

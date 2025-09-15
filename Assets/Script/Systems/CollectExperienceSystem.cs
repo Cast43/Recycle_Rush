@@ -13,14 +13,14 @@ using UnityEngine;
 
 public partial struct CollectExperienceSystem : ISystem
 {
-    [BurstCompile]
+    // [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
         state.RequireForUpdate<SimulationSingleton>();
         state.RequireForUpdate<EndSimulationEntityCommandBufferSystem.Singleton>();
     }
 
-    [BurstCompile]
+    // [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
         BeginSimulationEntityCommandBufferSystem.Singleton ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();

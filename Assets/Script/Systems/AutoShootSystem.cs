@@ -11,21 +11,21 @@ using Unity.Collections;
 [WithNone(typeof(NeedRessurection))]
 partial struct AutoShootSystem : ISystem
 {
-    [BurstCompile]
+    // [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
         state.RequireForUpdate<NetworkTime>();
         state.RequireForUpdate<BeginSimulationEntityCommandBufferSystem.Singleton>();
     }
 
-    [BurstCompile]
+    // [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
 
         BeginSimulationEntityCommandBufferSystem.Singleton ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();
         NetworkTime networkTime = SystemAPI.GetSingleton<NetworkTime>();
-        EntitiesReferences entitiesReferences = SystemAPI.GetSingleton<EntitiesReferences>();
-        Entity entitiesReferencesEntity = SystemAPI.GetSingletonEntity<EntitiesReferences>();
+        // EntitiesReferences entitiesReferences = SystemAPI.GetSingleton<EntitiesReferences>();
+        // Entity entitiesReferencesEntity = SystemAPI.GetSingletonEntity<EntitiesReferences>();
 
         state.Dependency = new ShootJob
         {
@@ -89,8 +89,6 @@ partial struct AutoShootSystem : ISystem
             var newCooldownTickMove = currentTick;
             newCooldownTickMove.Add(attackProperties.timeToDontMove);
             dontMoveOnTimer.AddCommandData(new DontMoveOnTimer { Tick = currentTick, value = newCooldownTickMove });
-
         }
     }
-
 }

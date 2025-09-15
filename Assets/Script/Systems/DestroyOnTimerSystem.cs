@@ -12,20 +12,20 @@ partial struct DestroyOnTimerSystem : ISystem
         // state.RequireForUpdate<EndSimulationEntityCommandBufferSystem.Singleton>();
     }
 
-    [BurstCompile]
+    // [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
 
-        // foreach (var (destroyAtTick, entity) in SystemAPI.Query<DestroyAtTick>().WithAll<Simulate>().WithNone<DestroyEntityTag>().WithEntityAccess())
+        foreach (var (destroyAtTick, entity) in SystemAPI.Query<DestroyAtTick>().WithAll<Simulate>().WithNone<DestroyEntityTag>().WithEntityAccess())
         {
-            // EndSimulationEntityCommandBufferSystem.Singleton ecbSingleton = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>();
-            // EntityCommandBuffer ECB = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
+            EndSimulationEntityCommandBufferSystem.Singleton ecbSingleton = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>();
+            EntityCommandBuffer ECB = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
 
-            // NetworkTick currentTick = SystemAPI.GetSingleton<NetworkTime>().ServerTick;
-            // if (currentTick.Equals(destroyAtTick.value) || currentTick.IsNewerThan(destroyAtTick.value))
-            // {
-            //     state.EntityManager.AddComponent<DestroyEntityTag>(entity);
-            // }
+            NetworkTick currentTick = SystemAPI.GetSingleton<NetworkTime>().ServerTick;
+            if (currentTick.Equals(destroyAtTick.value) || currentTick.IsNewerThan(destroyAtTick.value))
+            {
+                state.EntityManager.AddComponent<DestroyEntityTag>(entity);
+            }
         }
     }
 
