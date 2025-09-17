@@ -337,9 +337,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7280f576d2e4bbf42b14f162b187e31d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  effects:
-  - effectPrefab: {fileID: 23023812224790087, guid: 6bd6df149e1b8c24b92d828d4a819b2d, type: 3}
-    name: Curse
+  effectsPrefab:
+  - {fileID: 2446432607396823940, guid: 6cc711ff129f13c458da551e7e9d754d, type: 3}
 --- !u!114 &-7285337513843027083
 MonoBehaviour:
   m_ObjectHideFlags: 0

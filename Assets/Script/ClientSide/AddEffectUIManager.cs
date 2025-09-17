@@ -48,10 +48,13 @@ public class AddEffectUIManager : MonoBehaviour
     }
     void SetEffectInHUD()
     {
-        //efeitos ja presente na hud
-        List<EffectUIInfo> AddEffectsInHUD = new List<EffectUIInfo>();
+        //seta o mundo do player e do jogador
+        //-pega os efeitos no localplayer
+        //-pegar os efeitos globais do servidor
         var world = World.DefaultGameObjectInjectionWorld;
-        var clientLocalPlayer = GetClientWorld().EntityManager;
+
+        //modificar para adicionar o efeito para o cliente também
+        var clientLocalPlayer = GetServerWorld().EntityManager;
         var globalEffectsReference = GetServerWorld().EntityManager;
 
         // Pega o NetworkId do cliente local
@@ -68,6 +71,7 @@ public class AddEffectUIManager : MonoBehaviour
         );
         Entity clientLocalPlayerEntity = Entity.Null;
         Entity globalEffectEntity = Entity.Null;
+        //encotra o player local
         using (var players = playerQuery.ToEntityArray(Allocator.Temp))
         {
             foreach (var entity in players)
@@ -118,9 +122,17 @@ public class AddEffectUIManager : MonoBehaviour
             DisableAddEffects();
             return;
         }
+        foreach (var item in playerEffects)
+        {
+            Debug.Log(item.name);
+        }
+
+        //cria uma lista para ver quais efeitos serão adicionados
+        List<EffectUIInfo> AddEffectsInHUD = new List<EffectUIInfo>();
         //consegue o efeito randomico
         foreach (var item in GOEffectsUI)
         {
+            item.SetActive(false);
             var AddedEffectUIElement = GetRandomEffect(playerEffects, globalEffects, AddEffectsInHUD);
             if (AddedEffectUIElement != null)
             {
@@ -133,7 +145,7 @@ public class AddEffectUIManager : MonoBehaviour
             GOEffectsUI[i].SetActive(true);
             SetEffectUI(AddEffectsInHUD[i], i);
         }
-        AddEffectsInHUD.Clear();
+        AddEffectsInHUD = null;
     }
     bool CanAddEffects(DynamicBuffer<EffectPrefab> playerEffects, DynamicBuffer<GlobalEffectPrefab> globalEffects)
     {
@@ -200,11 +212,12 @@ public class AddEffectUIManager : MonoBehaviour
             // Verifica se o efeito já está no player
             foreach (var playerEffect in serverPlayerEffects)
             {
-                if (globalEffectPrefab == playerEffect.Prefab)
+                // Debug.Log($"Passando pelo efeito global: {globalEffectName} e player {playerEffect.name}");
+                if (globalEffectName == playerEffect.name)
                 {
                     // Debug.Log($"Efeito já no player: {globalEffectName}");
                     addThisEffect = false;
-                    break;
+                    continue;
                 }
             }
 
@@ -234,11 +247,6 @@ public class AddEffectUIManager : MonoBehaviour
                 }
             }
         }
-
-        // if (addEffectUI == null)
-        // {
-        //     Debug.LogWarning("Nenhum efeito válido encontrado para adicionar.");
-        // }
 
         return addEffectUI;
     }
@@ -315,64 +323,6 @@ public class AddEffectUIManager : MonoBehaviour
 
 
         DisableAddEffects();
-    }
-    Entity FindLocalPlayer(World clientWorld)
-    {
-        Entity clientLocalPlayerEntity = Entity.Null;
-
-        var clientLocalPlayer = clientWorld.EntityManager;
-        var netId = clientLocalPlayer.CreateEntityQuery(typeof(NetworkId)).GetSingleton<NetworkId>().Value;
-
-        // Procura a entidade do player local
-        EntityQuery playerQuery = clientLocalPlayer.CreateEntityQuery(
-            ComponentType.ReadOnly<PlayerInput>(),
-            ComponentType.ReadOnly<GhostOwner>()
-        );
-
-        using (var players = playerQuery.ToEntityArray(Allocator.Temp))
-        {
-            foreach (var entity in players)
-            {
-                if (clientLocalPlayer.GetComponentData<GhostOwner>(entity).NetworkId == netId)
-                {
-                    clientLocalPlayerEntity = entity;
-                    break;
-                }
-            }
-        }
-
-        return clientLocalPlayerEntity;
-    }
-    Entity GetEffectByName(string effectName)
-    {
-        Entity addedEffect = Entity.Null;
-
-        var clientLocalPlayer = GetClientWorld().EntityManager;
-        EntityQuery globalEffectsQuery = GetServerWorld().EntityManager.CreateEntityQuery(ComponentType.ReadOnly<GlobalEffectPrefab>());
-        var globalEffectsReference = GetServerWorld().EntityManager;
-        var globalEffectEntity = Entity.Null;
-
-        using (var globalEffect = globalEffectsQuery.ToEntityArray(Allocator.Temp))
-        {
-            foreach (var entity in globalEffect)
-            {
-                globalEffectEntity = entity;
-                break;
-            }
-        }
-        var globalEffects = globalEffectsReference.GetBuffer<GlobalEffectPrefab>(globalEffectEntity);
-
-        {
-            for (int i = 0; i < globalEffects.Length; i++)
-            {
-                if (effectName == globalEffects[i].name)
-                {
-                    addedEffect = globalEffects[i].Prefab;
-                }
-            }
-        }
-
-        return addedEffect;
     }
     void DisableAddEffects()
     {
