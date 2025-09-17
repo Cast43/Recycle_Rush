@@ -128,6 +128,7 @@ MonoBehaviour:
   TrackInterpolationDelay: 0
   GhostGroup: 0
   UsePreSerialization: 0
+  UseSingleBaseline: 0
   RollbackPredictedSpawnedGhostState: 0
   RollbackPredictionOnStructuralChanges: 1
 --- !u!114 &-8621147604542544362
@@ -158,7 +159,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 486fc13da430fdd4d8dbfceecd5f49b8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  damageOnTrigger: 1
+  damageOnTrigger: 0
 --- !u!114 &2004820599609851183
 MonoBehaviour:
   m_ObjectHideFlags: 0

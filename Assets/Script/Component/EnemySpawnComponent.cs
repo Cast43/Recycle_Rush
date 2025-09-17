@@ -1,10 +1,14 @@
 using Unity.Entities;
+using Unity.Mathematics;
 
 public struct EnemiesSpawnProperties : IComponentData
 {
     public float timeBetweenWaves;
     public float timeBetweenEnemies;
     public int CountToSpawnInWave;
+    public float3 spawnCenter;
+    public float notSpawnRadius;
+    public float SpawnRadius;
 
 }
 

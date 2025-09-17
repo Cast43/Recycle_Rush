@@ -247,6 +247,7 @@ MonoBehaviour:
   TrackInterpolationDelay: 0
   GhostGroup: 0
   UsePreSerialization: 0
+  UseSingleBaseline: 0
   RollbackPredictedSpawnedGhostState: 0
   RollbackPredictionOnStructuralChanges: 1
 --- !u!114 &7311710377357837233
@@ -275,7 +276,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   targetFaction: 0
-  targetRadius: 20
+  targetRadius: 15
 --- !u!114 &8243675087468462374
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -331,7 +332,7 @@ MonoBehaviour:
     x: 0
     y: 0.5
     z: 0
-  attackCooldownTime: 4
+  attackCooldownTime: 8
   attackPrefab: {fileID: 5824039362620267746, guid: 1847b923ef4093b4d9e8924858f5dec4, type: 3}
   timeToDontMove: 1
   netCodeConfig: {fileID: 11400000, guid: 75d8a62403cd4664593908df3234abf7, type: 2}

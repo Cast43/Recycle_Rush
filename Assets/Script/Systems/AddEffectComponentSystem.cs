@@ -46,7 +46,7 @@ partial struct AddEffectComponentSystem : ISystem
                                 if (connection.ValueRO.Value == receiveRpcCommandRequest.ValueRO.SourceConnection)
                                 {
                                     // Debug.Log($"adicionou o efeito {effect[i].Prefab}");
-                                    ECB.AppendToBuffer<EffectPrefab>(localPlayer, new EffectPrefab { Prefab = effect[i].Prefab });
+                                    ECB.AppendToBuffer<EffectPrefab>(localPlayer, new EffectPrefab { Prefab = effect[i].Prefab, name = effect[i].name });
 
                                 }
                             }

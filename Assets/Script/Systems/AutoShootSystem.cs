@@ -32,6 +32,7 @@ partial struct AutoShootSystem : ISystem
             currentTick = networkTime.ServerTick,
             transformLookup = SystemAPI.GetComponentLookup<LocalTransform>(true),
             shootAttackProperties = SystemAPI.GetComponentLookup<ShootAttackProperties>(true),
+            effectPrefabsLookup = SystemAPI.GetBufferLookup<EffectPrefab>(true),
             deltaTime = SystemAPI.Time.DeltaTime,
             ECB = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged).AsParallelWriter(),
         }.ScheduleParallel(state.Dependency);
@@ -46,6 +47,7 @@ partial struct AutoShootSystem : ISystem
         [ReadOnly] public NetworkTick currentTick;
         [ReadOnly] public ComponentLookup<LocalTransform> transformLookup;
         [ReadOnly] public ComponentLookup<ShootAttackProperties> shootAttackProperties;
+        [ReadOnly] public BufferLookup<EffectPrefab> effectPrefabsLookup;
         [ReadOnly] public float deltaTime;
         public EntityCommandBuffer.ParallelWriter ECB;
 
@@ -79,6 +81,13 @@ partial struct AutoShootSystem : ISystem
             ECB.SetComponent(sortKey, arrowEntity, new Team { faction = unit.faction }); //modifica apenas uma variável sem sobreescrever tudo
             ECB.SetComponent(sortKey, arrowEntity, new Direction { lookDirection = shootDirection }); //modifica apenas uma variável sem sobreescrever tudo
             ECB.SetComponent(sortKey, arrowEntity, new Owner { Value = entity }); //modifica apenas uma variável sem sobreescrever tudo
+            if (effectPrefabsLookup.HasBuffer(entity))
+            {
+                foreach (var item in effectPrefabsLookup[entity])
+                {
+                    ECB.AppendToBuffer(sortKey, arrowEntity, item); //modifica apenas uma variável sem sobreescrever tudo
+                }
+            }
 
             //cooldown de ataque
             var newCooldownTickAttack = currentTick;

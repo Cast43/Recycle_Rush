@@ -275,6 +275,7 @@ public partial struct ApplyEffectsSystem : ISystem
 
                                     if (hitEntity != entity)
                                     {
+                                        //pega o buffer dos efeitos
                                         var giverEffectsBuff = SystemAPI.GetBufferLookup<EffectPrefab>();
                                         if (giverEffectsBuff.HasBuffer(lightningDurationElemnt.effectGiver))
                                         {
@@ -283,7 +284,8 @@ public partial struct ApplyEffectsSystem : ISystem
                                             // Para cada prefab de efeito configurado, instancia uma cópia para o alvo
                                             foreach (var prefabElem in effects)
                                             {
-                                                Debug.Log(hitEntity);
+                                                // Debug.Log(hitEntity);
+                                                if (prefabElem.name == "Lightning") continue;
                                                 var effectInstance = ECB.Instantiate(prefabElem.Prefab);
                                                 // Associa o efeito ao alvo, via um componente “Target” ou via Parent
                                                 ECB.AddComponent(effectInstance, new EffectTarget { Value = hitEntity, effectGiver = lightningDurationElemnt.effectGiver });

@@ -1,4 +1,5 @@
 using Unity.Entities;
+using Unity.Mathematics;
 
 public readonly partial struct EnemySpawnAspect : IAspect
 {
@@ -29,10 +30,13 @@ public readonly partial struct EnemySpawnAspect : IAspect
         set => _enemySpawnTimers.ValueRW.timeToNextWave = value;
     }
 
-    private int CountToSpawnInWave => _enemySpawnProperties.ValueRO.CountToSpawnInWave;
     public int CountMaxEntitiesToSpawn => waveProperties.ValueRO.countMaxEntitiesToSpawn;
+    private int CountToSpawnInWave => _enemySpawnProperties.ValueRO.CountToSpawnInWave;
     private float timeBetweenEnemies => _enemySpawnProperties.ValueRO.timeBetweenEnemies;
     private float timeBetweenWaves => _enemySpawnProperties.ValueRO.timeBetweenWaves;
+    public float3 spawnCenter => _enemySpawnProperties.ValueRO.spawnCenter;
+    public float notSpawnRadius => _enemySpawnProperties.ValueRO.notSpawnRadius;
+    public float spawnRadius => _enemySpawnProperties.ValueRO.SpawnRadius;
 
     public bool shouldSpawn => timeToNextWave <= 0f && TimeToNextEnemy <= 0f;
     public bool isWaveSpaned => CountEntitiesSpawned >= CountToSpawnInWave;

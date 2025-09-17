@@ -16,6 +16,8 @@ public struct GlobalEffectPrefab : IBufferElementData
 public struct EffectPrefab : IBufferElementData
 {
     public Entity Prefab; // vai apontar para uma Entity Prefab que já tem o PoisonEffect, BurnEffect etc.
+    public FixedString64Bytes name;
+
 }
 public struct EffectTarget : IComponentData
 {

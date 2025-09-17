@@ -33,7 +33,7 @@ public partial struct SpawnEnemySystem : ISystem
             minionSpawnAspect.DecrementedTimers(deltaTime);
             if (minionSpawnAspect.shouldSpawn)
             {
-                SpawnRandonly(ref state);
+                SpawnRandonlyInRing(ref state, minionSpawnAspect.spawnCenter, minionSpawnAspect.notSpawnRadius, minionSpawnAspect.spawnRadius);
                 minionSpawnAspect.IncrementEntitiesCount();
                 if (minionSpawnAspect.isWaveSpaned)
                 {
@@ -47,7 +47,7 @@ public partial struct SpawnEnemySystem : ISystem
             }
         }
     }
-    private void SpawnRandonly(ref SystemState state)
+    private void SpawnRandonlyInRing(ref SystemState state, float3 center, float innerRadius, float outerRadius)
     {
         BeginSimulationEntityCommandBufferSystem.Singleton ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();
         EntityCommandBuffer ECB = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
@@ -56,15 +56,13 @@ public partial struct SpawnEnemySystem : ISystem
         Entity entitiesReferencesEntity = SystemAPI.GetSingletonEntity<EntitiesReferences>();
         DynamicBuffer<EnemyPrefabElement> enemyBuffer = SystemAPI.GetBuffer<EnemyPrefabElement>(entitiesReferencesEntity);
 
-        // Busca o prefab pelo nome só quando for atirar
-        Entity projectilePrefab = Entity.Null;
-
         int enemyIndex = UnityEngine.Random.Range(0, enemyBuffer.Length);
-
         Entity enemy = enemyBuffer[enemyIndex].prefab;
-        float randomX = UnityEngine.Random.Range(-10, +10);
-        float randomZ = UnityEngine.Random.Range(-10, +10);
-        float3 randomPosition = new float3(randomX, 0, randomZ);
+
+        float angle = UnityEngine.Random.Range(0f, math.PI * 2f);
+        float r = math.sqrt(UnityEngine.Random.Range(innerRadius * innerRadius, outerRadius * outerRadius));
+        float3 offset = new float3(r * math.cos(angle), 0f, r * math.sin(angle));
+        float3 randomPosition = center + offset;
 
         SpawnOnPosition(ECB, enemy, randomPosition);
         // Debug.Log("Spawn Enemy");

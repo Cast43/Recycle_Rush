@@ -60,6 +60,8 @@ public class ConnectionManager : MonoBehaviour
 
             StartHost();
 
+            RelayCode.instance.SetCode(joinCode);
+
             // LobbyService.Instance.JoinLobbyByCodeAsync(JoinCode);
 
         }
@@ -77,6 +79,8 @@ public class ConnectionManager : MonoBehaviour
             relayClientData = joinAllocation.ToRelayServerData("dtls");
 
             StartClient();
+            RelayCode.instance.SetCode(joinCodeTMP.text);
+
         }
         catch (RelayServiceException e)
         {
@@ -105,7 +109,7 @@ public class ConnectionManager : MonoBehaviour
             World.DefaultGameObjectInjectionWorld = serverWorld;
         }
 
-        SceneManager.LoadSceneAsync("SampleScene", LoadSceneMode.Single);
+        await SceneManager.LoadSceneAsync("SampleScene", LoadSceneMode.Single);
 
         //localConnection no endereço de loopBack
         // SceneManager.LoadSceneAsync(1, LoadSceneMode.Single);
@@ -153,7 +157,7 @@ public class ConnectionManager : MonoBehaviour
             World.DefaultGameObjectInjectionWorld = clientWorld;
         }
 
-        SceneManager.LoadSceneAsync("SampleScene", LoadSceneMode.Single);
+        await SceneManager.LoadSceneAsync("SampleScene", LoadSceneMode.Single);
 
         var networkStreamEntity = clientWorld.EntityManager.CreateEntity(ComponentType.ReadWrite<NetworkStreamRequestConnect>());
         clientWorld.EntityManager.SetName(networkStreamEntity, "NetworkStreamRequestConnect");

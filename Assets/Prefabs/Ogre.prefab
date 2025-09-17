@@ -482,6 +482,7 @@ MonoBehaviour:
   TrackInterpolationDelay: 0
   GhostGroup: 0
   UsePreSerialization: 0
+  UseSingleBaseline: 0
   RollbackPredictedSpawnedGhostState: 0
   RollbackPredictionOnStructuralChanges: 1
 --- !u!114 &311210543222332144
@@ -525,7 +526,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   targetFaction: 0
-  targetRadius: 20
+  targetRadius: 10
 --- !u!114 &9171828842725120963
 MonoBehaviour:
   m_ObjectHideFlags: 0

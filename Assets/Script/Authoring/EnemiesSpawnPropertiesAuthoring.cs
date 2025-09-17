@@ -1,5 +1,6 @@
 using Unity.Entities;
 using UnityEngine;
+using Unity.Mathematics;
 using Unity.NetCode;
 
 public class EnemiesSpawnPropertiesAuthoring : MonoBehaviour
@@ -9,6 +10,9 @@ public class EnemiesSpawnPropertiesAuthoring : MonoBehaviour
     public int CountToSpawnInWave;
     public int waveStart;
     public int maxEntitiesToSpawnInWave = 10;
+    public float3 spawnCenter = float3.zero;
+    public int notSpawnRadius = 20;
+    public int SpawnRadius = 30;
     public class Baker : Baker<EnemiesSpawnPropertiesAuthoring>
     {
         public override void Bake(EnemiesSpawnPropertiesAuthoring authoring)
@@ -19,6 +23,9 @@ public class EnemiesSpawnPropertiesAuthoring : MonoBehaviour
                 timeBetweenWaves = authoring.timeBetweenWaves,
                 timeBetweenEnemies = authoring.timeBetweenEnemies,
                 CountToSpawnInWave = authoring.CountToSpawnInWave,
+                spawnCenter = authoring.spawnCenter,
+                notSpawnRadius = authoring.notSpawnRadius,
+                SpawnRadius = authoring.SpawnRadius
             });
             AddComponent(entity, new EnemiesSpawnTimers
             {

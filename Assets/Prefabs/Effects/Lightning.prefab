@@ -69,6 +69,7 @@ MonoBehaviour:
   TrackInterpolationDelay: 0
   GhostGroup: 0
   UsePreSerialization: 0
+  UseSingleBaseline: 0
   RollbackPredictedSpawnedGhostState: 0
   RollbackPredictionOnStructuralChanges: 1
 --- !u!114 &-7387696096268868236
@@ -84,8 +85,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   duration: 1
-  dmgInterval: 0.9
-  damagePerTick: 0
+  dmgInterval: 0.99
+  damagePerTick: 1
   radius: 6
   team: 1
   netCodeConfig: {fileID: 11400000, guid: 75d8a62403cd4664593908df3234abf7, type: 2}

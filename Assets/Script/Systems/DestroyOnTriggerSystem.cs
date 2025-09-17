@@ -62,14 +62,13 @@ public struct DestroyOnTriggerJob : ITriggerEventsJob
         {
             return;
         }
-
         //ignore friendly fire
         if (unitLookup.TryGetComponent(damageDealingEntity, out var damageDealingTeam) &&
             unitLookup.TryGetComponent(damageRecievingEntity, out var damageReceinvingTeam))
         {
             if (damageDealingTeam.faction == damageReceinvingTeam.faction) return;
         }
-        // ECB.AddComponent<DestroyEntityTag>(damageDealingEntity);
+        ECB.AddComponent<DestroyEntityTag>(damageDealingEntity);
         // Debug.Log("tag added");
 
 
