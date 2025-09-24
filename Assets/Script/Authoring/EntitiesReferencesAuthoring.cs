@@ -3,12 +3,6 @@ using System.Collections.Generic;
 using Unity.Collections;
 using UnityEngine;
 
-[System.Serializable]
-public struct EnemysPrefab
-{
-    public string name;
-    public GameObject prefab;
-}
 
 // Buffer element para inimigos
 [InternalBufferCapacity(4)]
@@ -19,6 +13,8 @@ public struct EnemyPrefabElement : IBufferElementData
 }
 public class EntitiesReferencesAuthoring : MonoBehaviour
 {
+
+
     [Header("Jogadores")]
     public GameObject playerRPrefab;
     public GameObject playerBPrefab;
@@ -26,7 +22,7 @@ public class EntitiesReferencesAuthoring : MonoBehaviour
     public GameObject playerGPrefab;
 
     [Header("Inimigos")]
-    public List<EnemysPrefab> enemyPrefabs;
+    public GameObject[] enemyPrefabs;
 
     public class Baker : Baker<EntitiesReferencesAuthoring>
     {
@@ -45,12 +41,12 @@ public class EntitiesReferencesAuthoring : MonoBehaviour
 
             // Adiciona buffer de inimigos
             var enemyBuffer = AddBuffer<EnemyPrefabElement>(entity);
-            foreach (var named in authoring.enemyPrefabs)
+            foreach (var enemyPrefab in authoring.enemyPrefabs)
             {
                 enemyBuffer.Add(new EnemyPrefabElement
                 {
-                    name = new FixedString64Bytes(named.name),
-                    prefab = GetEntity(named.prefab, TransformUsageFlags.Dynamic)
+                    name = new FixedString64Bytes(enemyPrefab.name),
+                    prefab = GetEntity(enemyPrefab, TransformUsageFlags.Dynamic)
                 });
             }
         }

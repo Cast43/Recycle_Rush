@@ -9,7 +9,7 @@ public struct Team : IComponentData
 }
 public struct MaxHealth : IComponentData
 {
-    public int value;
+    [GhostField] public int value;
 }
 
 public struct CurrentHealth : IComponentData

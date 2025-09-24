@@ -138,6 +138,7 @@ GameObject:
   - component: {fileID: 7996789594745254796}
   - component: {fileID: 8219154975577715529}
   - component: {fileID: 31021348423272261}
+  - component: {fileID: -7793230913537335546}
   m_Layer: 3
   m_Name: OgreSpear
   m_TagString: Untagged
@@ -349,6 +350,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   experience: {fileID: 1953607005591944673, guid: 34973389b49e60c419dc0d2f6506879e, type: 3}
+--- !u!114 &-7793230913537335546
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3981080099591490107}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 99b58e1404eaa174390dda7f29787635, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxExperience: 1
+  startLevel: 1
+  modifiers:
+  - type: 0
+    value: 1
+  - type: 1
+    value: 1
+  - type: 3
+    value: 0.01
 --- !u!1 &5315488179751079938
 GameObject:
   m_ObjectHideFlags: 0
@@ -562,7 +584,7 @@ Transform:
   m_GameObject: {fileID: 9014309551003289146}
   serializedVersion: 2
   m_LocalRotation: {x: 0.17364816, y: -0, z: -0, w: 0.9848078}
-  m_LocalPosition: {x: 0, y: 2.5, z: 0}
+  m_LocalPosition: {x: 0, y: 1.7, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:

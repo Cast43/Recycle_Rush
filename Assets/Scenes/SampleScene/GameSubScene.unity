@@ -153,10 +153,11 @@ MonoBehaviour:
   playerYPrefab: {fileID: 4411393761261615811, guid: 6d489ebec439ce14a907df32ead75051, type: 3}
   playerGPrefab: {fileID: 4411393761261615811, guid: 3a6595ae756cc304eaa10c58439a64d4, type: 3}
   enemyPrefabs:
-  - name: Ogre
-    prefab: {fileID: 8275031677903195487, guid: a269a669ff856174f96a3d574a182c6f, type: 3}
-  - name: OgreSpear
-    prefab: {fileID: 3981080099591490107, guid: 4bbb655a6f3c57945b29f116681b9218, type: 3}
+  - {fileID: 8275031677903195487, guid: a269a669ff856174f96a3d574a182c6f, type: 3}
+  - {fileID: 3827788099892099598, guid: 4afe4c00b99ce274c9c241b8fae5a0bb, type: 3}
+  - {fileID: 3981080099591490107, guid: 4bbb655a6f3c57945b29f116681b9218, type: 3}
+  - {fileID: 379815721100212877, guid: b8e56da1ebdbf9e449c155178278cccf, type: 3}
+  - {fileID: 5780519441498486237, guid: 07281b7364de37844b123ff64ad0326d, type: 3}
 --- !u!4 &919603153
 Transform:
   m_ObjectHideFlags: 0
@@ -226,7 +227,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3914785277527616069, guid: ef329ff734b1946468e6328c703cc27f, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -295,7 +296,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1953607005591944673, guid: 34973389b49e60c419dc0d2f6506879e, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5693131410453865732, guid: 34973389b49e60c419dc0d2f6506879e, type: 3}
       propertyPath: m_LocalPosition.x
@@ -362,7 +363,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1358203444
 Transform:
   m_ObjectHideFlags: 0
@@ -390,17 +391,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e6be8c6e3b7896148b625fe324d7455d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  timeBetweenWaves: 2
-  timeBetweenEnemies: 2
-  CountToSpawnInWave: 3
+  timeBetweenWaves: 5
+  timeBetweenEnemies: 0.5
+  CountToSpawnInWave: 0
   waveStart: 0
-  maxEntitiesToSpawnInWave: 10
+  maxEntitiesToSpawnInWave: 40
   spawnCenter:
     x: 0
     y: 0
     z: 0
-  notSpawnRadius: 30
-  SpawnRadius: 40
+  notSpawnRadius: 0
+  SpawnRadius: 10
 --- !u!1001 &1477479453
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -415,7 +416,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1953607005591944673, guid: 34973389b49e60c419dc0d2f6506879e, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5693131410453865732, guid: 34973389b49e60c419dc0d2f6506879e, type: 3}
       propertyPath: m_LocalPosition.x
@@ -520,7 +521,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3914785277527616069, guid: ef329ff734b1946468e6328c703cc27f, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -581,7 +582,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3914785277527616069, guid: ef329ff734b1946468e6328c703cc27f, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -801,7 +802,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7666880610394538666, guid: 05e8a1c54b69bc144852296332793ebb, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -862,7 +863,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3914785277527616069, guid: ef329ff734b1946468e6328c703cc27f, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

@@ -33,7 +33,6 @@ partial struct HealthBarSystem : ISystem
 
             // Após atualizar, reseta o flag:
             float healthNormalized = (float)curHealth.value / maxHealth.value;
-
             // if (healthNormalized == 1f)
             // {
             //     localTransform.ValueRW.Scale = 0;

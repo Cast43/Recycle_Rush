@@ -125,6 +125,7 @@ MonoBehaviour:
   TrackInterpolationDelay: 0
   GhostGroup: 0
   UsePreSerialization: 0
+  UseSingleBaseline: 0
   RollbackPredictedSpawnedGhostState: 0
   RollbackPredictionOnStructuralChanges: 1
 --- !u!114 &-1519871619144317636
@@ -139,7 +140,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: de2d5e6292e7b81439cd03276b73f8be, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxTimeRessurect: 15
+  maxTimeRessurect: 50
   minTimeInArea: 2
   radius: 5
   faction: 0

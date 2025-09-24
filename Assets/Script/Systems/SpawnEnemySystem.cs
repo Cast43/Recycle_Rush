@@ -16,6 +16,23 @@ public partial struct SpawnEnemySystem : ISystem
     // [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
+        SpawnOverTime(ref state);
+    }
+
+    private void CountDay(ref SystemState state)
+    {
+        //quando é noite verifica quais campos estão vivos e vão para a cidade
+    }
+    private void SpawnCamps(ref SystemState state)
+    {
+        //spawna todos campos de dia 
+    }
+    private void SpawnEnemyCompany(ref SystemState state)
+    {
+        //nos dias impares spawna uma comitiva forte com direção direta para a base
+    }
+    private void SpawnOverTime(ref SystemState state)
+    {
         float deltaTime = SystemAPI.Time.DeltaTime;
         foreach (var minionSpawnAspect in SystemAPI.Query<EnemySpawnAspect>())
         {
@@ -33,7 +50,7 @@ public partial struct SpawnEnemySystem : ISystem
             minionSpawnAspect.DecrementedTimers(deltaTime);
             if (minionSpawnAspect.shouldSpawn)
             {
-                SpawnRandonlyInRing(ref state, minionSpawnAspect.spawnCenter, minionSpawnAspect.notSpawnRadius, minionSpawnAspect.spawnRadius);
+                SpawnRandonlyInRing(ref state, minionSpawnAspect.spawnCenter, minionSpawnAspect.notSpawnRadius, minionSpawnAspect.spawnRadius, minionSpawnAspect.WaveCount);
                 minionSpawnAspect.IncrementEntitiesCount();
                 if (minionSpawnAspect.isWaveSpaned)
                 {
@@ -47,7 +64,8 @@ public partial struct SpawnEnemySystem : ISystem
             }
         }
     }
-    private void SpawnRandonlyInRing(ref SystemState state, float3 center, float innerRadius, float outerRadius)
+
+    private void SpawnRandonlyInRing(ref SystemState state, float3 center, float innerRadius, float outerRadius, int waveCount)
     {
         BeginSimulationEntityCommandBufferSystem.Singleton ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();
         EntityCommandBuffer ECB = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
@@ -63,6 +81,14 @@ public partial struct SpawnEnemySystem : ISystem
         float r = math.sqrt(UnityEngine.Random.Range(innerRadius * innerRadius, outerRadius * outerRadius));
         float3 offset = new float3(r * math.cos(angle), 0f, r * math.sin(angle));
         float3 randomPosition = center + offset;
+
+        // var enemyXpLookup = SystemAPI.GetComponentLookup<CurrentExperience>();
+        // var enemyCurrentXp = enemyXpLookup[enemy];
+        for (int i = 0; i < waveCount; i++)
+        {
+            ECB.AppendToBuffer(enemy, new ExperienceBufferElement { value = 1 });
+        }
+
 
         SpawnOnPosition(ECB, enemy, randomPosition);
         // Debug.Log("Spawn Enemy");

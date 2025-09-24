@@ -47,7 +47,8 @@ partial struct ApplyExperienceSystem : ISystem
             }
         }
         //passou de level
-        foreach (var (level, connection, buffer, entity) in SystemAPI.Query<RefRO<Level>, RefRO<ConnectionEntity>, DynamicBuffer<LevelModifier>>().WithAll<LevelUpTag>().WithEntityAccess())
+        //escolhe o efeito
+        foreach (var (level, buffer, entity) in SystemAPI.Query<RefRO<Level>, DynamicBuffer<LevelModifier>>().WithAll<LevelUpTag>().WithEntityAccess())
         {
             int lvl = level.ValueRO.current;
             // Apply each modifier according to current level
@@ -61,6 +62,15 @@ partial struct ApplyExperienceSystem : ISystem
                             var maxHealth = state.EntityManager.GetComponentData<MaxHealth>(entity);
                             maxHealth.value += (int)mod.Value * lvl;
                             ECB.SetComponent(entity, maxHealth);
+                        }
+                        if (state.EntityManager.HasComponent<Enemy>(entity))
+                        {
+                            var maxHealth = state.EntityManager.GetComponentData<MaxHealth>(entity);
+                            var currentHealth = state.EntityManager.GetComponentData<CurrentHealth>(entity);
+                            maxHealth.value += (int)mod.Value * lvl;
+                            currentHealth.value = maxHealth.value;
+                            ECB.SetComponent(entity, maxHealth);
+                            ECB.SetComponent(entity, currentHealth);
                         }
                         break;
                     case ModifierType.IncreaseDamage:
@@ -103,14 +113,21 @@ partial struct ApplyExperienceSystem : ISystem
             // Enviar RPC para esse cliente
             //arrumar outro método pra achar o mundo do cliente esse está dando bug na build
             // Pega o NetworkId do cliente local
+            //essa parte não é do inimigo apenas do player
             NetworkId netId = SystemAPI.GetSingleton<NetworkId>();
+            if (state.EntityManager.HasComponent<PlayerInput>(entity))
+            {
+                var lookupConnection = SystemAPI.GetComponentLookup<ConnectionEntity>();
+                var connection = lookupConnection[entity];
 
+                var rpc = new ShowAddEffectRPC { ClientNetId = netId.Value };
+                // state.EntityManager.CreateEntity(typeof(ShowAddEffectRPC));
+                var rpcEntity = ECB.CreateEntity();
+                ECB.AddComponent(rpcEntity, rpc);
+                ECB.AddComponent(rpcEntity, new SendRpcCommandRequest { TargetConnection = connection.Value });
+            }
             // Cria o RPC usando o NetworkId
-            var rpc = new ShowAddEffectRPC { ClientNetId = netId.Value };
-            // state.EntityManager.CreateEntity(typeof(ShowAddEffectRPC));
-            var rpcEntity = ECB.CreateEntity();
-            ECB.AddComponent(rpcEntity, rpc);
-            ECB.AddComponent(rpcEntity, new SendRpcCommandRequest { TargetConnection = connection.ValueRO.Value });
+
             // Remove tag
             ECB.RemoveComponent<LevelUpTag>(entity);
         }
