@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: abd30ee0214cf6a45b2d76765a4615b1, type: 3}
   m_Name: NetcodeConfig
   m_EditorClassIdentifier: 
-  IsGlobalConfig: 0
+  IsGlobalConfig: 1
   EnableClientServerBootstrap: 1
   ClientServerTickRate:
     SimulationTickRate: 15
@@ -28,7 +28,10 @@ MonoBehaviour:
     InterpolationTimeNetTicks: 2
     InterpolationTimeMS: 0
     MaxExtrapolationTimeSimTicks: 20
+    ForcedInputLatencyTicks: 0
     MaxPredictAheadTimeMS: 500
+    NumAdditionalClientPredictedGhostLifetimeTicks: 0
+    DefaultClassificationAllowableTickPeriod: 5
     TargetCommandSlack: 2
     NumAdditionalCommandsToSend: 2
     MaxPredictionStepBatchSizeRepeatedTick: 0

@@ -7,6 +7,7 @@ public struct DropExperienceEntity : IComponentData
 {
     public Entity value;
 }
+public struct AlreadySpawnedXPTag : IComponentData { }
 public struct GetExperienceInArea : IComponentData
 {
     [GhostField] public float radius;

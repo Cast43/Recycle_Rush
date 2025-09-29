@@ -7,6 +7,7 @@ using Unity.Mathematics;
 using UnityEngine;
 
 // [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
+
 [UpdateInGroup(typeof(PredictedSimulationSystemGroup), OrderLast = true)]
 [UpdateAfter(typeof(CalculateFrameDamageSystem))]
 [WithNone(typeof(DestroyEntityTag))]
@@ -22,8 +23,6 @@ partial struct ApplyDamageSystem : ISystem
     // [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
-        // bool isServer = state.WorldUnmanaged.IsServer();
-        // bool isClient = state.WorldUnmanaged.IsClient();
         NetworkTick currentTick = SystemAPI.GetSingleton<NetworkTime>().ServerTick;
         // BeginSimulationEntityCommandBufferSystem.Singleton ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();
         // EntityCommandBuffer ECB = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);       
@@ -55,14 +54,16 @@ partial struct ApplyDamageSystem : ISystem
                 // Debug.Log(entity);
                 if (dropExperienceComponentLookup.HasComponent(entity))
                 {
-                    // if (isServer)
+                    if (!SystemAPI.HasComponent<AlreadySpawnedXPTag>(entity))
                     {
                         var dropExperience = dropExperienceComponentLookup[entity];
 
                         var dropEntity = ECB.Instantiate(dropExperience.value);
                         ECB.SetComponent(dropEntity, LocalTransform.FromPosition(localTransform.ValueRO.Position + new float3(0, 0.5f, 0)));
+                        // Debug.Log("SpawnXP");
                         // ECB.AppendToBuffer(damageThisTick.owner, new ExperienceBufferElement { value = giverExperience.value });
                         // ECB.SetComponent(damageThisTick.owner, levelOwner);
+                        ECB.AddComponent<AlreadySpawnedXPTag>(entity);
                     }
                 }
                 if (ressurectAreaLookup.HasComponent(entity))

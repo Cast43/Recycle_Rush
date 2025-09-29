@@ -4,7 +4,7 @@ using Unity.Mathematics;
 using Unity.NetCode;
 using UnityEngine;
 
-[UpdateInGroup(typeof(GhostInputSystemGroup))]
+[UpdateInGroup(typeof(PredictedSimulationSystemGroup))]
 partial struct PlayerInputSystem : ISystem
 {
     [BurstCompile]
@@ -80,10 +80,10 @@ public partial struct PlayerInputJob : IJobEntity
             dash = false;
         }
         movement.moveVector = inputVector;
-        if (math.lengthsq(inputVector) > 0)
-        {
-            direction.lookDirection = movement.moveVector;
-        }
+        // if (math.lengthsq(inputVector) > 0)
+        // {
+        //     direction.lookDirection = inputVector;
+        // }
         if (shoot)
             playerInput.shoot.Set();
         else

@@ -3,6 +3,7 @@ using Unity.Entities;
 using Unity.NetCode;
 using UnityEngine;
 
+[WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(PredictedSimulationSystemGroup), OrderLast = true)]
 public partial struct CalculateFrameDamageSystem : ISystem
 {

@@ -19,6 +19,7 @@ public class ConnectionManager : MonoBehaviour
     [SerializeField] private TMP_InputField joinCodeTMP;
     [SerializeField] private Button joinButton;
     [SerializeField] private Button hostButton;
+    [SerializeField] private bool isServerBuild = false;
 
     private static RelayServerData relayServerData;
     private static RelayServerData relayClientData;
@@ -32,6 +33,11 @@ public class ConnectionManager : MonoBehaviour
             await AuthenticationService.Instance.SignInAnonymouslyAsync();
             Debug.Log("Signed in with Unity Relay as: " + AuthenticationService.Instance.PlayerId);
         }
+        if (isServerBuild)
+        {
+            CreateRelay();
+        }
+
     }
 
     void Start()
@@ -57,8 +63,14 @@ public class ConnectionManager : MonoBehaviour
             JoinAllocation joinAllocation = await RelayService.Instance.JoinAllocationAsync(joinCode);
 
             relayClientData = joinAllocation.ToRelayServerData("dtls");
-
-            StartHost();
+            if (!isServerBuild)
+            {
+                StartHost();
+            }
+            else
+            {
+                StartServer();
+            }
 
             RelayCode.instance.SetCode(joinCode);
 
@@ -87,6 +99,33 @@ public class ConnectionManager : MonoBehaviour
             Debug.LogError($"Erro ao entrar no Relay Join: {e}");
         }
     }
+    public async void StartServer()
+    {
+        // Configura o RelayDriver para o servidor
+        var oldContructor = NetworkStreamReceiveSystem.DriverConstructor;
+        NetworkStreamReceiveSystem.DriverConstructor = new RelayDriverConstructor(relayServerData, relayClientData);
+
+        // Cria apenas o mundo de servidor
+        World serverWorld = ClientServerBootstrap.CreateServerWorld("ServerWorld");
+
+        // Garante que o mundo default seja o servidor
+        if (World.DefaultGameObjectInjectionWorld == null)
+        {
+            World.DefaultGameObjectInjectionWorld = serverWorld;
+        }
+
+        // Carrega a cena principal
+        await SceneManager.LoadSceneAsync("SampleScene", LoadSceneMode.Single);
+
+        // Cria entidade para escutar conexões de clientes
+        var networkStreamEntity = serverWorld.EntityManager.CreateEntity(ComponentType.ReadWrite<NetworkStreamRequestListen>());
+        serverWorld.EntityManager.SetName(networkStreamEntity, "NetworkStreamRequestListen");
+        serverWorld.EntityManager.SetComponentData(networkStreamEntity,
+            new NetworkStreamRequestListen { Endpoint = NetworkEndpoint.AnyIpv4 });
+
+        Debug.Log("Servidor iniciado e aguardando conexões...");
+    }
+
     public async void StartHost()
     {
 
