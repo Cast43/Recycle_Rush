@@ -114,14 +114,24 @@ partial struct ApplyExperienceSystem : ISystem
             //arrumar outro método pra achar o mundo do cliente esse está dando bug na build
             // Pega o NetworkId do cliente local
             //essa parte não é do inimigo apenas do player
-            NetworkId netId = SystemAPI.GetSingleton<NetworkId>();
             if (state.EntityManager.HasComponent<PlayerInput>(entity))
             {
-                var lookupConnection = SystemAPI.GetComponentLookup<ConnectionEntity>();
-                var connection = lookupConnection[entity];
+                var lookupConnection = SystemAPI.GetComponentLookup<ConnectionEntity>(true);
+                if (!lookupConnection.HasComponent(entity))
+                    continue; // sem conexão vinculada a essa entidade, pula
 
+                var connection = lookupConnection[entity]; // ConnectionEntity { Value = connectionEntity }
+
+                // pega o NetworkId da entidade de conexão (server tem vários NetworkId)
+                var networkIdLookup = SystemAPI.GetComponentLookup<NetworkId>(true);
+                if (!networkIdLookup.HasComponent(connection.Value))
+                    continue; // conexão sem NetworkId? pula
+
+                var netId = networkIdLookup[connection.Value];
+
+                // cria RPC e envia para a conexão correta
                 var rpc = new ShowAddEffectRPC { ClientNetId = netId.Value };
-                // state.EntityManager.CreateEntity(typeof(ShowAddEffectRPC));
+
                 var rpcEntity = ECB.CreateEntity();
                 ECB.AddComponent(rpcEntity, rpc);
                 ECB.AddComponent(rpcEntity, new SendRpcCommandRequest { TargetConnection = connection.Value });

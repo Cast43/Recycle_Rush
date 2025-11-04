@@ -5,7 +5,7 @@ using Unity.NetCode;
 using Unity.Collections;
 using UnityEngine;
 
-// [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
+[UpdateInGroup(typeof(PredictedSimulationSystemGroup))]
 public partial struct PlayerRotationSystem : ISystem
 {
     [BurstCompile]
@@ -14,13 +14,13 @@ public partial struct PlayerRotationSystem : ISystem
         state.RequireForUpdate<NetworkStreamInGame>();
         state.RequireForUpdate<PlayerInput>();
     }
+
     public void OnUpdate(ref SystemState state)
     {
         foreach (var (input, movement, direction) in
-         SystemAPI.Query<RefRO<PlayerInput>, RefRW<MovementPlayer>, RefRW<Direction>>())
+            SystemAPI.Query<RefRO<PlayerInput>, RefRW<MovementPlayer>, RefRW<Direction>>()
+                     .WithAll<GhostOwnerIsLocal>()) // só o dono calcula
         {
-            // movement.ValueRW.moveVector = input.ValueRO.movement;
-
             if (math.lengthsq(movement.ValueRO.moveVector) > 0)
             {
                 direction.ValueRW.lookDirection = movement.ValueRO.moveVector;
@@ -28,3 +28,4 @@ public partial struct PlayerRotationSystem : ISystem
         }
     }
 }
+

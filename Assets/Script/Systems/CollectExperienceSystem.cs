@@ -7,6 +7,7 @@ using Unity.Transforms;
 using Unity.Collections;
 using UnityEngine;
 
+[WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(PhysicsSystemGroup))] // nunca altera essa merda isso faz funcionar
 [UpdateAfter(typeof(PhysicsSimulationGroup))]
 // [UpdateBefore(typeof(AfterPhysicsSystemGroup))]
@@ -45,20 +46,35 @@ public partial struct CollectExperienceSystem : ISystem
 
             if (collisionWorld.OverlapSphere(localTransform.ValueRO.Position, getExperience.ValueRO.radius, ref hits, collisionFilter))
             {
+                var areadyExperiencedLookup = SystemAPI.GetBufferLookup<AlreadyGiveExperienceEntity>();
+                var GiverExperienceComponentLookup = SystemAPI.GetComponentLookup<GiveExperience>();
                 foreach (var hit in hits)
                 {
-                    var areadyExperiencedLookup = SystemAPI.GetBufferLookup<AlreadyGiveExperienceEntity>();
-                    var GiverExperienceComponentLookup = SystemAPI.GetComponentLookup<GiveExperience>();
-                    var alreadyExperiencedBuffer = areadyExperiencedLookup[entity];
-                    var giverExperience = GiverExperienceComponentLookup[hit.Entity];
-                    foreach (var alreadyExperiencedEntity in alreadyExperiencedBuffer)
+                    if (areadyExperiencedLookup.HasBuffer(entity))
                     {
-                        // Debug.Log(alreadyDamagedEntity.value);
-                        if (alreadyExperiencedEntity.value.Equals(hit.Entity)) return;
-                    }
+                        var alreadyExperiencedBuffer = areadyExperiencedLookup[entity];
 
-                    ECB.AppendToBuffer(entity, new AlreadyGiveExperienceEntity { value = hit.Entity });
-                    ECB.AppendToBuffer(entity, new ExperienceBufferElement { value = giverExperience.value });
+
+                        bool alreadyGiven = false;
+                        foreach (var alreadyExperiencedEntity in alreadyExperiencedBuffer)
+                        {
+                            if (alreadyExperiencedEntity.value.Equals(hit.Entity))
+                            {
+                                alreadyGiven = true;
+                                break;
+                            }
+                        }
+
+                        if (alreadyGiven)
+                            continue; // <-- agora sim ignora todo esse hit
+
+                        ECB.AppendToBuffer(entity, new AlreadyGiveExperienceEntity { value = hit.Entity });
+                    }
+                    if (GiverExperienceComponentLookup.HasComponent(hit.Entity))
+                    {
+                        var giverExperience = GiverExperienceComponentLookup[hit.Entity];
+                        ECB.AppendToBuffer(entity, new ExperienceBufferElement { value = giverExperience.value });
+                    }
 
                     ECB.AddComponent<DestroyEntityTag>(hit.Entity);
                     // alreadyExperiencedBuffer.Clear();

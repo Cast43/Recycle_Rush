@@ -48,104 +48,93 @@ public class AddEffectUIManager : MonoBehaviour
     }
     void SetEffectInHUD()
     {
-        //seta o mundo do player e do jogador
-        //-pega os efeitos no localplayer
-        //-pegar os efeitos globais do servidor
-        var world = World.DefaultGameObjectInjectionWorld;
+        var clientWorld = GetClientWorld();
+        if (clientWorld == null)
+        {
+            Debug.LogWarning("ClientWorld não encontrada ainda.");
+            return;
+        }
 
-        //modificar para adicionar o efeito para o cliente também
-        var clientLocalPlayer = GetServerWorld().EntityManager;
-        var globalEffectsReference = GetServerWorld().EntityManager;
+        var em = clientWorld.EntityManager;
 
-        // Pega o NetworkId do cliente local
-        var netId = clientLocalPlayer.CreateEntityQuery(typeof(NetworkId)).GetSingleton<NetworkId>().Value;
-
-        // Procura a entidade do player local
-        EntityQuery playerQuery = clientLocalPlayer.CreateEntityQuery(
+        // Encontra o player local usando GhostOwnerIsLocal (método robusto)
+        EntityQuery playerQuery = em.CreateEntityQuery(
             ComponentType.ReadOnly<PlayerInput>(),
-            ComponentType.ReadOnly<GhostOwner>()
-        );
+            ComponentType.ReadOnly<GhostOwnerIsLocal>());
 
-        EntityQuery GlobalEffectQuerry = globalEffectsReference.CreateEntityQuery(
-        ComponentType.ReadOnly<GlobalEffectPrefab>()
-        );
-        Entity clientLocalPlayerEntity = Entity.Null;
-        Entity globalEffectEntity = Entity.Null;
-        //encotra o player local
+        if (playerQuery.IsEmptyIgnoreFilter)
+        {
+            Debug.LogWarning("Nenhum player local encontrado (GhostOwnerIsLocal).");
+            return;
+        }
+
+        Entity clientLocalPlayerEntity;
         using (var players = playerQuery.ToEntityArray(Allocator.Temp))
         {
-            foreach (var entity in players)
-            {
-                if (clientLocalPlayer.GetComponentData<GhostOwner>(entity).NetworkId == netId)
-                {
-                    clientLocalPlayerEntity = entity;
-                    break;
-                }
-            }
+            clientLocalPlayerEntity = players.Length > 0 ? players[0] : Entity.Null;
         }
-        using (var globalEffect = GlobalEffectQuerry.ToEntityArray(Allocator.Temp))
-        {
-            foreach (var entity in globalEffect)
-            {
-                globalEffectEntity = entity;
-                break;
-            }
-        }
-        if (globalEffectEntity == Entity.Null)
+        if (clientLocalPlayerEntity == Entity.Null)
         {
             Debug.LogWarning("Não encontrei o player local para atualizar HUD.");
             return;
         }
-        if (clientLocalPlayerEntity == Entity.Null)
-        {
-            Debug.LogWarning("Não encontrei os efeitos globais para atualizar HUD.");
-            return;
-        }
-        // Lê o buffer de efeitos
-        if (!clientLocalPlayer.HasBuffer<EffectPrefab>(clientLocalPlayerEntity))
-        {
-            Debug.LogWarning("Não encontrei o buffer de EffectPrefab.");
-            return;
-        }
-        if (!globalEffectsReference.HasBuffer<GlobalEffectPrefab>(globalEffectEntity))
-        {
-            Debug.LogWarning("Não encontrei o buffer de GlobalEffectPrefab.");
-            return;
-        }
-        var playerEffects = clientLocalPlayer.GetBuffer<EffectPrefab>(clientLocalPlayerEntity);
-        var globalEffects = globalEffectsReference.GetBuffer<GlobalEffectPrefab>(globalEffectEntity);
 
-        //verifica se possui efeitos para adicionar 
+        // Busca GlobalEffectPrefab no client world (deve vir como ghost)
+        EntityQuery globalEffectQuery = em.CreateEntityQuery(ComponentType.ReadOnly<GlobalEffectPrefab>());
+        if (globalEffectQuery.IsEmptyIgnoreFilter)
+        {
+            Debug.LogWarning("Nenhuma entidade GlobalEffectPrefab encontrada no client world.");
+            return;
+        }
+
+        Entity globalEffectEntity;
+        using (var globals = globalEffectQuery.ToEntityArray(Allocator.Temp))
+        {
+            globalEffectEntity = globals.Length > 0 ? globals[0] : Entity.Null;
+        }
+        if (globalEffectEntity == Entity.Null)
+        {
+            Debug.LogWarning("GlobalEffect entity não encontrada.");
+            return;
+        }
+
+        // Confere buffers
+        if (!em.HasBuffer<EffectPrefab>(clientLocalPlayerEntity))
+        {
+            Debug.LogWarning("Player local não tem buffer EffectPrefab.");
+            return;
+        }
+        if (!em.HasBuffer<GlobalEffectPrefab>(globalEffectEntity))
+        {
+            Debug.LogWarning("GlobalEffect entity não tem buffer GlobalEffectPrefab.");
+            return;
+        }
+
+        var playerEffects = em.GetBuffer<EffectPrefab>(clientLocalPlayerEntity);
+        var globalEffects = em.GetBuffer<GlobalEffectPrefab>(globalEffectEntity);
+
         if (!CanAddEffects(playerEffects, globalEffects))
         {
             Debug.LogWarning("Não há mais efeitos para adicionar");
             DisableAddEffects();
             return;
         }
-        foreach (var item in playerEffects)
+
+        // Limpa UI e monta opções
+        foreach (var item in GOEffectsUI) item.SetActive(false);
+
+        List<EffectUIInfo> AddEffectsInHUD = new List<EffectUIInfo>();
+        foreach (var go in GOEffectsUI)
         {
-            Debug.Log(item.name);
+            var added = GetRandomEffect(playerEffects, globalEffects, AddEffectsInHUD);
+            if (added != null) AddEffectsInHUD.Add(added);
         }
 
-        //cria uma lista para ver quais efeitos serão adicionados
-        List<EffectUIInfo> AddEffectsInHUD = new List<EffectUIInfo>();
-        //consegue o efeito randomico
-        foreach (var item in GOEffectsUI)
-        {
-            item.SetActive(false);
-            var AddedEffectUIElement = GetRandomEffect(playerEffects, globalEffects, AddEffectsInHUD);
-            if (AddedEffectUIElement != null)
-            {
-                AddEffectsInHUD.Add(AddedEffectUIElement);
-                // Debug.Log(AddedEffectUIElement.name);
-            }
-        }
-        for (int i = 0; i < AddEffectsInHUD.Count; i++)
+        for (int i = 0; i < AddEffectsInHUD.Count && i < GOEffectsUI.Length; i++)
         {
             GOEffectsUI[i].SetActive(true);
             SetEffectUI(AddEffectsInHUD[i], i);
         }
-        AddEffectsInHUD = null;
     }
     bool CanAddEffects(DynamicBuffer<EffectPrefab> playerEffects, DynamicBuffer<GlobalEffectPrefab> globalEffects)
     {

@@ -108,6 +108,15 @@ public class ConnectionManager : MonoBehaviour
         // Cria apenas o mundo de servidor
         World serverWorld = ClientServerBootstrap.CreateServerWorld("ServerWorld");
 
+        foreach (var world in World.All)
+        {
+            if (world.Flags == WorldFlags.Game)
+            {
+                world.Dispose();
+                break;
+            }
+        }
+
         // Garante que o mundo default seja o servidor
         if (World.DefaultGameObjectInjectionWorld == null)
         {
