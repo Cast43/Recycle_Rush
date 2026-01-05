@@ -2250,13 +2250,13 @@ MonoBehaviour:
   - {fileID: 157375651}
   effectsUIInfo:
   - name: Curse
-    description: AAAAAAA
+    description: Stack curse to deal more damage
     image: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
   - name: Lightning
-    description: BBBBBB
+    description: Your attacks can now split damage
     image: {fileID: 10911, guid: 0000000000000000f000000000000000, type: 0}
   - name: Poison
-    description: CCCCCCCCC
+    description: Inflict damage over time
     image: {fileID: 10901, guid: 0000000000000000f000000000000000, type: 0}
 --- !u!1 &1146242541
 GameObject:
