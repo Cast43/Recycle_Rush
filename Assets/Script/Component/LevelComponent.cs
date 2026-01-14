@@ -3,10 +3,11 @@ using Unity.NetCode;
 using Unity.Mathematics;
 
 
-public struct DropExperienceEntity : IComponentData
+public struct DropExperienceEntity : IBufferElementData
 {
     public Entity value;
 }
+
 public struct AlreadySpawnedXPTag : IComponentData { }
 public struct GetExperienceInArea : IComponentData
 {

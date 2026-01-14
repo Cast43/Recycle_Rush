@@ -9,6 +9,7 @@ public class ShootAttackAuthoring : MonoBehaviour
     public float attackCooldownTime;
     public GameObject attackPrefab;
     public float timeToDontMove;
+    public int lostEnergy;
     public NetCodeConfig netCodeConfig;
     public int simulationTickRate => netCodeConfig.ClientServerTickRate.SimulationTickRate;
     public class Baker : Baker<ShootAttackAuthoring>
@@ -22,6 +23,7 @@ public class ShootAttackAuthoring : MonoBehaviour
                 cooldownTickCount = (uint)(authoring.attackCooldownTime * authoring.simulationTickRate),
                 attackPrefab = GetEntity(authoring.attackPrefab, TransformUsageFlags.Dynamic),
                 timeToDontMove = (uint)(authoring.timeToDontMove * authoring.simulationTickRate),
+                lostEnergy = (uint)authoring.lostEnergy
             });
             AddBuffer<ShootAttackCooldown>(entity);
             AddBuffer<DontMoveOnTimer>(entity);

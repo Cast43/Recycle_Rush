@@ -62,6 +62,7 @@ public struct ShootAttackProperties : IComponentData
     public float3 firePointOffset;
     public uint cooldownTickCount;
     public uint timeToDontMove;
+    public uint lostEnergy;
     // public FixedString64Bytes throwableName;
     public Entity attackPrefab;
 }
@@ -98,18 +99,8 @@ public struct ShootAttackCooldown : ICommandData
     public NetworkTick value;
 }
 
-public struct ShootCooldownTick : IComponentData
-{
-    public uint shoot;
-}
-
 public struct MeleeAttackCooldown : ICommandData
 {
     public NetworkTick Tick { get; set; }
     public NetworkTick value;
-}
-
-public struct MeleeCooldownTick : IComponentData
-{
-    public uint melee;
 }

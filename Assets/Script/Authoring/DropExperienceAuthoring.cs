@@ -5,13 +5,20 @@ using Unity.NetCode;
 
 public class DropExperienceAuthoring : MonoBehaviour
 {
-    public GameObject experience;
+    public GameObject[] experiencePrefabs;
     public class Baker : Baker<DropExperienceAuthoring>
     {
         public override void Bake(DropExperienceAuthoring authoring)
         {
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
-            AddComponent(entity, new DropExperienceEntity { value = GetEntity(authoring.experience, TransformUsageFlags.None) });
+            var experienceBuffer = AddBuffer<DropExperienceEntity>(entity);
+            foreach (var enemyPrefab in authoring.experiencePrefabs)
+            {
+                experienceBuffer.Add(new DropExperienceEntity
+                {
+                    value = GetEntity(enemyPrefab, TransformUsageFlags.Dynamic)
+                });
+            }
         }
     }
 }

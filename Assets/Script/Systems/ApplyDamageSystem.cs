@@ -27,7 +27,7 @@ partial struct ApplyDamageSystem : ISystem
         // BeginSimulationEntityCommandBufferSystem.Singleton ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();
         // EntityCommandBuffer ECB = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);       
         EntityCommandBuffer ECB = new EntityCommandBuffer(Allocator.Temp);
-        ComponentLookup<DropExperienceEntity> dropExperienceComponentLookup = SystemAPI.GetComponentLookup<DropExperienceEntity>();
+        BufferLookup<DropExperienceEntity> dropExperienceBufferLookup = SystemAPI.GetBufferLookup<DropExperienceEntity>();
         ComponentLookup<RessurectArea> ressurectAreaLookup = SystemAPI.GetComponentLookup<RessurectArea>();
         ComponentLookup<RessurectProperties> ressurectPropertiesLookup = SystemAPI.GetComponentLookup<RessurectProperties>();
 
@@ -52,13 +52,19 @@ partial struct ApplyDamageSystem : ISystem
             if (currentHealth.ValueRO.value <= 0)
             {
                 // Debug.Log(entity);
-                if (dropExperienceComponentLookup.HasComponent(entity))
+                if (dropExperienceBufferLookup.HasBuffer(entity))
                 {
                     if (!SystemAPI.HasComponent<AlreadySpawnedXPTag>(entity))
                     {
-                        var dropExperience = dropExperienceComponentLookup[entity];
+                        var dropExperience = dropExperienceBufferLookup[entity];
 
-                        var dropEntity = ECB.Instantiate(dropExperience.value);
+                        uint seed = (uint)System.Diagnostics.Stopwatch.GetTimestamp();
+
+                        var randomGenerator = new Unity.Mathematics.Random(math.max(1, seed));
+
+                        int randNumber = randomGenerator.NextInt(0, dropExperience.Length);
+
+                        var dropEntity = ECB.Instantiate(dropExperience[randNumber].value);
                         ECB.SetComponent(dropEntity, LocalTransform.FromPosition(localTransform.ValueRO.Position + new float3(0, 0.5f, 0)));
                         // Debug.Log("SpawnXP");
                         // ECB.AppendToBuffer(damageThisTick.owner, new ExperienceBufferElement { value = giverExperience.value });

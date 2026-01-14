@@ -4,6 +4,7 @@ public class GameAssets : MonoBehaviour
 {
     public const int UNIT_LAYER = 3;
     public const int EXPERIENCE_LAYER = 7;
+    public const int PLAYER_LAYER = 8;
 
     public static GameAssets Instance { get; private set; }
 

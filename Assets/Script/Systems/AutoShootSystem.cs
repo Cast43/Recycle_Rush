@@ -32,6 +32,8 @@ partial struct AutoShootSystem : ISystem
             currentTick = networkTime.ServerTick,
             transformLookup = SystemAPI.GetComponentLookup<LocalTransform>(true),
             shootAttackProperties = SystemAPI.GetComponentLookup<ShootAttackProperties>(true),
+            currentEnergy = SystemAPI.GetComponentLookup<CurrentEnergy>(true),
+            energyBuffer = SystemAPI.GetBufferLookup<EnergyBufferElement>(true),
             effectPrefabsLookup = SystemAPI.GetBufferLookup<EffectPrefab>(true),
             deltaTime = SystemAPI.Time.DeltaTime,
             ECB = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged).AsParallelWriter(),
@@ -47,6 +49,8 @@ partial struct AutoShootSystem : ISystem
         [ReadOnly] public NetworkTick currentTick;
         [ReadOnly] public ComponentLookup<LocalTransform> transformLookup;
         [ReadOnly] public ComponentLookup<ShootAttackProperties> shootAttackProperties;
+        [ReadOnly] public ComponentLookup<CurrentEnergy> currentEnergy;
+        [ReadOnly] public BufferLookup<EnergyBufferElement> energyBuffer;
         [ReadOnly] public BufferLookup<EffectPrefab> effectPrefabsLookup;
         [ReadOnly] public float deltaTime;
         public EntityCommandBuffer.ParallelWriter ECB;
@@ -69,10 +73,22 @@ partial struct AutoShootSystem : ISystem
             spawnPos = new float3(spawnPos.x, 0, spawnPos.z);
             targetPos = new float3(targetPos.x, 0, targetPos.z);
 
+            //reduz a energia a cada ataque
+            if (energyBuffer.HasBuffer(entity))
+            {
+                var lostEnergy = shootAttackProperties[entity].lostEnergy;
+                if (currentEnergy[entity].value < lostEnergy)
+                {
+                    return;
+                }
+                ECB.AppendToBuffer(sortKey, entity, new EnergyBufferElement { value = (int)lostEnergy });
+            }
+
             // Criar entidade da flecha
             // Direção da flecha baseada no olhar do jogador
             var shootProperties = shootAttackProperties[entity];
             Entity arrowEntity = ECB.Instantiate(sortKey, shootProperties.attackPrefab);
+
             float3 shootDirection = math.normalizesafe(targetPos - spawnPos);
 
             ECB.SetComponent(sortKey, arrowEntity, LocalTransform.FromPositionRotation(spawnPos + shootProperties.firePointOffset,
