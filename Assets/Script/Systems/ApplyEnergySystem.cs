@@ -23,6 +23,7 @@ partial struct ApplyEnergySystem : ISystem
         NetworkTick currentTick = SystemAPI.GetSingleton<NetworkTime>().ServerTick;
         EntityCommandBuffer ECB = new EntityCommandBuffer(Allocator.Temp);
 
+        //remove energia para cada valor no buffer de energia usado por tiro etc
         foreach (var (currentEnergy, maxEnergy, getEnergyThisTickBuffer, entity) in
             SystemAPI.Query<RefRW<CurrentEnergy>, RefRO<MaxEnergy>
             , DynamicBuffer<GetEnergyThisTick>>().WithAll<Simulate>().WithEntityAccess())

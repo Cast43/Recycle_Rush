@@ -1,5 +1,6 @@
 using Unity.Entities;
 using Unity.NetCode;
+using Unity.Collections;
 using Unity.Mathematics;
 
 
@@ -19,10 +20,9 @@ public struct MaxExperience : IComponentData
     public int value;
 }
 
-// 2) Define the modifiers that apply on level up
 public struct LevelModifier : IBufferElementData
 {
-    public ModifierType Type;
+    public UpgradeModifier Type;
     public float Value;
 }
 public struct Level : IComponentData
@@ -34,6 +34,10 @@ public struct Level : IComponentData
 public struct CurrentExperience : IComponentData
 {
     [GhostField] public int value;
+}
+public struct UpgradesPending : IBufferElementData
+{
+    [GhostField] public int Count;
 }
 public struct LevelUpTag : IComponentData { }
 public struct GiveExperience : IComponentData

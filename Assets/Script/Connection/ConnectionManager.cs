@@ -4,14 +4,13 @@ using Unity.NetCode;
 using Unity.Networking.Transport;
 using Unity.Networking.Transport.Relay;
 using Unity.Services.Relay;
-using Unity.Services.Lobbies;
 using Unity.Services.Relay.Models;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using System.Collections.Generic;
-using System.Linq;
+using System.Threading.Tasks;
 using TMPro;
 
 public class ConnectionManager : MonoBehaviour
@@ -24,6 +23,8 @@ public class ConnectionManager : MonoBehaviour
     private static RelayServerData relayServerData;
     private static RelayServerData relayClientData;
 
+    private bool isBusy = false;
+
     async void Awake()
     {
         await UnityServices.InitializeAsync();
@@ -31,13 +32,12 @@ public class ConnectionManager : MonoBehaviour
         if (!AuthenticationService.Instance.IsSignedIn)
         {
             await AuthenticationService.Instance.SignInAnonymouslyAsync();
-            Debug.Log("Signed in with Unity Relay as: " + AuthenticationService.Instance.PlayerId);
+            Debug.Log($"Logado no Relay: {AuthenticationService.Instance.PlayerId}");
         }
         if (isServerBuild)
         {
             CreateRelay();
         }
-
     }
 
     void Start()
@@ -45,170 +45,172 @@ public class ConnectionManager : MonoBehaviour
         hostButton.onClick.AddListener(CreateRelay);
         joinButton.onClick.AddListener(JoinRelay);
     }
+
+    private async Task DestroyLocalWorlds()
+    {
+        var worldsToDispose = new List<World>();
+        foreach (var world in World.All)
+        {
+            if (world != null && world.IsCreated)
+            {
+                if (world.Flags == WorldFlags.Game || world.Name == "ServerWorld" || world.Name == "ClientWorld")
+                {
+                    worldsToDispose.Add(world);
+                }
+            }
+        }
+
+        foreach (var world in worldsToDispose)
+        {
+            if (world != null && world.IsCreated) world.Dispose();
+        }
+
+        // Mantemos o delay para garantir que a porta foi liberada
+        await Task.Delay(10); 
+    }
+
     private async void CreateRelay()
     {
+        if (isBusy) return;
+        isBusy = true;
+
         try
         {
-            // O número de jogadores é limitado (no plano gratuito)
+            await DestroyLocalWorlds();
+
             var allocation = await RelayService.Instance.CreateAllocationAsync(4);
-
-            // 2. Obtém o "join code" para compartilhar com os clientes
             string joinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
+            Debug.Log($"Relay Criado. Código: {joinCode}");
 
-            Debug.Log($"Relay Host criado. Código de Conexão: {joinCode}");
-
-            // 3. Converte a alocação do Relay para dados de transporte que o DOTS entende
             relayServerData = allocation.ToRelayServerData("dtls");
-
-            JoinAllocation joinAllocation = await RelayService.Instance.JoinAllocationAsync(joinCode);
-
+            var joinAllocation = await RelayService.Instance.JoinAllocationAsync(joinCode);
             relayClientData = joinAllocation.ToRelayServerData("dtls");
-            if (!isServerBuild)
-            {
-                StartHost();
-            }
-            else
-            {
-                StartServer();
-            }
 
             RelayCode.instance.SetCode(joinCode);
 
-            // LobbyService.Instance.JoinLobbyByCodeAsync(JoinCode);
-
+            if (!isServerBuild) await StartHost();
+            else await StartServer();
         }
         catch (RelayServiceException e)
         {
-            Debug.LogError($"Erro ao criar o Relay Host: {e}");
+            Debug.LogError($"Erro Relay Host: {e}");
+        }
+        finally
+        {
+            isBusy = false;
         }
     }
+
     private async void JoinRelay()
     {
+        if (isBusy) return;
+        isBusy = true;
+
         try
         {
-            JoinAllocation joinAllocation = await RelayService.Instance.JoinAllocationAsync(joinCodeTMP.text);
+            await DestroyLocalWorlds();
 
+            var joinAllocation = await RelayService.Instance.JoinAllocationAsync(joinCodeTMP.text);
             relayClientData = joinAllocation.ToRelayServerData("dtls");
 
-            StartClient();
             RelayCode.instance.SetCode(joinCodeTMP.text);
-
+            await StartClient();
         }
         catch (RelayServiceException e)
         {
-            Debug.LogError($"Erro ao entrar no Relay Join: {e}");
+            Debug.LogError($"Erro Relay Join: {e}");
+        }
+        finally
+        {
+            isBusy = false;
         }
     }
-    public async void StartServer()
+
+    public async Task StartServer()
     {
-        // Configura o RelayDriver para o servidor
-        var oldContructor = NetworkStreamReceiveSystem.DriverConstructor;
+        await DestroyLocalWorlds();
+
         NetworkStreamReceiveSystem.DriverConstructor = new RelayDriverConstructor(relayServerData, relayClientData);
-
-        // Cria apenas o mundo de servidor
         World serverWorld = ClientServerBootstrap.CreateServerWorld("ServerWorld");
+        World.DefaultGameObjectInjectionWorld = serverWorld;
 
-        foreach (var world in World.All)
-        {
-            if (world.Flags == WorldFlags.Game)
-            {
-                world.Dispose();
-                break;
-            }
-        }
-
-        // Garante que o mundo default seja o servidor
-        if (World.DefaultGameObjectInjectionWorld == null)
-        {
-            World.DefaultGameObjectInjectionWorld = serverWorld;
-        }
-
-        // Carrega a cena principal
         await SceneManager.LoadSceneAsync("SampleScene", LoadSceneMode.Single);
 
-        // Cria entidade para escutar conexões de clientes
-        var networkStreamEntity = serverWorld.EntityManager.CreateEntity(ComponentType.ReadWrite<NetworkStreamRequestListen>());
-        serverWorld.EntityManager.SetName(networkStreamEntity, "NetworkStreamRequestListen");
-        serverWorld.EntityManager.SetComponentData(networkStreamEntity,
-            new NetworkStreamRequestListen { Endpoint = NetworkEndpoint.AnyIpv4 });
+        var query = serverWorld.EntityManager.CreateEntityQuery(typeof(NetworkStreamRequestListen));
+        if (query.IsEmptyIgnoreFilter)
+        {
+            var networkStreamEntity = serverWorld.EntityManager.CreateEntity(ComponentType.ReadWrite<NetworkStreamRequestListen>());
+            serverWorld.EntityManager.SetName(networkStreamEntity, "NetworkStreamRequestListen");
 
-        Debug.Log("Servidor iniciado e aguardando conexões...");
+            // CORREÇÃO AQUI: O Server escuta em AnyIpv4 (Local), o RelayDriver redireciona pra nuvem.
+            serverWorld.EntityManager.SetComponentData(networkStreamEntity,
+                new NetworkStreamRequestListen { Endpoint = NetworkEndpoint.AnyIpv4 });
+
+            Debug.Log("Servidor Relay Iniciado (AnyIpv4).");
+        }
     }
 
-    public async void StartHost()
+    public async Task StartHost()
     {
+        await DestroyLocalWorlds();
 
-        var oldContructor = NetworkStreamReceiveSystem.DriverConstructor;
         NetworkStreamReceiveSystem.DriverConstructor = new RelayDriverConstructor(relayServerData, relayClientData);
+
         World serverWorld = ClientServerBootstrap.CreateServerWorld("ServerWorld");
         World clientWorld = ClientServerBootstrap.CreateClientWorld("ClientWorld");
-
-        foreach (var world in World.All)
-        {
-            if (world.Flags == WorldFlags.Game)
-            {
-                world.Dispose();
-                break;
-            }
-        }
-
-        if (World.DefaultGameObjectInjectionWorld == null)
-        {
-            World.DefaultGameObjectInjectionWorld = serverWorld;
-        }
+        World.DefaultGameObjectInjectionWorld = serverWorld;
 
         await SceneManager.LoadSceneAsync("SampleScene", LoadSceneMode.Single);
 
-        //localConnection no endereço de loopBack
-        // SceneManager.LoadSceneAsync(1, LoadSceneMode.Single);
-        // ushort port = 7979;
+        // --- SERVER ---
+        var queryListen = serverWorld.EntityManager.CreateEntityQuery(typeof(NetworkStreamRequestListen));
+        if (queryListen.IsEmptyIgnoreFilter)
+        {
+            var listenEntity = serverWorld.EntityManager.CreateEntity(ComponentType.ReadWrite<NetworkStreamRequestListen>());
+            serverWorld.EntityManager.SetName(listenEntity, "ListenRequest");
 
-        // RefRW<NetworkStreamDriver> networkStreamDriver =
-        //     serverWorld.EntityManager.CreateEntityQuery(typeof(NetworkStreamDriver)).GetSingletonRW<NetworkStreamDriver>();
-        // networkStreamDriver.ValueRW.Listen(NetworkEndpoint.AnyIpv4.WithPort(port));
-        // Debug.Log(networkStreamDriver.ValueRO.LastEndPoint.Address);
+            // CORREÇÃO AQUI: Host Server escuta em AnyIpv4
+            serverWorld.EntityManager.SetComponentData(listenEntity, new NetworkStreamRequestListen { Endpoint = NetworkEndpoint.AnyIpv4 });
+        }
 
-        // NetworkEndpoint connectNetworkEndpoint = NetworkEndpoint.Parse(joinCodeTMP.text, port);
-        // networkStreamDriver =
-        //     clientWorld.EntityManager.CreateEntityQuery(typeof(NetworkStreamDriver)).GetSingletonRW<NetworkStreamDriver>();
-        // networkStreamDriver.ValueRW.Connect(clientWorld.EntityManager, connectNetworkEndpoint);
+        // --- CLIENT ---
+        // O Cliente continua precisando do Endpoint ESPECÍFICO do Relay para saber onde conectar
+        var queryConnect = clientWorld.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<NetworkStreamRequestConnect>());
 
-        var networkStreamEntity = serverWorld.EntityManager.CreateEntity(ComponentType.ReadWrite<NetworkStreamRequestListen>());
-        serverWorld.EntityManager.SetName(networkStreamEntity, "NetworkStreamRequestListen");
-        serverWorld.EntityManager.SetComponentData(networkStreamEntity, new NetworkStreamRequestListen { Endpoint = NetworkEndpoint.AnyIpv4 });
+        if (queryConnect.IsEmptyIgnoreFilter)
+        {
+            var connectEntity = clientWorld.EntityManager.CreateEntity(ComponentType.ReadWrite<NetworkStreamRequestConnect>());
+            clientWorld.EntityManager.SetName(connectEntity, "ConnectRequest");
 
-        networkStreamEntity = clientWorld.EntityManager.CreateEntity(ComponentType.ReadWrite<NetworkStreamRequestConnect>());
-        clientWorld.EntityManager.SetName(networkStreamEntity, "NetworkStreamRequestConnect");
+            // AQUI MANTÉM: Cliente conecta no endereço do Relay
+            clientWorld.EntityManager.SetComponentData(connectEntity, new NetworkStreamRequestConnect { Endpoint = relayClientData.Endpoint });
 
-        Debug.Log("relayServerData.Endpoint: " + relayServerData.Endpoint);
-        clientWorld.EntityManager.SetComponentData(networkStreamEntity, new NetworkStreamRequestConnect { Endpoint = relayClientData.Endpoint });
+            Debug.Log("Host Relay Conectado.");
+        }
     }
 
-    public async void StartClient()
+    public async Task StartClient()
     {
-        var oldContructor = NetworkStreamReceiveSystem.DriverConstructor;
+        await DestroyLocalWorlds();
+
         NetworkStreamReceiveSystem.DriverConstructor = new RelayDriverConstructor(new RelayServerData(), relayClientData);
+
         World clientWorld = ClientServerBootstrap.CreateClientWorld("ClientWorld");
-        NetworkStreamReceiveSystem.DriverConstructor = oldContructor;
-
-        foreach (var world in World.All)
-        {
-            if (world.Flags == WorldFlags.Game)
-            {
-                world.Dispose();
-                break;
-            }
-        }
-
-        if (World.DefaultGameObjectInjectionWorld == null)
-        {
-            World.DefaultGameObjectInjectionWorld = clientWorld;
-        }
+        World.DefaultGameObjectInjectionWorld = clientWorld;
 
         await SceneManager.LoadSceneAsync("SampleScene", LoadSceneMode.Single);
 
-        var networkStreamEntity = clientWorld.EntityManager.CreateEntity(ComponentType.ReadWrite<NetworkStreamRequestConnect>());
-        clientWorld.EntityManager.SetName(networkStreamEntity, "NetworkStreamRequestConnect");
-        clientWorld.EntityManager.SetComponentData(networkStreamEntity, new NetworkStreamRequestConnect { Endpoint = relayClientData.Endpoint });
+        var queryConnect = clientWorld.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<NetworkStreamRequestConnect>());
+
+        if (queryConnect.IsEmptyIgnoreFilter)
+        {
+            var connectEntity = clientWorld.EntityManager.CreateEntity(ComponentType.ReadWrite<NetworkStreamRequestConnect>());
+            clientWorld.EntityManager.SetName(connectEntity, "ConnectRequest");
+
+            // Cliente conecta no endereço do Relay
+            clientWorld.EntityManager.SetComponentData(connectEntity, new NetworkStreamRequestConnect { Endpoint = relayClientData.Endpoint });
+
+            Debug.Log("Cliente Conectado.");
+        }
     }
 }

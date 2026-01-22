@@ -5,14 +5,14 @@ using Unity.Collections;
 
 partial struct InicializateDestroyOnTimerSystem : ISystem
 {
-    [BurstCompile]
+    // [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
         state.RequireForUpdate<NetworkTime>();
         state.RequireForUpdate<EndSimulationEntityCommandBufferSystem.Singleton>();
     }
 
-    [BurstCompile]
+    // [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
         var ECB = new EntityCommandBuffer(Allocator.Temp);

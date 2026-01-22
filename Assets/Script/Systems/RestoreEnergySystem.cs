@@ -1,11 +1,16 @@
 using Unity.Burst;
 using Unity.Entities;
 using Unity.NetCode;
+using Unity.Physics;
+using Unity.Mathematics;
 using UnityEngine;
 using Unity.Collections;
 
-[UpdateInGroup(typeof(LateSimulationSystemGroup))]
+[UpdateInGroup(typeof(PredictedSimulationSystemGroup), OrderLast = true)]
 [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
+//gerador de biomassa precisa disso
+[UpdateBefore(typeof(CalculateFrameExperienceSystem))]
+
 partial struct RestoreEnergySystem : ISystem
 {
     [BurstCompile]
@@ -45,5 +50,30 @@ partial struct RestoreEnergySystem : ISystem
             energyRestoreCooldown.AddCommandData(new EnergyRestoreCooldown { Tick = currentTick, value = newCooldownRestoreEnergy });
         }
 
+        foreach (var (currentEnergy, maxEnergy, energyMovement, physicsVelocity, entity) in
+        SystemAPI.Query<RefRW<CurrentEnergy>, RefRO<MaxEnergy>,
+        RefRW<EnergyRestoreMovement>, RefRO<PhysicsVelocity>>().WithAll<Simulate>().WithEntityAccess())
+        {
+            if (currentEnergy.ValueRW.value >= maxEnergy.ValueRO.value) return;
+            if (energyMovement.ValueRO.distance >= energyMovement.ValueRO.maxDistance)
+            {
+                currentEnergy.ValueRW.value += energyMovement.ValueRO.amount;
+                energyMovement.ValueRW.distance = 0;
+            }
+            else
+            {
+                energyMovement.ValueRW.distance += math.length(physicsVelocity.ValueRO.Linear);
+            }
+        }
+
+        foreach (var (currentEnergy, maxEnergy, energyRestoreKill, alreadyExperienceBuffer, entity) in
+        SystemAPI.Query<RefRW<CurrentEnergy>, RefRO<MaxEnergy>,
+        RefRW<EnergyRestoreKill>, DynamicBuffer<AlreadyGiveExperienceEntity>>().WithAll<Simulate>().WithEntityAccess())
+        {
+            if (currentEnergy.ValueRW.value >= maxEnergy.ValueRO.value) return;
+            if (alreadyExperienceBuffer.IsEmpty) return;
+            currentEnergy.ValueRW.value += energyRestoreKill.ValueRO.amount;
+            alreadyExperienceBuffer.Clear();
+        }
     }
 }

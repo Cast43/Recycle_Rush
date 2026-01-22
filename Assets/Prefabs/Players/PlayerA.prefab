@@ -104,6 +104,8 @@ GameObject:
   - component: {fileID: -4669703099547100025}
   - component: {fileID: 322780033610864457}
   - component: {fileID: 7856358101718946897}
+  - component: {fileID: 357815296403494025}
+  - component: {fileID: 2478120488542937865}
   m_Layer: 8
   m_Name: PlayerA
   m_TagString: Untagged
@@ -241,6 +243,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   MaxLife: 5
+  healthRegenCooldown: 5
+  regenAmount: 0
 --- !u!114 &6619590767418275881
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -267,7 +271,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1f729146d2e36c24780c4b303075676b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 5
+  moveSpeed: 4
   dashSpeed: 10
   dashDuration: 0.5
   dashCooldown: 2
@@ -304,6 +308,9 @@ MonoBehaviour:
   attackCooldownTime: 3
   attackPrefab: {fileID: 7074913954056216728, guid: fe1776e47e77f8a4dabe22cacb5239f7, type: 3}
   timeToDontMove: 0
+  bulletLifeTime: 1
+  bulletSpeed: 5
+  damage: 1
   lostEnergy: 10
   netCodeConfig: {fileID: 11400000, guid: 75d8a62403cd4664593908df3234abf7, type: 2}
 --- !u!114 &-1984916485959386395
@@ -320,13 +327,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxExperience: 100
   startLevel: 0
-  modifiers:
-  - type: 0
-    value: 1
-  - type: 2
-    value: 0.05
-  - type: 3
-    value: 0.05
+  modifiers: []
 --- !u!114 &-3475810099924927038
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -382,6 +383,32 @@ MonoBehaviour:
   startEnergy: 100
   energyRestoreCooldown: 2
   energyRestoreAmount: 5
+--- !u!114 &357815296403494025
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4411393761261615811}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bef3ca3a61cc6fb40a3dcbf20e2d0f52, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  modifiers: []
+--- !u!114 &2478120488542937865
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4411393761261615811}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 54ae82f41db1f2240a4a3f408a845f7e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  techs: []
 --- !u!1 &6728840892501591999
 GameObject:
   m_ObjectHideFlags: 0

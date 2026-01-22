@@ -6,7 +6,6 @@ using Unity.Collections;
 [UpdateInGroup(typeof(PredictedSimulationSystemGroup))]
 partial struct DestroyOnTimerSystem : ISystem
 {
-    [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
         state.RequireForUpdate<NetworkTime>();

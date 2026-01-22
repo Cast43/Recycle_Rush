@@ -4,6 +4,7 @@ using Unity.NetCode;
 using UnityEngine;
 
 [UpdateInGroup(typeof(PredictedSimulationSystemGroup), OrderLast = true)]
+
 public partial struct CalculateFrameExperienceSystem : ISystem
 {
     // [BurstCompile]
@@ -17,8 +18,8 @@ public partial struct CalculateFrameExperienceSystem : ISystem
     {
         NetworkTick currentTick = SystemAPI.GetSingleton<NetworkTime>().ServerTick;
 
-        foreach (var (experienceBuffer, getExpThisTickBuffer, entity) in
-                SystemAPI.Query<DynamicBuffer<ExperienceBufferElement>, DynamicBuffer<GetExperienceThisTick>>().WithAll<Simulate>().WithEntityAccess())
+        foreach (var (experienceBuffer, AlreadyGiveExperience, getExpThisTickBuffer, entity) in
+                SystemAPI.Query<DynamicBuffer<ExperienceBufferElement>, DynamicBuffer<AlreadyGiveExperienceEntity>, DynamicBuffer<GetExperienceThisTick>>().WithAll<Simulate>().WithEntityAccess())
         {
             if (experienceBuffer.IsEmpty)
             {
@@ -38,6 +39,7 @@ public partial struct CalculateFrameExperienceSystem : ISystem
                 // Debug.Log("o jogador " + entity + " ganhou " + totalExperience + " de Xp");
                 getExpThisTickBuffer.AddCommandData(new GetExperienceThisTick { Tick = currentTick, value = totalExperience });
                 experienceBuffer.Clear();
+                AlreadyGiveExperience.Clear();
             }
         }
     }

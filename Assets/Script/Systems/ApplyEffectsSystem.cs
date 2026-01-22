@@ -317,7 +317,6 @@ public partial struct ApplyEffectsSystem : ISystem
                 ECB.RemoveComponent<LightningDps>(entity);
                 ECB.RemoveComponent<LightningDuration>(entity);
             }
-
         }
         //ponto que vai destruir os efeitos
         for (int i = 0; i < toDestroy.Length; i++)

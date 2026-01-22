@@ -59,7 +59,7 @@ partial struct RessurectSystem : ISystem
             CollisionFilter collisionFilter = new CollisionFilter
             {
                 BelongsTo = ~0u,
-                CollidesWith = 1u << GameAssets.UNIT_LAYER,
+                CollidesWith = 1u << GameAssets.PLAYER_LAYER,
                 GroupIndex = 0
                 // CollidesWith = (1u << GameAssets.PLAYER_LAYER) | (1u << GameAssets.ENEMY_LAYER),
             };

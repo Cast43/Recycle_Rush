@@ -554,6 +554,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   MaxLife: 1
+  healthRegenCooldown: 1
+  regenAmount: 0
 --- !u!114 &1225167301293152823
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -580,11 +582,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   experiencePrefabs:
-  - {fileID: 1953607005591944673, guid: 34973389b49e60c419dc0d2f6506879e, type: 3}
-  - {fileID: 1953607005591944673, guid: 9cbcf5fdbee360040882a85bb9124248, type: 3}
   - {fileID: 1953607005591944673, guid: d4c83fc7cbaf96c4bab262390ed7c907, type: 3}
-  - {fileID: 1953607005591944673, guid: 306aec71dda868944aa52c2e96803484, type: 3}
-  - {fileID: 1953607005591944673, guid: c3fc12b8b3bfec24cabfa6ece3c502e4, type: 3}
+  - {fileID: 1953607005591944673, guid: 189d00f500c83a344aba1a059e99a951, type: 3}
+  - {fileID: 1953607005591944673, guid: 7ccfa8e51ff2b2940ab8d27957778134, type: 3}
+  - {fileID: 1953607005591944673, guid: edaec70fba80acb4693c2146eb6dfa6f, type: 3}
+  - {fileID: 1953607005591944673, guid: cc54bb166e8584d478cb4281c5d9f5ec, type: 3}
+  - {fileID: 1953607005591944673, guid: 7ccfa8e51ff2b2940ab8d27957778134, type: 3}
 --- !u!114 &-1687032486116331933
 MonoBehaviour:
   m_ObjectHideFlags: 0

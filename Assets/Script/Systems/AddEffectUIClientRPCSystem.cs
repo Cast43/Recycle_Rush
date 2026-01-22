@@ -10,7 +10,7 @@ partial struct AddEffectUIClientRPCSystem : ISystem
     // [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
-        EntityQueryBuilder entityQueryBuilder = new EntityQueryBuilder(Allocator.Temp).WithAll<ShowAddEffectRPC>().WithAll<ReceiveRpcCommandRequest>();
+        EntityQueryBuilder entityQueryBuilder = new EntityQueryBuilder(Allocator.Temp).WithAll<ShowUpgradesRPC>().WithAll<ReceiveRpcCommandRequest>();
         state.RequireForUpdate(state.GetEntityQuery(entityQueryBuilder));
         entityQueryBuilder.Dispose();
     }
@@ -19,22 +19,22 @@ partial struct AddEffectUIClientRPCSystem : ISystem
     {
         EntityCommandBuffer ECB = new EntityCommandBuffer(Unity.Collections.Allocator.Temp);
         foreach ((RefRO<ReceiveRpcCommandRequest> receiveRpcCommandRequest, Entity entity)
-            in SystemAPI.Query<RefRO<ReceiveRpcCommandRequest>>().WithAll<ShowAddEffectRPC>().WithEntityAccess())
+            in SystemAPI.Query<RefRO<ReceiveRpcCommandRequest>>().WithAll<ShowUpgradesRPC>().WithEntityAccess())
         {
             // Aqui você pode ativar o GameObject
             var canvas = GameObject.Find("Canvas");
             if (canvas != null)
             {
                 // Busca o filho "AddEffectUI" dentro do Canvas
-                var addEffectUITransform = canvas.transform.Find("AddEffectUI");
-                if (addEffectUITransform != null)
+                var addUpgradeUITransform = canvas.transform.Find("AddUpgradesUI");
+                if (addUpgradeUITransform != null)
                 {
-                    addEffectUITransform.gameObject.SetActive(true);
+                    addUpgradeUITransform.gameObject.SetActive(true);
                     // Debug.Log("AddEffectUI ativado");
                 }
                 else
                 {
-                    Debug.LogWarning("AddEffectUI não encontrado dentro do Canvas!");
+                    Debug.LogWarning("AddUpgradesUI não encontrado dentro do Canvas!");
                 }
             }
             else
@@ -45,25 +45,25 @@ partial struct AddEffectUIClientRPCSystem : ISystem
             ECB.DestroyEntity(entity);
         }
 
-        foreach ((RefRO<PlayerInput> player, DynamicBuffer<EffectPrefab> effects, Entity entity)
-    in SystemAPI.Query<RefRO<PlayerInput>, DynamicBuffer<EffectPrefab>>().WithEntityAccess())
-        {
-            // Aqui você pode ativar o GameObject
-            var canvas = GameObject.Find("Canvas");
-            var addEffectUITransform = canvas.transform.Find("AddEffectUI");
-            var effectOneUI = addEffectUITransform.transform.Find("EffectButton1");
-            var effectTwoUI = addEffectUITransform.transform.Find("EffectButton2");
-            var effectThreeIU = addEffectUITransform.transform.Find("EffectButton3");
+        //     foreach ((RefRO<PlayerInput> player, DynamicBuffer<EffectPrefab> effects, Entity entity)
+        // in SystemAPI.Query<RefRO<PlayerInput>, DynamicBuffer<EffectPrefab>>().WithEntityAccess())
+        //     {
+        //         // Aqui você pode ativar o GameObject
+        //         var canvas = GameObject.Find("Canvas");
+        //         var addUpgradeUITransform = canvas.transform.Find("AddUpgradesUI");
+        //         var upgradeOneUI = addUpgradeUITransform.transform.Find("UpgradeButton1");
+        //         var upgradeTwoUI = addUpgradeUITransform.transform.Find("UpgradeButton2");
+        //         var upgradeThreeIU = addUpgradeUITransform.transform.Find("UpgradeButton3");
 
-            if (canvas == null) Debug.LogWarning("Canvas não encontrado!");
-            if (addEffectUITransform == null) Debug.LogWarning("AddEffectUI não encontrado");
-            if (effectOneUI == null) Debug.LogWarning("Efeito 1 não encontrado");
-            if (effectTwoUI == null) Debug.LogWarning("Efeito 2 não encontrado");
-            if (effectThreeIU == null) Debug.LogWarning("Efeito 3 não encontrado");
+        //         if (canvas == null) Debug.LogWarning("Canvas não encontrado!");
+        //         if (addUpgradeUITransform == null) Debug.LogWarning("AddUpgradesUI não encontrado");
+        //         if (upgradeOneUI == null) Debug.LogWarning("Upgrade 1 não encontrado");
+        //         if (upgradeTwoUI == null) Debug.LogWarning("Upgrade 2 não encontrado");
+        //         if (upgradeThreeIU == null) Debug.LogWarning("Upgrade 3 não encontrado");
 
 
-        }
+        //     }
+
         ECB.Playback(state.EntityManager);
     }
-
 }

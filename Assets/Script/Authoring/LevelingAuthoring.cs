@@ -13,7 +13,7 @@ public class LevelingAuthoring : MonoBehaviour
     [System.Serializable]
     public struct ModifierEntry
     {
-        public ModifierType type;
+        public UpgradeModifier type;
         public float value;
     }
     public class Baker : Baker<LevelingAuthoring>
@@ -24,8 +24,10 @@ public class LevelingAuthoring : MonoBehaviour
             AddComponent(entity, new MaxExperience { value = authoring.maxExperience });
             AddComponent(entity, new Level { current = authoring.startLevel, previous = authoring.startLevel });
             AddComponent(entity, new CurrentExperience { value = 0 });
+            AddBuffer<UpgradesPending>(entity);
             AddBuffer<ExperienceBufferElement>(entity);
             AddBuffer<GetExperienceThisTick>(entity);
+            // AddBuffer<LevelUpTag>(entity);
 
             // Create DynamicBuffer for LevelModifier
             var buffer = AddBuffer<LevelModifier>(entity);

@@ -302,6 +302,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   MaxLife: 1
+  healthRegenCooldown: 1
+  regenAmount: 0
 --- !u!114 &7996789594745254796
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -331,9 +333,12 @@ MonoBehaviour:
     x: 0
     y: 0.5
     z: 0
-  attackCooldownTime: 8
+  attackCooldownTime: 6
   attackPrefab: {fileID: 5824039362620267746, guid: d21f298808cd0904e86225d43bf7cb85, type: 3}
   timeToDontMove: 1
+  bulletLifeTime: 4
+  bulletSpeed: 4
+  damage: 1
   lostEnergy: 0
   netCodeConfig: {fileID: 11400000, guid: 75d8a62403cd4664593908df3234abf7, type: 2}
 --- !u!114 &31021348423272261
@@ -350,10 +355,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   experiencePrefabs:
   - {fileID: 1953607005591944673, guid: 34973389b49e60c419dc0d2f6506879e, type: 3}
+  - {fileID: 1953607005591944673, guid: a046cb46281beb644a78e983d4dde079, type: 3}
+  - {fileID: 1953607005591944673, guid: 1298d1f7cc409e944a1c01985277ddfe, type: 3}
   - {fileID: 1953607005591944673, guid: 9cbcf5fdbee360040882a85bb9124248, type: 3}
-  - {fileID: 1953607005591944673, guid: d4c83fc7cbaf96c4bab262390ed7c907, type: 3}
-  - {fileID: 1953607005591944673, guid: 306aec71dda868944aa52c2e96803484, type: 3}
+  - {fileID: 1953607005591944673, guid: fad4b430b731a9040a0245767e8a8ab4, type: 3}
+  - {fileID: 1953607005591944673, guid: e04efff5b5df6484b926a2ccb26fdae2, type: 3}
   - {fileID: 1953607005591944673, guid: c3fc12b8b3bfec24cabfa6ece3c502e4, type: 3}
+  - {fileID: 1953607005591944673, guid: 32cf52adde1a56b4187f42a85a8f7f4d, type: 3}
+  - {fileID: 1953607005591944673, guid: e45994ee6e6510f48b70edd04493bf0a, type: 3}
+  - {fileID: 1953607005591944673, guid: d51dd4c45dbeac84887b08aad4bdcf9e, type: 3}
+  - {fileID: 1953607005591944673, guid: 138065d119cd26c40b2cb7dfa2519184, type: 3}
+  - {fileID: 1953607005591944673, guid: c71674a7681f1014cb14d0aca76cbae7, type: 3}
+  - {fileID: 1953607005591944673, guid: d4c83fc7cbaf96c4bab262390ed7c907, type: 3}
+  - {fileID: 1953607005591944673, guid: 189d00f500c83a344aba1a059e99a951, type: 3}
+  - {fileID: 1953607005591944673, guid: 7ccfa8e51ff2b2940ab8d27957778134, type: 3}
 --- !u!114 &-7793230913537335546
 MonoBehaviour:
   m_ObjectHideFlags: 0

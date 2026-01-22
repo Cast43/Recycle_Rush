@@ -97,6 +97,10 @@ partial struct AutoShootSystem : ISystem
             ECB.SetComponent(sortKey, arrowEntity, new Team { faction = unit.faction }); //modifica apenas uma variável sem sobreescrever tudo
             ECB.SetComponent(sortKey, arrowEntity, new Direction { lookDirection = shootDirection }); //modifica apenas uma variável sem sobreescrever tudo
             ECB.SetComponent(sortKey, arrowEntity, new Owner { Value = entity }); //modifica apenas uma variável sem sobreescrever tudo
+            ECB.SetComponent(sortKey, arrowEntity, new DamageOnTrigger { value = (int)shootProperties.damage });
+            ECB.SetComponent(sortKey, arrowEntity, new DestroyOnTimer { value = shootProperties.bulletLifeTime });
+            ECB.SetComponent(sortKey, arrowEntity, new Arrow { moveSpeed = (int)shootProperties.bulletSpeed });
+
             if (effectPrefabsLookup.HasBuffer(entity))
             {
                 foreach (var item in effectPrefabsLookup[entity])

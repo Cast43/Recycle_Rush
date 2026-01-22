@@ -22,8 +22,8 @@ partial struct ApplyExperienceSystem : ISystem
         NetworkTick currentTick = SystemAPI.GetSingleton<NetworkTime>().ServerTick;
         EntityCommandBuffer ECB = new EntityCommandBuffer(Allocator.Temp);
 
-        foreach (var (currentExperience, maxExperience, level, getExperienceThisTickBuffer, entity) in
-            SystemAPI.Query<RefRW<CurrentExperience>, RefRO<MaxExperience>, RefRW<Level>
+        foreach (var (currentExperience, maxExperience, level, buffUpgradesPending, getExperienceThisTickBuffer, entity) in
+            SystemAPI.Query<RefRW<CurrentExperience>, RefRO<MaxExperience>, RefRW<Level>, DynamicBuffer<UpgradesPending>
             , DynamicBuffer<GetExperienceThisTick>>().WithAll<Simulate>().WithEntityAccess())
         {
             if (!getExperienceThisTickBuffer.GetDataAtTick(currentTick, out var getExperienceThisTick)) continue;
@@ -33,7 +33,7 @@ partial struct ApplyExperienceSystem : ISystem
             if (currentExperience.ValueRO.value >= maxExperience.ValueRO.value)
             {
                 level.ValueRW.current += (int)(currentExperience.ValueRO.value / maxExperience.ValueRO.value);
-                currentExperience.ValueRW.value = (int)(currentExperience.ValueRO.value % maxExperience.ValueRO.value);
+                currentExperience.ValueRW.value = (int)(currentExperience.ValueRO.value - maxExperience.ValueRO.value);
             }
         }
 
@@ -43,20 +43,22 @@ partial struct ApplyExperienceSystem : ISystem
             {
                 level.ValueRW.previous = level.ValueRO.current;
                 ECB.AddComponent<LevelUpTag>(entity);
-                ECB.AddComponent<RequestChooseEffect>(entity);
+                ECB.AddComponent<RequestChooseUpgrade>(entity);
+                ECB.AppendToBuffer<UpgradesPending>(entity, new UpgradesPending { });
             }
         }
+
         //passou de level
         //escolhe o efeito
-        foreach (var (level, buffer, entity) in SystemAPI.Query<RefRO<Level>, DynamicBuffer<LevelModifier>>().WithAll<LevelUpTag>().WithEntityAccess())
+        foreach (var (level, bufferLevelModifier, entity) in SystemAPI.Query<RefRO<Level>, DynamicBuffer<LevelModifier>>().WithAll<LevelUpTag>().WithEntityAccess())
         {
             int lvl = level.ValueRO.current;
             // Apply each modifier according to current level
-            foreach (var mod in buffer)
+            foreach (var mod in bufferLevelModifier)
             {
                 switch (mod.Type)
                 {
-                    case ModifierType.AddHealth:
+                    case UpgradeModifier.IncreaseHealth:
                         if (state.EntityManager.HasComponent<MaxHealth>(entity))
                         {
                             var maxHealth = state.EntityManager.GetComponentData<MaxHealth>(entity);
@@ -73,7 +75,7 @@ partial struct ApplyExperienceSystem : ISystem
                             ECB.SetComponent(entity, currentHealth);
                         }
                         break;
-                    case ModifierType.IncreaseDamage:
+                    case UpgradeModifier.IncreaseDamage:
                         if (state.EntityManager.HasComponent<MeleeAttackProperties>(entity))
                         {
                             var meleeAttack = state.EntityManager.GetComponentData<MeleeAttackProperties>(entity);
@@ -81,7 +83,7 @@ partial struct ApplyExperienceSystem : ISystem
                             ECB.SetComponent(entity, meleeAttack);
                         }
                         break;
-                    case ModifierType.DecreaseShootTime:
+                    case UpgradeModifier.DecreaseShootTime:
                         if (state.EntityManager.HasComponent<ShootAttackProperties>(entity))
                         {
                             var shootAttack = state.EntityManager.GetComponentData<ShootAttackProperties>(entity);
@@ -89,7 +91,7 @@ partial struct ApplyExperienceSystem : ISystem
                             ECB.SetComponent(entity, shootAttack);
                         }
                         break;
-                    case ModifierType.IncreaseSpeed:
+                    case UpgradeModifier.IncreaseSpeed:
                         if (state.EntityManager.HasComponent<PlayerInput>(entity))
                         {
                             var ms = state.EntityManager.GetComponentData<MoveSpeed>(entity);
@@ -106,40 +108,44 @@ partial struct ApplyExperienceSystem : ISystem
                 }
             }
 
-            // var networkIdLookup = SystemAPI.GetComponentLookup<NetworkId>();
-            // var networkId = networkIdLookup[entity];
+            ECB.RemoveComponent<LevelUpTag>(entity);
+        }
+
+        foreach (var (buffUpgradesPending, entity) in SystemAPI.Query<DynamicBuffer<UpgradesPending>>().WithAll<RequestChooseUpgrade, PlayerInput>().WithEntityAccess())
+        {
 
             // manda um rpc para o player escolher os efeitos a adição de efeitos
             // Enviar RPC para esse cliente
             //arrumar outro método pra achar o mundo do cliente esse está dando bug na build
             // Pega o NetworkId do cliente local
             //essa parte não é do inimigo apenas do player
-            if (state.EntityManager.HasComponent<PlayerInput>(entity))
+
+            // if (buffUpgradesPending.Length > 0) return;
+
+            var lookupConnection = SystemAPI.GetComponentLookup<ConnectionEntity>(true);
+            if (!lookupConnection.HasComponent(entity))
+                continue; // sem conexão vinculada a essa entidade, pula
+
+            var connection = lookupConnection[entity]; // ConnectionEntity { Value = connectionEntity }
+
+            // pega o NetworkId da entidade de conexão (server tem vários NetworkId)
+            var networkIdLookup = SystemAPI.GetComponentLookup<NetworkId>(true);
+            if (!networkIdLookup.HasComponent(connection.Value))
+                continue; // conexão sem NetworkId? pula
+
+            var netId = networkIdLookup[connection.Value];
+
+            // cria RPC e envia para a conexão correta
+            var rpc = new ShowUpgradesRPC { ClientNetId = netId.Value };
+
+            var rpcEntity = ECB.CreateEntity();
+            ECB.AddComponent(rpcEntity, rpc);
+            ECB.AddComponent(rpcEntity, new SendRpcCommandRequest { TargetConnection = connection.Value });
+
+            if (buffUpgradesPending.Length <= 1)
             {
-                var lookupConnection = SystemAPI.GetComponentLookup<ConnectionEntity>(true);
-                if (!lookupConnection.HasComponent(entity))
-                    continue; // sem conexão vinculada a essa entidade, pula
-
-                var connection = lookupConnection[entity]; // ConnectionEntity { Value = connectionEntity }
-
-                // pega o NetworkId da entidade de conexão (server tem vários NetworkId)
-                var networkIdLookup = SystemAPI.GetComponentLookup<NetworkId>(true);
-                if (!networkIdLookup.HasComponent(connection.Value))
-                    continue; // conexão sem NetworkId? pula
-
-                var netId = networkIdLookup[connection.Value];
-
-                // cria RPC e envia para a conexão correta
-                var rpc = new ShowAddEffectRPC { ClientNetId = netId.Value };
-
-                var rpcEntity = ECB.CreateEntity();
-                ECB.AddComponent(rpcEntity, rpc);
-                ECB.AddComponent(rpcEntity, new SendRpcCommandRequest { TargetConnection = connection.Value });
+                ECB.RemoveComponent<RequestChooseUpgrade>(entity);
             }
-            // Cria o RPC usando o NetworkId
-
-            // Remove tag
-            ECB.RemoveComponent<LevelUpTag>(entity);
         }
 
         ECB.Playback(state.EntityManager);

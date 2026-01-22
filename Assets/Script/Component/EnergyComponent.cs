@@ -36,8 +36,13 @@ public struct EnergyRestoreCooldown : ICommandData
     public NetworkTick Tick { get; set; }
     public NetworkTick value;
 }
-
-public struct EnergyBar : IComponentData
+public struct EnergyRestoreMovement : IComponentData
 {
-    public Entity energyPercentageEntity;
+    public float distance;
+    public float maxDistance;
+    public int amount;
+}
+public struct EnergyRestoreKill : IComponentData
+{
+    public int amount;
 }

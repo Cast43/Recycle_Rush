@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 
 public class UIManager : MonoBehaviour
@@ -7,7 +8,9 @@ public class UIManager : MonoBehaviour
     public static UIManager Instance;
 
     [SerializeField] private TextMeshProUGUI energyPercentageText;
-    [SerializeField] private TextMeshProUGUI healthPercentageText;
+    [SerializeField] private TextMeshProUGUI robotHealthPercentageText;
+    [SerializeField] private TextMeshProUGUI treeHealthPercentageText;
+    [SerializeField] private Slider experienceBar;
 
     private void Awake()
     {
@@ -25,12 +28,27 @@ public class UIManager : MonoBehaviour
             energyPercentageText.text = $"{value:0}%";
         }
     }
-    public void UpdateHealthPercentage(float value)
+    public void UpdateRobotHealthPercentage(int currentValue, int maxValue)
     {
-        if (healthPercentageText != null)
+        if (robotHealthPercentageText != null)
         {
             // Formata para mostrar como porcentagem (ex: 50%)
-            healthPercentageText.text = $"{value:0}";
+            robotHealthPercentageText.text = $"{currentValue:0}/{maxValue:0}";
+        }
+    }
+    public void UpdateExperienceBar(int value)
+    {
+        if (experienceBar != null)
+        {
+            experienceBar.value = value;
+        }
+    }
+    public void UpdateTreeHealthPercentage(float value)
+    {
+        if (treeHealthPercentageText != null)
+        {
+            // Formata para mostrar como porcentagem (ex: 50%)
+            treeHealthPercentageText.text = $"{value:0}";
         }
     }
 }

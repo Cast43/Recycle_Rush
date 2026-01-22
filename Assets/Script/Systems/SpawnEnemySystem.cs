@@ -19,18 +19,6 @@ public partial struct SpawnEnemySystem : ISystem
         SpawnOverTime(ref state);
     }
 
-    private void CountDay(ref SystemState state)
-    {
-        //quando é noite verifica quais campos estão vivos e vão para a cidade
-    }
-    private void SpawnCamps(ref SystemState state)
-    {
-        //spawna todos campos de dia 
-    }
-    private void SpawnEnemyCompany(ref SystemState state)
-    {
-        //nos dias impares spawna uma comitiva forte com direção direta para a base
-    }
     private void SpawnOverTime(ref SystemState state)
     {
         float deltaTime = SystemAPI.Time.DeltaTime;
@@ -84,9 +72,9 @@ public partial struct SpawnEnemySystem : ISystem
 
         // var enemyXpLookup = SystemAPI.GetComponentLookup<CurrentExperience>();
         // var enemyCurrentXp = enemyXpLookup[enemy];
-        for (int i = 0; i < waveCount; i++)
+        // for (int i = 0; i < waveCount; i++)
         {
-            ECB.AppendToBuffer(enemy, new ExperienceBufferElement { value = 1 });
+            ECB.SetComponent(enemy, new Level { current = waveCount });
         }
 
 

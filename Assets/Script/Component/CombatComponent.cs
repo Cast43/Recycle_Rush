@@ -18,6 +18,19 @@ public struct CurrentHealth : IComponentData
     [GhostField] public bool onHealthChanged;
 }
 
+public struct HealthRegen : IComponentData
+{
+    public int amount;
+    public float cooldownRestore;
+}
+
+[GhostComponent(PrefabType = GhostPrefabType.AllPredicted)]
+public struct HealthRegenCooldown : ICommandData
+{
+    public NetworkTick Tick { get; set; }
+    public NetworkTick value;
+}
+
 public struct HealthBar : IComponentData
 {
     public Entity barVisualEntity;
@@ -63,6 +76,9 @@ public struct ShootAttackProperties : IComponentData
     public uint cooldownTickCount;
     public uint timeToDontMove;
     public uint lostEnergy;
+    public float bulletLifeTime;
+    public float bulletSpeed;
+    public int damage;
     // public FixedString64Bytes throwableName;
     public Entity attackPrefab;
 }
