@@ -179,6 +179,7 @@ public partial struct ApplyEffectsSystem : ISystem
             var lightningDpsLookup = SystemAPI.GetBufferLookup<LightningDps>();
             var lightningDurationBuff = new DynamicBuffer<LightningDuration>();
             var lightningDpsBuff = new DynamicBuffer<LightningDps>();
+            var lightningVisual = new LightningVisual();
 
             //verifica se existe lightning no alvo
             if (lightningDurationLookup.HasBuffer(target.ValueRO.Value))
@@ -193,6 +194,24 @@ public partial struct ApplyEffectsSystem : ISystem
                 //adiciona os stacks de curse
                 lightningDurationBuff = ECB.AddBuffer<LightningDuration>(target.ValueRO.Value);
                 lightningDpsBuff = ECB.AddBuffer<LightningDps>(target.ValueRO.Value);
+
+                //lightning visual effect
+                var visualLightningEffect = ECB.Instantiate(lightningProperties.ValueRO.particleEffect);
+                lightningVisual.particleEffect = visualLightningEffect;
+                ECB.AddComponent(target.ValueRO.Value, lightningVisual);
+
+                ECB.AddComponent(visualLightningEffect, new Parent { Value = target.ValueRO.Value });
+                ECB.SetComponent(visualLightningEffect, LocalTransform.FromPositionRotationScale(
+                    new float3(0, 0.5f, 0), // Posição LOCAL (relativa ao pai)
+                    quaternion.identity,
+                    1.0f
+                ));
+
+                ECB.AddComponent(visualLightningEffect, new VisualParentLink
+                {
+                    ParentEntity = target.ValueRO.Value
+                });
+                ECB.AddComponent(target.ValueRO.Value, lightningVisual);
             }
             //Adiciona o tempo do começo do lightning(tick)
             var newLightningDurationTick = currentTick;
@@ -225,7 +244,7 @@ public partial struct ApplyEffectsSystem : ISystem
             // ECB.DestroyEntity(entity);
         }
         //calcula o tempo da lightning duration 
-        foreach (var (LightningDurationBuff, LightningDpsBuff, hitPos, entity) in SystemAPI.Query<DynamicBuffer<LightningDuration>, DynamicBuffer<LightningDps>, RefRO<LocalTransform>>().WithEntityAccess())
+        foreach (var (LightningDurationBuff, LightningDpsBuff, LightningVisual, hitPos, entity) in SystemAPI.Query<DynamicBuffer<LightningDuration>, DynamicBuffer<LightningDps>, RefRO<LightningVisual>, RefRO<LocalTransform>>().WithEntityAccess())
         {
             // Verifica se o lightningDuration já expirou
             if (!LightningDurationBuff.GetDataAtTick(currentTick, out var lightningDurationElemnt))
@@ -316,6 +335,8 @@ public partial struct ApplyEffectsSystem : ISystem
             {
                 ECB.RemoveComponent<LightningDps>(entity);
                 ECB.RemoveComponent<LightningDuration>(entity);
+                ECB.DestroyEntity(LightningVisual.ValueRO.particleEffect);
+                ECB.RemoveComponent<LightningVisual>(entity);
             }
         }
         //ponto que vai destruir os efeitos

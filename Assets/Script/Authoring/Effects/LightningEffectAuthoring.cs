@@ -11,6 +11,7 @@ public class LightningEffectAuthoring : MonoBehaviour
     public float radius;
     public Faction team;
     public NetCodeConfig netCodeConfig;
+    public GameObject particleEffect;
     public int simulationTickRate => netCodeConfig.ClientServerTickRate.SimulationTickRate;
     // public GameObject[] effectPrefabs; // arraste aqui seus prefabs Poison, Burn, Slow…
 
@@ -27,6 +28,7 @@ public class LightningEffectAuthoring : MonoBehaviour
                 timeSinceLastTick = 0,
                 target = authoring.team,
                 radius = authoring.radius,
+                particleEffect = GetEntity(authoring.particleEffect, TransformUsageFlags.None),
             });
 
             AddBuffer<LightningDuration>(entity);

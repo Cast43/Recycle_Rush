@@ -66,7 +66,7 @@ public class ConnectionManager : MonoBehaviour
         }
 
         // Mantemos o delay para garantir que a porta foi liberada
-        await Task.Delay(10); 
+        await Task.Delay(10);
     }
 
     private async void CreateRelay()

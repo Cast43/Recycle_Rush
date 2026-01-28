@@ -4671,7 +4671,7 @@ MonoBehaviour:
   joinCodeTMP: {fileID: 697701830}
   joinButton: {fileID: 1896105652}
   hostButton: {fileID: 1525967383}
-  isServerBuild: 1
+  isServerBuild: 0
 --- !u!4 &1838750446
 Transform:
   m_ObjectHideFlags: 0

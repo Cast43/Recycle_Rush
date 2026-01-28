@@ -84,9 +84,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f5e17b0558c6fbe43b04e7c4f1ddf589, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  duration: 1
+  duration: 10
   dmgInterval: 0.99
   damagePerTick: 1
   radius: 6
   team: 1
   netCodeConfig: {fileID: 11400000, guid: 75d8a62403cd4664593908df3234abf7, type: 2}
+  particleEffect: {fileID: 2685634194520249867, guid: 146c781a57077bd45ac00c2de1858238, type: 3}

@@ -1,6 +1,5 @@
 using Unity.Entities;
 using Unity.NetCode;
-using Unity.Mathematics;
 using Unity.Collections;
 
 //para conter uma lista dos efeitos ja possiudos 
@@ -74,6 +73,11 @@ public struct LightningEffect : IComponentData
     public uint dmgInterval;     // A cada quanto tempo toma dano
     public int damagePerTick;   //dos raios
     public uint timeSinceLastTick;
+    public Entity particleEffect;
+}
+public struct LightningVisual : IComponentData
+{
+    public Entity particleEffect;
 }
 //estrutura para sincronizar a duração do lightning no multiplayer
 [GhostComponent(PrefabType = GhostPrefabType.AllPredicted)]
