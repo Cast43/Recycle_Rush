@@ -24,6 +24,7 @@ partial struct HealthRegenSystem : ISystem
         foreach (var (healthRegen, currentHealth, maxHealth, healthRegenCooldown, entity) in
                 SystemAPI.Query<RefRO<HealthRegen>, RefRW<CurrentHealth>, RefRO<MaxHealth>, DynamicBuffer<HealthRegenCooldown>>().WithAll<GhostOwnerIsLocal>().WithEntityAccess())
         {
+            if (currentHealth.ValueRO.value <= 0) return;
             if (!healthRegenCooldown.GetDataAtTick(currentTick, out var cooldownExpirationTick))
             {
                 cooldownExpirationTick.value = NetworkTick.Invalid;

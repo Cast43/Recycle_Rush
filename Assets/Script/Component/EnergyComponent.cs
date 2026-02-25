@@ -46,3 +46,7 @@ public struct EnergyRestoreKill : IComponentData
 {
     public int amount;
 }
+public struct GetEnergyFromKill : IBufferElementData
+{
+    public int amount;
+}

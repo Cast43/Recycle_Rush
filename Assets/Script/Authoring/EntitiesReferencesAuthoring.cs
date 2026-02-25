@@ -3,14 +3,6 @@ using System.Collections.Generic;
 using Unity.Collections;
 using UnityEngine;
 
-
-// Buffer element para inimigos
-[InternalBufferCapacity(4)]
-public struct EnemyPrefabElement : IBufferElementData
-{
-    public FixedString64Bytes name;
-    public Entity prefab;
-}
 public class EntitiesReferencesAuthoring : MonoBehaviour
 {
 
@@ -23,6 +15,9 @@ public class EntitiesReferencesAuthoring : MonoBehaviour
 
     [Header("Inimigos")]
     public GameObject[] enemyPrefabs;
+
+    [Header("Bosses")]
+    public GameObject[] bossesPrefabs;
 
     public class Baker : Baker<EntitiesReferencesAuthoring>
     {
@@ -47,6 +42,16 @@ public class EntitiesReferencesAuthoring : MonoBehaviour
                 {
                     name = new FixedString64Bytes(enemyPrefab.name),
                     prefab = GetEntity(enemyPrefab, TransformUsageFlags.Dynamic)
+                });
+            }
+
+            var bossesBuffer = AddBuffer<BossPrefabElement>(entity);
+            foreach (var bossPrefab in authoring.bossesPrefabs)
+            {
+                bossesBuffer.Add(new BossPrefabElement
+                {
+                    name = new FixedString64Bytes(bossPrefab.name),
+                    prefab = GetEntity(bossPrefab, TransformUsageFlags.Dynamic)
                 });
             }
         }

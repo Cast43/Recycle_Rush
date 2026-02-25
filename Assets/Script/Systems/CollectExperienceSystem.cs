@@ -24,7 +24,7 @@ public partial struct CollectExperienceSystem : ISystem
     // [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
-        BeginSimulationEntityCommandBufferSystem.Singleton ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();
+        EndSimulationEntityCommandBufferSystem.Singleton ecbSingleton = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>();
         EntityCommandBuffer ECB = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
 
 
@@ -46,12 +46,15 @@ public partial struct CollectExperienceSystem : ISystem
 
             if (collisionWorld.OverlapSphere(localTransform.ValueRO.Position, getExperience.ValueRO.radius, ref hits, collisionFilter))
             {
-                var areadyExperiencedLookup = SystemAPI.GetBufferLookup<AlreadyGiveExperienceEntity>();
                 var GiverExperienceComponentLookup = SystemAPI.GetComponentLookup<GiveExperience>();
+                var GetCoreComponentLookup = SystemAPI.GetComponentLookup<GetCore>();
+                var areadyExperiencedLookup = SystemAPI.GetBufferLookup<AlreadyGiveExperienceEntity>();
+                var GiverExperienceBufferLookup = SystemAPI.GetBufferLookup<GetEnergyFromKill>();
                 foreach (var hit in hits)
                 {
                     if (areadyExperiencedLookup.HasBuffer(entity))
                     {
+
                         var alreadyExperiencedBuffer = areadyExperiencedLookup[entity];
 
 
@@ -68,6 +71,15 @@ public partial struct CollectExperienceSystem : ISystem
                         if (alreadyGiven)
                             continue; // <-- agora sim ignora todo esse hit
 
+                        if (GetCoreComponentLookup.HasComponent(hit.Entity))
+                        {
+                            // ECB.AppendToBuffer(entity, new CoreUpgradeCount { });
+                            ECB.AppendToBuffer<UpgradesPending>(entity, new UpgradesPending
+                            {
+                                upgradeLevel = UpgradeLevel.Core
+                            });
+                        }
+
                         ECB.AppendToBuffer(entity, new AlreadyGiveExperienceEntity { value = hit.Entity });
                     }
                     if (GiverExperienceComponentLookup.HasComponent(hit.Entity))
@@ -77,7 +89,10 @@ public partial struct CollectExperienceSystem : ISystem
                     }
 
                     ECB.AddComponent<DestroyEntityTag>(hit.Entity);
-                    // alreadyExperiencedBuffer.Clear();
+                    if (GiverExperienceBufferLookup.HasBuffer(entity))
+                    {
+                        ECB.AppendToBuffer(entity, new GetEnergyFromKill { amount = GiverExperienceComponentLookup[entity].value });
+                    }
                 }
             }
         }

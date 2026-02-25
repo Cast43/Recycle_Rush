@@ -5,14 +5,12 @@ using Unity.NetCode;
 
 public class LightningEffectAuthoring : MonoBehaviour
 {
-    public float duration;
-    public float dmgInterval;
-    public int damagePerTick;
+    public int damage;
+    public int chainCount;
     public float radius;
     public Faction team;
-    public NetCodeConfig netCodeConfig;
-    public GameObject particleEffect;
-    public int simulationTickRate => netCodeConfig.ClientServerTickRate.SimulationTickRate;
+    public GameObject particleUnit;
+    // public GameObject particleArea;
     // public GameObject[] effectPrefabs; // arraste aqui seus prefabs Poison, Burn, Slow…
 
     public class Baker : Baker<LightningEffectAuthoring>
@@ -22,17 +20,12 @@ public class LightningEffectAuthoring : MonoBehaviour
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
             AddComponent(entity, new LightningEffect
             {
-                duration = (uint)(authoring.duration * authoring.simulationTickRate),
-                dmgInterval = (uint)(authoring.dmgInterval * authoring.simulationTickRate),
-                damagePerTick = authoring.damagePerTick,
-                timeSinceLastTick = 0,
+                damage = authoring.damage,
                 target = authoring.team,
                 radius = authoring.radius,
-                particleEffect = GetEntity(authoring.particleEffect, TransformUsageFlags.None),
+                chainCount = authoring.chainCount,
+                sinalizationInstantiateParticle = GetEntity(authoring.particleUnit, TransformUsageFlags.None),
             });
-
-            AddBuffer<LightningDuration>(entity);
-            AddBuffer<LightningDps>(entity);
         }
     }
 }

@@ -22,11 +22,28 @@ public class AddUpgradesUIManager : MonoBehaviour
 
     [SerializeField]
     public UpgradeUIInfo[] upgradesUIInfo;
+    public UpgradeUIInfo[] coreUpgradesUIInfo;
 
-    void OnEnable()
+    [SerializeField]
+    public GOVisualUpgradesHUD[] GOVisualUpgrades;
+
+    [System.Serializable]
+    public class GOVisualUpgradesHUD
     {
-        SetEffectInHUD();
+        public GameObject GOVisual;
+        public int count;
     }
+    public UpgradeLevel currentUpgradeLevel = UpgradeLevel.Commum;
+
+    public void ShowUpgrades(UpgradeLevel level)
+    {
+        currentUpgradeLevel = level;
+        SetUpgradesInHUD();
+    }
+    // void OnEnable()
+    // {
+    //     SetUpgradesInHUD();
+    // }
     //pega o mundo do servidor para encontrar o playerLocal
     World GetClientWorld()
     {
@@ -48,7 +65,7 @@ public class AddUpgradesUIManager : MonoBehaviour
         return null;
     }
 
-    void SetEffectInHUD()
+    void SetUpgradesInHUD()
     {
         var clientWorld = GetClientWorld();
         if (clientWorld == null)
@@ -229,12 +246,26 @@ public class AddUpgradesUIManager : MonoBehaviour
             // Se for válido, procura no effectsUIInfo
             if (addThisEffect)
             {
-                foreach (var item in upgradesUIInfo)
+                if (currentUpgradeLevel == UpgradeLevel.Commum)
                 {
-                    if (item.name == globalEffectName)
+                    foreach (var item in upgradesUIInfo)
                     {
-                        addEffectUI = item;
-                        break;
+                        if (item.name == globalEffectName)
+                        {
+                            addEffectUI = item;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    foreach (var item in coreUpgradesUIInfo)
+                    {
+                        if (item.name == globalEffectName)
+                        {
+                            addEffectUI = item;
+                            break;
+                        }
                     }
                 }
             }
@@ -330,6 +361,7 @@ public class AddUpgradesUIManager : MonoBehaviour
         // entityManager.AddComponentData(rpcEntity, new ConnectionEntity { Value = connectionEntity });
         Debug.LogWarning($"rpcEnviado!{upgrade.name}");
 
+        SetUpgradeVisualCount(upgrade);
 
         DisableAddEffects();
     }
@@ -348,5 +380,26 @@ public class AddUpgradesUIManager : MonoBehaviour
         entityManager.AddComponentData(rpcEntity, new DecreaseUpgradesPendingRpc { });
 
         entityManager.AddComponent<SendRpcCommandRequest>(rpcEntity);
+    }
+
+    void SetUpgradeVisualCount(UpgradeUIInfo upgrade)
+    {
+        foreach (var visual in GOVisualUpgrades)
+        {
+            if (visual.GOVisual.name == upgrade.name)
+            {
+                visual.GOVisual.SetActive(true);
+                visual.count++;
+                visual.GOVisual.GetComponentInChildren<TMP_Text>().text = visual.count.ToString();
+            }
+        }
+    }
+    public void DisableAllUpgradesVisual()
+    {
+        foreach (var visual in GOVisualUpgrades)
+        {
+            visual.GOVisual.SetActive(false);
+            visual.count = 0;
+        }
     }
 }

@@ -9,5 +9,6 @@ public enum UpgradeModifier
     IncreaseHealthRegen,
     AddEolicTurbines,
     AddBiomassGenerator,
-    AddPassiveEnergy
+    AddPassiveEnergy,
+    AddBoostTurbine
 }

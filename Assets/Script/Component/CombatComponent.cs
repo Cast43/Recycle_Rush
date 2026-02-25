@@ -1,6 +1,7 @@
 using Unity.Entities;
 using Unity.NetCode;
 using Unity.Mathematics;
+using Unity.Rendering;
 using Unity.Collections;
 
 public struct Team : IComponentData
@@ -79,8 +80,15 @@ public struct ShootAttackProperties : IComponentData
     public float bulletLifeTime;
     public float bulletSpeed;
     public int damage;
-    // public FixedString64Bytes throwableName;
+    public int shotCount;
+    public uint ticksBetweenShots;
+    public float spreadRadius;
     public Entity attackPrefab;
+}
+
+public struct PendingShootElement : IBufferElementData
+{
+    public NetworkTick spawnTick;
 }
 
 public struct Owner : IComponentData
@@ -119,4 +127,89 @@ public struct MeleeAttackCooldown : ICommandData
 {
     public NetworkTick Tick { get; set; }
     public NetworkTick value;
+}
+
+public struct DamageFlashTimer : IComponentData
+{
+    [GhostField] public float Value;
+    [GhostField] public float maxDuration;
+}
+
+public struct DamageFlashVisualLink : IComponentData
+{
+    public Entity VisualEntity;
+}
+
+public struct DamageUIEvent : IComponentData
+{
+    public float3 WorldPosition;
+    public int DamageAmount;
+}
+public struct DamageNumberRpc : IRpcCommand
+{
+    public float3 Position;
+    public int DamageAmount;
+}
+
+public struct AreaAttackProperties : IComponentData
+{
+    public Entity attack;
+    public int dmgPerTick;
+    public float timeToDmg;
+    public float dmgInterval;
+    public float TimeToAttack;
+    public float aggroDistance;
+    public float areaDuration;
+    public float timeToDontMove;
+    public float radiusArea;
+}
+public struct CooldownAreaAttack : IComponentData
+{
+    public NetworkTick NextPhaseTick;
+    public NetworkTick NextDamageTick;
+}
+
+public struct AreaDamage : IComponentData
+{
+    public int dmgPerTick;
+    public float timeToDmg;
+    public float dmgInterval;
+    public float radius;
+    public Entity start;
+    public Entity middle;
+    public Entity end;
+}
+public enum AreaPhase : byte
+{
+    Preparing = 0, // Carregando (mostra o 'start')
+    Impacting = 1  // Causando dano (mostra o 'end')
+}
+
+// Adicione isso no seu Baker junto com o AreaDamage!
+public struct AreaDamageTimer : IComponentData
+{
+    public AreaPhase CurrentPhase;
+    public NetworkTick NextPhaseTick; // O Tick em que a fase atual acaba
+    public NetworkTick NextDamageTick; // Opcional: Se for causar dano por segundo durante o impacto
+}
+[GhostComponent]
+public struct AreaVisualState : IComponentData
+{
+    [GhostField]
+    public bool IsImpacting;
+}
+
+public struct AreaSlow : IComponentData
+{
+    public float slowAmount;
+    public float duration;
+}
+public struct DurationAreaSlow : IComponentData
+{
+    public NetworkTick tick;
+}
+public struct SpawnOnDeath : IComponentData
+{
+    public Entity entity;
+    public float scale;
 }

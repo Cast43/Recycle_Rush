@@ -86,4 +86,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   modifiers:
   - type: 1
-    value: 1
+    value: 2

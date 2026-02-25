@@ -374,6 +374,7 @@ GameObject:
   - component: {fileID: 8774793204707371089}
   - component: {fileID: 1021966534303000685}
   - component: {fileID: -2962224611437276920}
+  - component: {fileID: 6987645446414250650}
   m_Layer: 3
   m_Name: Tire
   m_TagString: Untagged
@@ -566,7 +567,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d6dcf92f69834549bfd056c87d57611, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 1.5
+  maxSpeed: 2.2
+  currentSpeed: 2.2
 --- !u!114 &1021966534303000685
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -602,11 +604,31 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxExperience: 1
+  maxExperienceModifier: 0
   startLevel: 1
   modifiers:
   - type: 0
     value: 1
+    divideWaveGain: 1.5
   - type: 1
     value: 1
+    divideWaveGain: 4
   - type: 3
     value: 0.1
+    divideWaveGain: 0
+--- !u!114 &6987645446414250650
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3827788099892099598}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f6f47cd060e4594fa56fc3ce5ba23a3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  aggroDash: 4
+  dashSpeed: 7
+  dashDuration: 1.2
+  dashCooldown: 10

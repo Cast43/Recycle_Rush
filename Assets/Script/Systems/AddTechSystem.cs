@@ -67,6 +67,7 @@ partial struct AddTechSystem : ISystem
                                 amount = (int)mod.amount,
                             };
                             ECB.AddComponent<EnergyRestoreKill>(entity, BiomassMotor);
+                            ECB.AddBuffer<GetEnergyFromKill>(entity);
                         }
 
                         break;
@@ -91,6 +92,37 @@ partial struct AddTechSystem : ISystem
                             };
                             ECB.AddComponent<EnergyRestore>(entity, SolarEnergy);
                             ECB.AddBuffer<EnergyRestoreCooldown>(entity);
+                        }
+                        break;
+                    case UpgradeModifier.AddBoostTurbine:
+                        if (state.EntityManager.HasComponent<DashProperties>(entity))
+                        {
+                            var previousTurbine = state.EntityManager.GetComponentData<DashProperties>(entity);
+                            var boostTurbine = new DashProperties
+                            {
+                                duration = (previousTurbine.duration),
+                                cooldown = (previousTurbine.cooldown * mod.cooldown),
+                                speed = previousTurbine.speed * mod.modifier,
+                                canDash = previousTurbine.canDash,
+                                isDashing = previousTurbine.isDashing,
+                                lostEnergy = previousTurbine.lostEnergy + 1,
+                            };
+                            ECB.SetComponent<DashProperties>(entity, boostTurbine);
+                        }
+                        else
+                        {
+                            // ECB.SetComponentEnabled<DashProperties>(entity, true);
+                            // ECB.AddComponent(entity, new DashProperties
+                            // {
+                            //     duration = 1f,
+                            //     cooldown = 2.5f,
+                            //     speed = 8,
+                            //     canDash = true,
+                            //     isDashing = false,
+                            // });
+                            // ECB.AddBuffer<DashCommand>(entity);
+                            // ECB.AddBuffer<DashCooldown>(entity);
+                            // ECB.AddBuffer<DashDuration>(entity);
                         }
                         break;
                 }

@@ -23,7 +23,7 @@ partial struct ApplyExperienceSystem : ISystem
         EntityCommandBuffer ECB = new EntityCommandBuffer(Allocator.Temp);
 
         foreach (var (currentExperience, maxExperience, level, buffUpgradesPending, getExperienceThisTickBuffer, entity) in
-            SystemAPI.Query<RefRW<CurrentExperience>, RefRO<MaxExperience>, RefRW<Level>, DynamicBuffer<UpgradesPending>
+            SystemAPI.Query<RefRW<CurrentExperience>, RefRW<MaxExperience>, RefRW<Level>, DynamicBuffer<UpgradesPending>
             , DynamicBuffer<GetExperienceThisTick>>().WithAll<Simulate>().WithEntityAccess())
         {
             if (!getExperienceThisTickBuffer.GetDataAtTick(currentTick, out var getExperienceThisTick)) continue;
@@ -32,8 +32,9 @@ partial struct ApplyExperienceSystem : ISystem
 
             if (currentExperience.ValueRO.value >= maxExperience.ValueRO.value)
             {
-                level.ValueRW.current += (int)(currentExperience.ValueRO.value / maxExperience.ValueRO.value);
+                level.ValueRW.current++;
                 currentExperience.ValueRW.value = (int)(currentExperience.ValueRO.value - maxExperience.ValueRO.value);
+                maxExperience.ValueRW.value = (int)(maxExperience.ValueRO.modier * maxExperience.ValueRW.value);
             }
         }
 
@@ -43,8 +44,11 @@ partial struct ApplyExperienceSystem : ISystem
             {
                 level.ValueRW.previous = level.ValueRO.current;
                 ECB.AddComponent<LevelUpTag>(entity);
-                ECB.AddComponent<RequestChooseUpgrade>(entity);
-                ECB.AppendToBuffer<UpgradesPending>(entity, new UpgradesPending { });
+                // ECB.AddComponent<RequestChooseUpgrade>(entity);
+                ECB.AppendToBuffer<UpgradesPending>(entity, new UpgradesPending
+                {
+                    upgradeLevel = UpgradeLevel.Commum
+                });
             }
         }
 
@@ -69,7 +73,7 @@ partial struct ApplyExperienceSystem : ISystem
                         {
                             var maxHealth = state.EntityManager.GetComponentData<MaxHealth>(entity);
                             var currentHealth = state.EntityManager.GetComponentData<CurrentHealth>(entity);
-                            maxHealth.value += (int)mod.Value * lvl;
+                            maxHealth.value += (int)(((int)mod.Value * lvl) / mod.divideWaveGain);
                             currentHealth.value = maxHealth.value;
                             ECB.SetComponent(entity, maxHealth);
                             ECB.SetComponent(entity, currentHealth);
@@ -79,7 +83,7 @@ partial struct ApplyExperienceSystem : ISystem
                         if (state.EntityManager.HasComponent<MeleeAttackProperties>(entity))
                         {
                             var meleeAttack = state.EntityManager.GetComponentData<MeleeAttackProperties>(entity);
-                            meleeAttack.damage = (int)(meleeAttack.damage / ((mod.Value * lvl) + 1));
+                            meleeAttack.damage = (int)(meleeAttack.damage + ((mod.Value * lvl) / mod.divideWaveGain));
                             ECB.SetComponent(entity, meleeAttack);
                         }
                         break;
@@ -95,13 +99,13 @@ partial struct ApplyExperienceSystem : ISystem
                         if (state.EntityManager.HasComponent<PlayerInput>(entity))
                         {
                             var ms = state.EntityManager.GetComponentData<MoveSpeed>(entity);
-                            ms.value += mod.Value * lvl;
+                            ms.maxSpeed += mod.Value * lvl;
                             ECB.SetComponent(entity, ms);
                         }
                         if (state.EntityManager.HasComponent<Movement>(entity))
                         {
                             var ms = state.EntityManager.GetComponentData<MoveSpeed>(entity);
-                            ms.value += mod.Value * lvl;
+                            ms.maxSpeed += mod.Value * lvl;
                             ECB.SetComponent(entity, ms);
                         }
                         break;
@@ -111,7 +115,7 @@ partial struct ApplyExperienceSystem : ISystem
             ECB.RemoveComponent<LevelUpTag>(entity);
         }
 
-        foreach (var (buffUpgradesPending, entity) in SystemAPI.Query<DynamicBuffer<UpgradesPending>>().WithAll<RequestChooseUpgrade, PlayerInput>().WithEntityAccess())
+        foreach (var (buffUpgradesPending, entity) in SystemAPI.Query<DynamicBuffer<UpgradesPending>>().WithAll<PlayerInput>().WithNone<RequestChooseUpgrade>().WithEntityAccess())
         {
 
             // manda um rpc para o player escolher os efeitos a adição de efeitos
@@ -120,7 +124,11 @@ partial struct ApplyExperienceSystem : ISystem
             // Pega o NetworkId do cliente local
             //essa parte não é do inimigo apenas do player
 
-            // if (buffUpgradesPending.Length > 0) return;
+            if (buffUpgradesPending.IsEmpty)
+            {
+                //     ECB.RemoveComponent<RequestChooseUpgrade>(entity);
+                continue;
+            }
 
             var lookupConnection = SystemAPI.GetComponentLookup<ConnectionEntity>(true);
             if (!lookupConnection.HasComponent(entity))
@@ -136,16 +144,30 @@ partial struct ApplyExperienceSystem : ISystem
             var netId = networkIdLookup[connection.Value];
 
             // cria RPC e envia para a conexão correta
-            var rpc = new ShowUpgradesRPC { ClientNetId = netId.Value };
+            var rpc = new ShowUpgradesRPC();
+
+            if (buffUpgradesPending[0].upgradeLevel == UpgradeLevel.Commum)
+            {
+                rpc = new ShowUpgradesRPC
+                {
+                    ClientNetId = netId.Value,
+                    upgradeLevel = UpgradeLevel.Commum
+                };
+            }
+            else
+            {
+                rpc = new ShowUpgradesRPC
+                {
+                    ClientNetId = netId.Value,
+                    upgradeLevel = UpgradeLevel.Core
+                };
+            }
+
 
             var rpcEntity = ECB.CreateEntity();
             ECB.AddComponent(rpcEntity, rpc);
             ECB.AddComponent(rpcEntity, new SendRpcCommandRequest { TargetConnection = connection.Value });
-
-            if (buffUpgradesPending.Length <= 1)
-            {
-                ECB.RemoveComponent<RequestChooseUpgrade>(entity);
-            }
+            ECB.AddComponent<RequestChooseUpgrade>(entity);
         }
 
         ECB.Playback(state.EntityManager);

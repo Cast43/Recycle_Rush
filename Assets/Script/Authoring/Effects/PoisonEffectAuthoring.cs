@@ -10,6 +10,9 @@ public class PoisonEffectAuthoring : MonoBehaviour
     public int damagePerTick;
     public NetCodeConfig netCodeConfig;
     public int simulationTickRate => netCodeConfig.ClientServerTickRate.SimulationTickRate;
+    public GameObject poisonEffectArea;
+    public float areaRadius;
+    public Faction targetFaction;
 
     public class Baker : Baker<PoisonEffectAuthoring>
     {
@@ -21,7 +24,10 @@ public class PoisonEffectAuthoring : MonoBehaviour
                 duration = (uint)(authoring.duration * authoring.simulationTickRate),
                 dmgInterval = (uint)(authoring.dmgInterval * authoring.simulationTickRate),
                 damagePerTick = authoring.damagePerTick,
-                timeSinceLastTick = 0
+                timeSinceLastTick = 0,
+                poisonEffectArea = GetEntity(authoring.poisonEffectArea, TransformUsageFlags.None),
+                areaRadius = authoring.areaRadius,
+                targetFaction = authoring.targetFaction,
             });
             AddBuffer<PoisonDuration>(entity);
             AddBuffer<PoisonDps>(entity);

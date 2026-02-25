@@ -41,6 +41,7 @@ partial struct MovementSystem : ISystem
     }
 }
 
+[WithNone(typeof(EnemyDashProperties))]
 public partial struct MoveJob : IJobEntity
 {
     [ReadOnly] public NetworkTick currentTick;
@@ -66,7 +67,7 @@ public partial struct MoveJob : IJobEntity
         }
 
         physicsVelocity.Angular = float3.zero;
-        physicsVelocity.Linear = movement.moveVector * speed.value;
+        physicsVelocity.Linear = movement.moveVector * speed.currentSpeed;
         localTransform.Rotation = quaternion.identity;
     }
 }
@@ -77,14 +78,14 @@ public partial struct PlayerMoveJob : IJobEntity
 {
     [ReadOnly] public NetworkTick currentTick;
 
-    public void Execute(in MovementPlayer movement, in DashProperties dashProperties, ref PhysicsVelocity physicsVelocity, ref LocalTransform localTransform, in MoveSpeed speed)
+    public void Execute(in MovementPlayer movement, ref PhysicsVelocity physicsVelocity, ref LocalTransform localTransform, in DashProperties dash, in MoveSpeed speed)
     {
         // return;
         //enquanto estiver no dash não pode andar
-        if (dashProperties.isDashing) return;
+        if (dash.isDashing) return;
 
         physicsVelocity.Angular = float3.zero;
-        physicsVelocity.Linear = movement.moveVector * speed.value;
+        physicsVelocity.Linear = movement.moveVector * speed.currentSpeed;
         localTransform.Rotation = quaternion.identity;
     }
 }

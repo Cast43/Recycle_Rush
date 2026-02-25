@@ -566,7 +566,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d6dcf92f69834549bfd056c87d57611, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 1
+  maxSpeed: 2
+  currentSpeed: 2
 --- !u!114 &-8833622661249094351
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -605,11 +606,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxExperience: 1
+  maxExperienceModifier: 0
   startLevel: 1
   modifiers:
   - type: 0
     value: 1
+    divideWaveGain: 1.5
   - type: 1
     value: 1
+    divideWaveGain: 4
   - type: 3
     value: 0.02
+    divideWaveGain: 0

@@ -12,6 +12,7 @@ public struct GlobalUpgradesPrefab : IBufferElementData
 public struct ShowUpgradesRPC : IRpcCommand
 {
     public int ClientNetId;
+    public UpgradeLevel upgradeLevel;
 }
 public struct AddEffectRpc : IRpcCommand
 {
@@ -27,3 +28,4 @@ public struct AddComponentRpc : IRpcCommand
 }
 public struct DecreaseUpgradesPendingRpc : IRpcCommand { }
 public struct RequestChooseUpgrade : IComponentData { }
+public struct GetCore : IComponentData { }

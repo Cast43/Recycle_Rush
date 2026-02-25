@@ -4,3 +4,9 @@ public enum UpgradeType
     Effect,
     Tech
 }
+
+public enum UpgradeLevel
+{
+    Commum,
+    Core
+}

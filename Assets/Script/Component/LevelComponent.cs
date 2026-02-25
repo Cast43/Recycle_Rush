@@ -17,13 +17,15 @@ public struct GetExperienceInArea : IComponentData
 
 public struct MaxExperience : IComponentData
 {
-    public int value;
+    [GhostField] public int value;
+    public float modier;
 }
 
 public struct LevelModifier : IBufferElementData
 {
     public UpgradeModifier Type;
     public float Value;
+    public float divideWaveGain;
 }
 public struct Level : IComponentData
 {
@@ -37,7 +39,7 @@ public struct CurrentExperience : IComponentData
 }
 public struct UpgradesPending : IBufferElementData
 {
-    [GhostField] public int Count;
+    [GhostField] public UpgradeLevel upgradeLevel;
 }
 public struct LevelUpTag : IComponentData { }
 public struct GiveExperience : IComponentData

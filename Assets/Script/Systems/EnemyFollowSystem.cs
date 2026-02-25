@@ -42,6 +42,11 @@ public partial struct InputEnemyJob : IJobEntity
     [BurstCompile]
     public void Execute(ref Movement movement, ref Direction direction, in TargetEntity target, in LocalTransform localTransform)
     {
+        if (!transformLookup.HasComponent(target.value))
+        {
+            // O alvo morreu ou não existe. O inimigo deve parar ou ficar confuso.
+            return;
+        }
         if (target.value == Entity.Null) return;
         float3 inputVector = float3.zero;
 

@@ -40,13 +40,22 @@ partial struct ApplyDamageSystem : ISystem
             if (currentHealth.ValueRO.value > 0)
             {
                 currentHealth.ValueRW.value -= damageThisTick.value;
-
             }
 
             if (damageThisTick.value > 0)
             {
-                // Debug.Log("teste apply");
+                // Debug.Log(damageThisTick.value);
                 currentHealth.ValueRW.onHealthChanged = true;
+
+                var damageFlashLookup = SystemAPI.GetComponentLookup<DamageFlashTimer>();
+                // Define que o personagem ficará vermelho por 0.2 segundos
+                if (damageFlashLookup.HasComponent(entity))
+                {
+                    var flashDuration = SystemAPI.GetComponentLookup<DamageFlashTimer>()[entity].maxDuration;
+
+                    damageFlashLookup.GetRefRW(entity).ValueRW.Value = flashDuration;
+                }
+
             }
 
             if (currentHealth.ValueRO.value <= 0)
@@ -101,10 +110,7 @@ partial struct ApplyDamageSystem : ISystem
                 }
                 else
                 {
-                    // if (isServer)
-                    {
-                        ECB.AddComponent<DestroyEntityTag>(entity);
-                    }
+                    ECB.AddComponent<DestroyEntityTag>(entity);
                 }
             }
         }

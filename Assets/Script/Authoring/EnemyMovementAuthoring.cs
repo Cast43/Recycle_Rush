@@ -5,7 +5,8 @@ using Unity.NetCode;
 
 public class EnemyMovementAuthoring : MonoBehaviour
 {
-    public float moveSpeed;
+    public float maxSpeed;
+    public float currentSpeed;
 
     public class Baker : Baker<EnemyMovementAuthoring>
     {
@@ -13,8 +14,13 @@ public class EnemyMovementAuthoring : MonoBehaviour
         {
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
             AddComponent(entity, new Movement { });
-            AddComponent(entity, new MoveSpeed { value = authoring.moveSpeed });
+            AddComponent(entity, new MoveSpeed
+            {
+                currentSpeed = authoring.maxSpeed,
+                maxSpeed = authoring.currentSpeed
+            });
             AddComponent(entity, new Direction { });
+            AddBuffer<DontMoveOnTimer>(entity);
         }
     }
 }

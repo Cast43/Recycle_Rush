@@ -56,9 +56,79 @@ partial struct AutoShootSystem : ISystem
         public EntityCommandBuffer.ParallelWriter ECB;
 
         [BurstCompile]
-        public void Execute(ref DynamicBuffer<ShootAttackCooldown> attackCooldown, ref DynamicBuffer<DontMoveOnTimer> dontMoveOnTimer, in Team unit, in ShootAttackProperties attackProperties, in TargetEntity target, Entity entity, [ChunkIndexInQuery] int sortKey)
+        public void Execute(
+            ref DynamicBuffer<ShootAttackCooldown> attackCooldown,
+            ref DynamicBuffer<DontMoveOnTimer> dontMoveOnTimer,
+            ref DynamicBuffer<PendingShootElement> pendingShoots, // NOVO: Buffer de tiros agendados
+            in Team unit,
+            in ShootAttackProperties attackProperties,
+            in TargetEntity target,
+            Entity entity,
+            [ChunkIndexInQuery] int sortKey)
         {
             if (!transformLookup.HasComponent(target.value)) return;
+
+            float3 spawnPos = transformLookup[entity].Position;
+            float3 targetPos = transformLookup[target.value].Position;
+            spawnPos = new float3(spawnPos.x, 0, spawnPos.z);
+            targetPos = new float3(targetPos.x, 0, targetPos.z);
+
+            var shootProperties = shootAttackProperties[entity];
+
+            // 1. PROCESSAR TIROS PENDENTES (A RAJADA)
+            // Lemos de trás para frente para poder remover do buffer em segurança
+            for (int i = pendingShoots.Length - 1; i >= 0; i--)
+            {
+                var pendingShot = pendingShoots[i];
+
+                // Se o tick atual chegou no tick agendado ou já passou dele
+                if (!pendingShot.spawnTick.IsNewerThan(currentTick))
+                {
+                    // Cria a semente única
+                    uint seed = (uint)(entity.Index + 1) * (uint)math.abs(currentTick.GetHashCode()) + (uint)(i + 1);
+                    if (seed == 0) seed = 1;
+                    var random = new Unity.Mathematics.Random(seed);
+
+                    // 1. Gera um deslocamento aleatório para X e Z (se o seu jogo for 2D/TopDown)
+                    float radius = shootProperties.spreadRadius; // O quão impreciso é o tiro
+                    float randomOffsetX = random.NextFloat(-radius, radius);
+                    float randomOffsetZ = random.NextFloat(-radius, radius);
+
+                    // 2. Cria uma "falsa" posição do alvo adicionando essa variação
+                    float3 variedTargetPos = targetPos + new float3(randomOffsetX, 0, randomOffsetZ);
+
+                    // 3. Calcula a direção final baseada nesse alvo "impreciso"
+                    float3 finalShootDirection = math.normalizesafe(variedTargetPos - spawnPos);
+
+                    // Criar entidade da flecha usando a nova direção
+                    Entity arrowEntity = ECB.Instantiate(sortKey, shootProperties.attackPrefab);
+
+                    ECB.SetComponent(sortKey, arrowEntity, LocalTransform.FromPositionRotation(
+                        spawnPos + shootProperties.firePointOffset,
+                        quaternion.LookRotationSafe(finalShootDirection, math.up())));
+
+                    // Continua com o resto das suas definições...
+                    ECB.SetComponent(sortKey, arrowEntity, new Team { faction = unit.faction });
+                    ECB.SetComponent(sortKey, arrowEntity, new Direction { lookDirection = finalShootDirection });
+                    ECB.SetComponent(sortKey, arrowEntity, new Owner { Value = entity });
+                    ECB.SetComponent(sortKey, arrowEntity, new DamageOnTrigger { value = (int)shootProperties.damage });
+                    ECB.SetComponent(sortKey, arrowEntity, new DestroyOnTimer { value = shootProperties.bulletLifeTime });
+                    ECB.SetComponent(sortKey, arrowEntity, new Arrow { moveSpeed = (int)shootProperties.bulletSpeed });
+
+                    if (effectPrefabsLookup.HasBuffer(entity))
+                    {
+                        foreach (var item in effectPrefabsLookup[entity])
+                        {
+                            ECB.AppendToBuffer(sortKey, arrowEntity, item);
+                        }
+                    }
+
+                    // Remover o tiro que acabou de ser processado do buffer
+                    pendingShoots.RemoveAt(i);
+                }
+            }
+
+            // 2. VERIFICAR SE PODE INICIAR UM NOVO ATAQUE
             if (!attackCooldown.GetDataAtTick(currentTick, out var cooldownExpirationTick))
             {
                 cooldownExpirationTick.value = NetworkTick.Invalid;
@@ -68,15 +138,10 @@ partial struct AutoShootSystem : ISystem
 
             if (!canAttack) return;
 
-            float3 spawnPos = transformLookup[entity].Position;
-            float3 targetPos = transformLookup[target.value].Position;
-            spawnPos = new float3(spawnPos.x, 0, spawnPos.z);
-            targetPos = new float3(targetPos.x, 0, targetPos.z);
-
-            //reduz a energia a cada ataque
+            // Verifica energia
             if (energyBuffer.HasBuffer(entity))
             {
-                var lostEnergy = shootAttackProperties[entity].lostEnergy;
+                var lostEnergy = shootAttackProperties[entity].lostEnergy + shootProperties.damage;
                 if (currentEnergy[entity].value < lostEnergy)
                 {
                     return;
@@ -84,37 +149,22 @@ partial struct AutoShootSystem : ISystem
                 ECB.AppendToBuffer(sortKey, entity, new EnergyBufferElement { value = (int)lostEnergy });
             }
 
-            // Criar entidade da flecha
-            // Direção da flecha baseada no olhar do jogador
-            var shootProperties = shootAttackProperties[entity];
-            Entity arrowEntity = ECB.Instantiate(sortKey, shootProperties.attackPrefab);
-
-            float3 shootDirection = math.normalizesafe(targetPos - spawnPos);
-
-            ECB.SetComponent(sortKey, arrowEntity, LocalTransform.FromPositionRotation(spawnPos + shootProperties.firePointOffset,
-                quaternion.LookRotationSafe(targetPos - spawnPos, math.up())));
-            // Apenas modificar a direção sem sobrescrever os outros valores
-            ECB.SetComponent(sortKey, arrowEntity, new Team { faction = unit.faction }); //modifica apenas uma variável sem sobreescrever tudo
-            ECB.SetComponent(sortKey, arrowEntity, new Direction { lookDirection = shootDirection }); //modifica apenas uma variável sem sobreescrever tudo
-            ECB.SetComponent(sortKey, arrowEntity, new Owner { Value = entity }); //modifica apenas uma variável sem sobreescrever tudo
-            ECB.SetComponent(sortKey, arrowEntity, new DamageOnTrigger { value = (int)shootProperties.damage });
-            ECB.SetComponent(sortKey, arrowEntity, new DestroyOnTimer { value = shootProperties.bulletLifeTime });
-            ECB.SetComponent(sortKey, arrowEntity, new Arrow { moveSpeed = (int)shootProperties.bulletSpeed });
-
-            if (effectPrefabsLookup.HasBuffer(entity))
+            // 3. AGENDAR A RAJADA DE TIROS
+            // Em vez de atirar direto, agendamos os tiros no buffer baseado em 'shotCount'
+            int shotsToFire = math.max(1, shootProperties.shotCount); // Garante no mínimo 1 tiro
+            for (int i = 0; i < shotsToFire; i++)
             {
-                foreach (var item in effectPrefabsLookup[entity])
-                {
-                    ECB.AppendToBuffer(sortKey, arrowEntity, item); //modifica apenas uma variável sem sobreescrever tudo
-                }
+                var spawnTick = currentTick;
+                spawnTick.Add((uint)(i * shootProperties.ticksBetweenShots)); // Adiciona o delay para cada tiro subsequente
+
+                pendingShoots.Add(new PendingShootElement { spawnTick = spawnTick });
             }
 
-            //cooldown de ataque
+            // Aplicar Cooldowns gerais do ataque
             var newCooldownTickAttack = currentTick;
             newCooldownTickAttack.Add(attackProperties.cooldownTickCount);
             attackCooldown.AddCommandData(new ShootAttackCooldown { Tick = currentTick, value = newCooldownTickAttack });
 
-            //cooldown de movimento
             var newCooldownTickMove = currentTick;
             newCooldownTickMove.Add(attackProperties.timeToDontMove);
             dontMoveOnTimer.AddCommandData(new DontMoveOnTimer { Tick = currentTick, value = newCooldownTickMove });

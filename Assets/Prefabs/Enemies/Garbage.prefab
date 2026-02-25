@@ -316,7 +316,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d6dcf92f69834549bfd056c87d57611, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 2.2
+  maxSpeed: 2
+  currentSpeed: 2
 --- !u!114 &8219154975577715529
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -340,6 +341,9 @@ MonoBehaviour:
   bulletSpeed: 4
   damage: 1
   lostEnergy: 0
+  shotCount: 1
+  ticksBetweenShots: 0
+  spreadRadius: 0.2
   netCodeConfig: {fileID: 11400000, guid: 75d8a62403cd4664593908df3234abf7, type: 2}
 --- !u!114 &31021348423272261
 MonoBehaviour:
@@ -382,14 +386,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxExperience: 1
+  maxExperienceModifier: 0
   startLevel: 1
   modifiers:
   - type: 0
     value: 1
+    divideWaveGain: 1.5
   - type: 1
     value: 1
+    divideWaveGain: 4
   - type: 3
     value: 0.01
+    divideWaveGain: 0
 --- !u!1 &5315488179751079938
 GameObject:
   m_ObjectHideFlags: 0

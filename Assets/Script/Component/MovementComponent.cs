@@ -14,15 +14,25 @@ public struct Movement : IComponentData
 }
 public struct MoveSpeed : IComponentData
 {
-    public float value;
+    [GhostField] public float maxSpeed;
+    [GhostField] public float currentSpeed;
 }
 public struct DashProperties : IComponentData
 {
-    public uint cooldown;
-    public uint duration;
-    public float speed;
+    [GhostField] public int lostEnergy;
+    [GhostField] public float cooldown;
+    [GhostField] public float duration;
+    [GhostField] public float speed;
     [GhostField] public bool canDash;
     [GhostField] public bool isDashing;
+}
+public struct EnemyDashProperties : IComponentData
+{
+    public float aggroDistance;
+    public float cooldown;
+    public float duration;
+    public float speed;
+    public bool isDashing;
 }
 [GhostComponent(PrefabType = GhostPrefabType.AllPredicted)]
 public struct DashCooldown : ICommandData

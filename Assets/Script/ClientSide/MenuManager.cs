@@ -6,14 +6,15 @@ using UnityEngine.SceneManagement;
 using System.Linq;
 using Unity.Networking.Transport;
 using Unity.Networking.Transport.Relay;
+
 public class MenuManager : MonoBehaviour
 {
     public GameObject menuPanel;
-    bool enabled = false;
+    bool isEnabled = false;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        menuPanel.SetActive(enabled);
+        menuPanel.SetActive(isEnabled);
     }
 
     // Update is called once per frame
@@ -21,15 +22,15 @@ public class MenuManager : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            if (enabled)
+            if (isEnabled)
             {
-                enabled = false;
+                isEnabled = false;
             }
             else
             {
-                enabled = true;
+                isEnabled = true;
             }
-            menuPanel.SetActive(enabled);
+            menuPanel.SetActive(isEnabled);
         }
     }
     public void LeaveMatch()
@@ -137,4 +138,41 @@ public class MenuManager : MonoBehaviour
 
         Debug.Log("Stopped worlds and cleaned up.");
     }
+
+    public void RestartScene()
+    {
+        // 1. Encontra o Mundo do Cliente (Onde o jogador está clicando)
+        World clientWorld = GetClientWorld();
+
+        if (clientWorld != null)
+        {
+            // 2. Cria uma entidade temporária para carregar o RPC
+            var entityManager = clientWorld.EntityManager;
+            var rpcEntity = entityManager.CreateEntity();
+
+            // 3. Adiciona o componente do RPC
+            entityManager.AddComponent<RestartGameRpc>(rpcEntity);
+
+            // 4. Adiciona o pedido de envio para o Servidor
+            entityManager.AddComponent<SendRpcCommandRequest>(rpcEntity);
+
+            Debug.Log("Pedido de reinício enviado ao servidor!");
+        }
+        else
+        {
+            Debug.LogError("Não foi possível encontrar o Mundo do Cliente!");
+        }
+    }
+
+    // Função auxiliar para achar o mundo correto
+    private World GetClientWorld()
+    {
+        foreach (var world in World.All)
+        {
+            // Pega o primeiro mundo que é Cliente e não é Servidor (ou é Host)
+            if (world.IsClient()) return world;
+        }
+        return null;
+    }
+
 }

@@ -106,6 +106,7 @@ GameObject:
   - component: {fileID: -3475810099924927038}
   - component: {fileID: 357815296403494025}
   - component: {fileID: 2478120488542937865}
+  - component: {fileID: 8287433019369763991}
   m_Layer: 8
   m_Name: PlayerA
   m_TagString: Untagged
@@ -271,11 +272,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1f729146d2e36c24780c4b303075676b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 4
-  dashSpeed: 10
+  maxSpeed: 4
+  currentSpeed: 4
+  dashSpeed: 8
   dashDuration: 0.5
-  dashCooldown: 2
-  netCodeConfig: {fileID: 11400000, guid: 75d8a62403cd4664593908df3234abf7, type: 2}
+  dashCooldown: 2.5
+  dashEnergyCost: 5
 --- !u!114 &1900719457097203956
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -311,7 +313,10 @@ MonoBehaviour:
   bulletLifeTime: 1
   bulletSpeed: 5
   damage: 1
-  lostEnergy: 10
+  lostEnergy: 3
+  shotCount: 1
+  ticksBetweenShots: 0
+  spreadRadius: 0.2
   netCodeConfig: {fileID: 11400000, guid: 75d8a62403cd4664593908df3234abf7, type: 2}
 --- !u!114 &-1984916485959386395
 MonoBehaviour:
@@ -325,7 +330,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 99b58e1404eaa174390dda7f29787635, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxExperience: 100
+  maxExperience: 80
+  maxExperienceModifier: 1.1
   startLevel: 0
   modifiers: []
 --- !u!114 &-4669703099547100025
@@ -368,7 +374,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxEnergy: 100
   startEnergy: 100
-  energyRestoreCooldown: 2
+  energyRestoreCooldown: 5
   energyRestoreAmount: 5
 --- !u!114 &-3475810099924927038
 MonoBehaviour:
@@ -382,8 +388,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7280f576d2e4bbf42b14f162b187e31d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  effectsPrefab:
-  - {fileID: 2446432607396823940, guid: 6cc711ff129f13c458da551e7e9d754d, type: 3}
+  effectsPrefab: []
 --- !u!114 &357815296403494025
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -410,6 +415,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   techs: []
+--- !u!114 &8287433019369763991
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4411393761261615811}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 46dd7b868b788c14e9f75368b8a977e1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  meshFilho: {fileID: 7829576326830782810}
+  flashDuration: 0.2
 --- !u!1 &6728840892501591999
 GameObject:
   m_ObjectHideFlags: 0
@@ -594,6 +613,7 @@ GameObject:
   - component: {fileID: 2792660848605163285}
   - component: {fileID: 5246362034938687313}
   - component: {fileID: 4991999302183146384}
+  - component: {fileID: 8544441321820593820}
   m_Layer: 8
   m_Name: Mesh
   m_TagString: Untagged
@@ -683,3 +703,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   rotationSpeed: 3
   Yoffset: 0
+--- !u!114 &8544441321820593820
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7829576326830782810}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd767c11dd76c394cba78280e213701f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

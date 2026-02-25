@@ -18,8 +18,8 @@ partial struct AddEffectUIClientRPCSystem : ISystem
     public void OnUpdate(ref SystemState state)
     {
         EntityCommandBuffer ECB = new EntityCommandBuffer(Unity.Collections.Allocator.Temp);
-        foreach ((RefRO<ReceiveRpcCommandRequest> receiveRpcCommandRequest, Entity entity)
-            in SystemAPI.Query<RefRO<ReceiveRpcCommandRequest>>().WithAll<ShowUpgradesRPC>().WithEntityAccess())
+        foreach ((RefRO<ReceiveRpcCommandRequest> receiveRpcCommandRequest, RefRO<ShowUpgradesRPC> showUpgrades, Entity entity)
+            in SystemAPI.Query<RefRO<ReceiveRpcCommandRequest>, RefRO<ShowUpgradesRPC>>().WithEntityAccess())
         {
             // Aqui você pode ativar o GameObject
             var canvas = GameObject.Find("Canvas");
@@ -27,9 +27,10 @@ partial struct AddEffectUIClientRPCSystem : ISystem
             {
                 // Busca o filho "AddEffectUI" dentro do Canvas
                 var addUpgradeUITransform = canvas.transform.Find("AddUpgradesUI");
-                if (addUpgradeUITransform != null)
+                if (addUpgradeUITransform != null && !addUpgradeUITransform.gameObject.activeSelf)
                 {
                     addUpgradeUITransform.gameObject.SetActive(true);
+                    addUpgradeUITransform.GetComponent<AddUpgradesUIManager>().ShowUpgrades(showUpgrades.ValueRO.upgradeLevel);
                     // Debug.Log("AddEffectUI ativado");
                 }
                 else

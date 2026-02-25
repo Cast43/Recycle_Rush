@@ -71,13 +71,13 @@ partial struct UpdateStatusSystem : ISystem
                         if (state.EntityManager.HasComponent<PlayerInput>(entity))
                         {
                             var ms = state.EntityManager.GetComponentData<MoveSpeed>(entity);
-                            ms.value += mod.Value;
+                            ms.maxSpeed += mod.Value;
                             ECB.SetComponent(entity, ms);
                         }
                         if (state.EntityManager.HasComponent<Movement>(entity))
                         {
                             var ms = state.EntityManager.GetComponentData<MoveSpeed>(entity);
-                            ms.value += mod.Value;
+                            ms.maxSpeed += mod.Value;
                             ECB.SetComponent(entity, ms);
                         }
                         break;

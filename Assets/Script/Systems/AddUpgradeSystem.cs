@@ -156,6 +156,7 @@ partial struct AddUpgradeSystem : ISystem
                 {
                     var buffer = SystemAPI.GetBuffer<UpgradesPending>(localPlayer);
                     if (buffer.Length > 0) buffer.RemoveAt(0);
+                    ECB.RemoveComponent<RequestChooseUpgrade>(localPlayer);
                 }
             }
             ECB.DestroyEntity(rpcEntity);

@@ -6,6 +6,7 @@ using Unity.NetCode;
 public class LevelingAuthoring : MonoBehaviour
 {
     public int maxExperience;
+    public float maxExperienceModifier;
     public int startLevel = 1;
 
     public ModifierEntry[] modifiers;
@@ -15,13 +16,18 @@ public class LevelingAuthoring : MonoBehaviour
     {
         public UpgradeModifier type;
         public float value;
+        public float divideWaveGain;
     }
     public class Baker : Baker<LevelingAuthoring>
     {
         public override void Bake(LevelingAuthoring authoring)
         {
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
-            AddComponent(entity, new MaxExperience { value = authoring.maxExperience });
+            AddComponent(entity, new MaxExperience
+            {
+                value = authoring.maxExperience,
+                modier = authoring.maxExperienceModifier
+            });
             AddComponent(entity, new Level { current = authoring.startLevel, previous = authoring.startLevel });
             AddComponent(entity, new CurrentExperience { value = 0 });
             AddBuffer<UpgradesPending>(entity);
@@ -34,7 +40,12 @@ public class LevelingAuthoring : MonoBehaviour
             foreach (var entry in authoring.modifiers)
             {
                 //modificadores que ao passar de level aumentam alguma variável
-                buffer.Add(new LevelModifier { Type = entry.type, Value = entry.value });
+                buffer.Add(new LevelModifier
+                {
+                    Type = entry.type,
+                    Value = entry.value,
+                    divideWaveGain = entry.divideWaveGain
+                });
             }
         }
     }

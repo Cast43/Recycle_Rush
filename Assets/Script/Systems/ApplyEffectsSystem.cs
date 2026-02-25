@@ -9,7 +9,8 @@ using Unity.Mathematics;
 using Unity.Collections;
 
 [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
-// [UpdateInGroup(typeof(SimulationSystemGroup))]
+// [UpdateBefore(typeof(CalculateFrameDamageSystem))]
+[UpdateInGroup(typeof(SimulationSystemGroup))]
 public partial struct ApplyEffectsSystem : ISystem
 {
     public void OnCreate(ref SystemState state)
@@ -34,30 +35,45 @@ public partial struct ApplyEffectsSystem : ISystem
             var poisonDpsLookup = SystemAPI.GetBufferLookup<PoisonDps>();
             var poisonDurationBuff = new DynamicBuffer<PoisonDuration>();
             var poisonDpsBuff = new DynamicBuffer<PoisonDps>();
+            // var poisonUnitVisual = new EffectUnitVisual();
 
             //verifica se existe poison no alvo
-            if (poisonDurationBuffLookup.HasBuffer(target.ValueRO.Value))
-            {
-                //adiciona os stacks de curse //valta value RW da health
-                poisonDurationBuff = SystemAPI.GetBufferLookup<PoisonDuration>()[target.ValueRO.Value];
-                poisonDpsBuff = SystemAPI.GetBufferLookup<PoisonDps>()[target.ValueRO.Value];
-                poisonDurationBuff.Clear();
-            }
-            else
-            {
-                //adiciona os stacks de curse
-                poisonDurationBuff = ECB.AddBuffer<PoisonDuration>(target.ValueRO.Value);
-                poisonDpsBuff = ECB.AddBuffer<PoisonDps>(target.ValueRO.Value);
-            }
-            //Adiciona o tempo de duração da poison
+            // if (poisonDurationBuffLookup.HasBuffer(target.ValueRO.Value))
+            // {
+            //     //adiciona os stacks de poison //valta value RW da health
+            // poisonDurationBuff = SystemAPI.GetBufferLookup<PoisonDuration>()[target.ValueRO.Value];
+            // poisonDpsBuff = SystemAPI.GetBufferLookup<PoisonDps>()[target.ValueRO.Value];
+            //     poisonDurationBuff.Clear();
+            // }
+            // else
+            // {
+            //instancia o efeito de poison em uma posição
+            var poisonEffectArea = ECB.Instantiate(poisonProperties.ValueRO.poisonEffectArea);
+
+            poisonDurationBuff = ECB.AddBuffer<PoisonDuration>(poisonEffectArea);
+            poisonDpsBuff = ECB.AddBuffer<PoisonDps>(poisonEffectArea);
+            // //lightning visual effect
+            var poisonEffectPosition = SystemAPI.GetComponentLookup<LocalTransform>()[target.ValueRO.Value];
+            ECB.SetComponent(poisonEffectArea, new PoisonVisualTag { position = poisonEffectPosition.Position });
+
+            ECB.SetComponent(poisonEffectArea, LocalTransform.FromPositionRotationScale(
+                 poisonEffectPosition.Position,
+                quaternion.identity,
+                poisonProperties.ValueRO.areaRadius
+            ));
+            // }
+            // //Adiciona o tempo de duração da poison
             var newPoisonDurationTick = currentTick;
             newPoisonDurationTick.Add(poisonProperties.ValueRO.duration);
             poisonDurationBuff.AddCommandData(new PoisonDuration
             {
                 Tick = currentTick,
-                value = newPoisonDurationTick
+                value = newPoisonDurationTick,
+                duration = poisonProperties.ValueRO.duration,
+                radius = poisonProperties.ValueRO.areaRadius,
+                target = poisonProperties.ValueRO.targetFaction,
             });
-            //Adiciona o tempo do começo do PoisonDps(tick)
+            // //Adiciona o tempo do começo do PoisonDps(tick)
             var newPoisonDpsTick = currentTick;
             newPoisonDpsTick.Add(poisonProperties.ValueRO.dmgInterval);
             poisonDpsBuff.AddCommandData(new PoisonDps
@@ -66,40 +82,75 @@ public partial struct ApplyEffectsSystem : ISystem
                 value = newPoisonDpsTick,
                 damagePerTick = poisonProperties.ValueRO.damagePerTick,
                 dmgInterval = poisonProperties.ValueRO.dmgInterval,
+                // areaDamage = poisonProperties.ValueRO.areaDamage,
 
             });
             // Debug.Log(entity);
             toDestroy.Add(entity);
             // ECB.AddComponent<DestroyEntityTag>(entity);
-            // ECB.DestroyEntity(entity);
         }
         //calcula o tempo da poison e dps duration 
-        foreach (var (poisonDurationBuff, poisonDpsBuff, entity) in SystemAPI.Query<DynamicBuffer<PoisonDuration>, DynamicBuffer<PoisonDps>>().WithEntityAccess())
+        foreach (var (poisonDurationBuff, poisonDpsBuff, alreadyDamagedBuff, hitPos, entity) in SystemAPI.Query<DynamicBuffer<PoisonDuration>, DynamicBuffer<PoisonDps>, DynamicBuffer<AlreadyDamagedEntity>, RefRO<LocalTransform>>().WithEntityAccess())
         {
+
             // Verifica se o poison já expirou
             if (!poisonDurationBuff.GetDataAtTick(currentTick, out var poisonDurationElemnt))
             {
                 poisonDurationElemnt.value = NetworkTick.Invalid;
             }
             bool endPoisonDuration = !poisonDurationElemnt.value.IsValid || currentTick.IsNewerThan(poisonDurationElemnt.value);
+            if (endPoisonDuration)
+            {
+                ECB.DestroyEntity(entity);
+            }
             // verifica se a duração das curses não acabou
             if (!poisonDpsBuff.GetDataAtTick(currentTick, out var poisonDpsElement))
             {
                 poisonDpsElement.value = NetworkTick.Invalid;
             }
+
             bool dealDamage = !poisonDpsElement.value.IsValid || currentTick.IsNewerThan(poisonDpsElement.value);
             // var ArrowEffectsLookup = SystemAPI.GetComponentLookup<CurseStackEffect>();
             if (dealDamage)
             {
-                if (SystemAPI.HasComponent<CurrentHealth>(entity))
+                NativeList<DistanceHit> hits = new NativeList<DistanceHit>(Allocator.Temp);
+                var collisionWorld = SystemAPI.GetSingleton<PhysicsWorldSingleton>().CollisionWorld;
+                //cria uma esfera para achar entidades no entorno
+                CollisionFilter collisionFilter = new CollisionFilter
                 {
-                    var health = SystemAPI.GetComponentRW<CurrentHealth>(entity);
-                    health.ValueRW.value -= (int)(poisonDpsElement.damagePerTick);
+                    BelongsTo = ~0u,
+                    CollidesWith = 1u << GameAssets.UNIT_LAYER,
+                    GroupIndex = 0
+                    // CollidesWith = (1u << GameAssets.PLAYER_LAYER) | (1u << GameAssets.ENEMY_LAYER),
+                };
+                // {
+
+                if (collisionWorld.OverlapSphere(hitPos.ValueRO.Position, poisonDurationElemnt.radius, ref hits, collisionFilter))
+                {
+                    foreach (var hit in hits)
+                    {
+                        Entity hitEntity = hit.Entity;
+                        if (SystemAPI.HasComponent<Team>(hitEntity))
+                        {
+                            var team = SystemAPI.GetComponentRO<Team>(hitEntity);
+
+                            if (SystemAPI.HasComponent<CurrentHealth>(hitEntity))
+                            {
+                                if (team.ValueRO.faction == poisonDurationElemnt.target)
+                                {
+                                    var health = SystemAPI.GetComponentRW<CurrentHealth>(hitEntity);
+                                    health.ValueRW.value -= (int)(poisonDpsElement.damagePerTick);
+                                }
+                            }
+                        }
+                    }
                 }
+                hits.Dispose();
+                // }
                 //Adiciona o tempo do começo do PoisonDps(tick)
                 var newPoisonDpsTick = currentTick;
                 newPoisonDpsTick.Add(poisonDpsElement.dmgInterval);
-                poisonDpsBuff.AddCommandData(new PoisonDps
+                poisonDpsBuff.Add(new PoisonDps
                 {
                     Tick = currentTick,
                     value = newPoisonDpsTick,
@@ -107,11 +158,6 @@ public partial struct ApplyEffectsSystem : ISystem
                     dmgInterval = poisonDpsElement.dmgInterval,
 
                 });
-            }
-            if (endPoisonDuration)
-            {
-                ECB.RemoveComponent<PoisonDuration>(entity);
-                ECB.RemoveComponent<PoisonDps>(entity);
             }
         }
         //Cursed//
@@ -175,174 +221,133 @@ public partial struct ApplyEffectsSystem : ISystem
         //lightning
         foreach (var (lightningProperties, target, entity) in SystemAPI.Query<RefRW<LightningEffect>, RefRW<EffectTarget>>().WithEntityAccess())
         {
-            var lightningDurationLookup = SystemAPI.GetBufferLookup<LightningDuration>();
-            var lightningDpsLookup = SystemAPI.GetBufferLookup<LightningDps>();
-            var lightningDurationBuff = new DynamicBuffer<LightningDuration>();
-            var lightningDpsBuff = new DynamicBuffer<LightningDps>();
-            var lightningVisual = new LightningVisual();
+            // var lightningDurationLookup = SystemAPI.GetBufferLookup<LightningDuration>();
+            // var lightningDpsLookup = SystemAPI.GetBufferLookup<LightningDps>();
+            // var lightningDurationBuff = new DynamicBuffer<LightningDuration>();
+            // var lightningDpsBuff = new DynamicBuffer<LightningDps>();
+            var lightningVisual = new EffectUnitVisual();
 
-            //verifica se existe lightning no alvo
-            if (lightningDurationLookup.HasBuffer(target.ValueRO.Value))
+            //adiciona os stacks de lightning
+            ECB.AddComponent(target.ValueRO.Value, new LightningChain
             {
-                lightningDurationBuff = lightningDurationLookup[target.ValueRO.Value];
-                lightningDpsBuff = lightningDpsLookup[target.ValueRO.Value];
-                //limpa o tempo atual de duração e cria um novo tempo para o buffer(reseta a duração)
-                lightningDurationBuff.Clear();
-            }
-            else
-            {
-                //adiciona os stacks de curse
-                lightningDurationBuff = ECB.AddBuffer<LightningDuration>(target.ValueRO.Value);
-                lightningDpsBuff = ECB.AddBuffer<LightningDps>(target.ValueRO.Value);
-
-                //lightning visual effect
-                var visualLightningEffect = ECB.Instantiate(lightningProperties.ValueRO.particleEffect);
-                lightningVisual.particleEffect = visualLightningEffect;
-                ECB.AddComponent(target.ValueRO.Value, lightningVisual);
-
-                ECB.AddComponent(visualLightningEffect, new Parent { Value = target.ValueRO.Value });
-                ECB.SetComponent(visualLightningEffect, LocalTransform.FromPositionRotationScale(
-                    new float3(0, 0.5f, 0), // Posição LOCAL (relativa ao pai)
-                    quaternion.identity,
-                    1.0f
-                ));
-
-                ECB.AddComponent(visualLightningEffect, new VisualParentLink
-                {
-                    ParentEntity = target.ValueRO.Value
-                });
-                ECB.AddComponent(target.ValueRO.Value, lightningVisual);
-            }
-            //Adiciona o tempo do começo do lightning(tick)
-            var newLightningDurationTick = currentTick;
-            newLightningDurationTick.Add(lightningProperties.ValueRO.duration);
-            //Adiciona o tempo de começo do dano do lightning
-            lightningDurationBuff.AddCommandData(new LightningDuration
-            {
-                Tick = currentTick,
-                value = newLightningDurationTick,
                 radius = lightningProperties.ValueRO.radius,
+                chainCount = lightningProperties.ValueRO.chainCount,
                 target = lightningProperties.ValueRO.target,
-                effectGiver = target.ValueRO.effectGiver
+                damage = lightningProperties.ValueRO.damage,
             });
+            var lightningChainBuff = ECB.AddBuffer<LightningChainInfo>(target.ValueRO.Value);
 
-            //Adiciona o tempo do começo do lightninDps(tick)
-            var newLightningDpsTick = currentTick;
-            newLightningDpsTick.Add(lightningProperties.ValueRO.dmgInterval);
-            //Adiciona o tempo de começo do dano do lightning
-
-            lightningDpsBuff.AddCommandData(new LightningDps
-            {
-                Tick = currentTick,
-                value = newLightningDpsTick,
-                damagePerTick = lightningProperties.ValueRO.damagePerTick,
-                dmgInterval = lightningProperties.ValueRO.dmgInterval,
-
-            });
+            // lightning visual effect
+            var visualUnitLightningSinalization = ECB.Instantiate(lightningProperties.ValueRO.sinalizationInstantiateParticle);
+            lightningVisual.particleUnitEffect = visualUnitLightningSinalization;
+            ECB.AddComponent(target.ValueRO.Value, lightningVisual);
 
             toDestroy.Add(entity);
             // ECB.DestroyEntity(entity);
         }
-        //calcula o tempo da lightning duration 
-        foreach (var (LightningDurationBuff, LightningDpsBuff, LightningVisual, hitPos, entity) in SystemAPI.Query<DynamicBuffer<LightningDuration>, DynamicBuffer<LightningDps>, RefRO<LightningVisual>, RefRO<LocalTransform>>().WithEntityAccess())
+        foreach (var (lightningChain, lightningChainBuff, position, visualEffect, entity) in SystemAPI.Query<RefRW<LightningChain>, DynamicBuffer<LightningChainInfo>, RefRO<LocalTransform>, RefRO<EffectUnitVisual>>().WithEntityAccess())
         {
-            // Verifica se o lightningDuration já expirou
-            if (!LightningDurationBuff.GetDataAtTick(currentTick, out var lightningDurationElemnt))
-            {
-                lightningDurationElemnt.value = NetworkTick.Invalid;
-            }
-            bool endLightningDuration = !lightningDurationElemnt.value.IsValid || currentTick.IsNewerThan(lightningDurationElemnt.value);
-            // verifica se a duração da lightningDps não acabou
-            if (!LightningDpsBuff.GetDataAtTick(currentTick, out var lightningDpsElement))
-            {
-                lightningDpsElement.value = NetworkTick.Invalid;
-            }
-            bool dealDamage = !lightningDpsElement.value.IsValid || currentTick.IsNewerThan(lightningDpsElement.value);
-            // var ArrowEffectsLookup = SystemAPI.GetComponentLookup<CurseStackEffect>();
-            if (dealDamage)
-            {
-                ///sistema para acerto de inimigos dentro do raio
-                // ponto central e raio do overlap
-                // resultados encontrados
-                NativeList<DistanceHit> hits = new NativeList<DistanceHit>(Allocator.Temp);
-                // var hits = new NativeList<ColliderHit>(Allocator.Temp);
-                var collisionWorld = SystemAPI.GetSingleton<PhysicsWorldSingleton>().CollisionWorld;
-                //cria uma esfera para achar entidades no entorno
-                CollisionFilter collisionFilter = new CollisionFilter
-                {
-                    BelongsTo = ~0u,
-                    CollidesWith = 1u << GameAssets.UNIT_LAYER,
-                    GroupIndex = 0
-                    // CollidesWith = (1u << GameAssets.PLAYER_LAYER) | (1u << GameAssets.ENEMY_LAYER),
-                };
-                // var hitsList = new NativeList<DistanceHit>(Allocator.Temp);
+            var collisionWorld = SystemAPI.GetSingleton<PhysicsWorldSingleton>().CollisionWorld;
 
-                if (collisionWorld.OverlapSphere(hitPos.ValueRO.Position, lightningDurationElemnt.radius, ref hits, collisionFilter))
+            // 1. Iniciamos a posição de busca a partir da origem do raio
+            float3 currentSourcePos = position.ValueRO.Position;
+
+            CollisionFilter filter = new CollisionFilter
+            {
+                BelongsTo = ~0u,
+                CollidesWith = 1u << GameAssets.UNIT_LAYER,
+                GroupIndex = 0
+            };
+
+            // 2. Criamos a lista de hits FORA do loop de saltos para reuso (Performance)
+            NativeList<DistanceHit> hits = new NativeList<DistanceHit>(Allocator.Temp);
+            //adiciona o primeiroinimigo atingido
+            lightningChainBuff.Add(new LightningChainInfo
+            {
+                target = entity,
+                position = position.ValueRO.Position
+            });
+            // Loop de saltos (Chain Count)
+            for (int i = 0; i < lightningChain.ValueRO.chainCount; i++)
+            {
+                hits.Clear();
+                float closestDist = lightningChain.ValueRO.radius;
+                Entity bestTarget = Entity.Null;
+                float3 bestPos = float3.zero;
+
+
+                if (collisionWorld.OverlapSphere(currentSourcePos, lightningChain.ValueRO.radius, ref hits, filter))
                 {
                     foreach (var hit in hits)
                     {
                         Entity hitEntity = hit.Entity;
-                        if (SystemAPI.HasComponent<CurrentHealth>(hitEntity))
+
+                        // Validações básicas
+                        if (hitEntity == entity || !SystemAPI.HasComponent<CurrentHealth>(hitEntity)) continue;
+
+                        // Validação de Time/Facção
+                        var team = SystemAPI.GetComponentRO<Team>(hitEntity);
+                        if (team.ValueRO.faction != lightningChain.ValueRO.target) continue;
+
+                        // CRÍTICO: Verifica se este inimigo já foi atingido NESTA corrente
+                        if (IsAlreadyInChain(lightningChainBuff, hitEntity)) continue;
+
+                        // Busca o mais próximo da posição atual da corrente
+                        float dist = math.distance(currentSourcePos, hit.Position);
+                        if (dist < closestDist)
                         {
-                            if (SystemAPI.HasComponent<Team>(hitEntity))
-                            {
-                                var team = SystemAPI.GetComponentRO<Team>(hitEntity);
-                                if (team.ValueRO.faction == lightningDurationElemnt.target)
-                                {
-                                    var health = SystemAPI.GetComponentRW<CurrentHealth>(hitEntity);
-                                    health.ValueRW.value -= (int)(lightningDpsElement.damagePerTick);
-
-                                    if (hitEntity != entity)
-                                    {
-                                        //pega o buffer dos efeitos
-                                        var giverEffectsBuff = SystemAPI.GetBufferLookup<EffectPrefab>();
-                                        if (giverEffectsBuff.HasBuffer(lightningDurationElemnt.effectGiver))
-                                        {
-                                            var effects = giverEffectsBuff[lightningDurationElemnt.effectGiver];
-
-                                            // Para cada prefab de efeito configurado, instancia uma cópia para o alvo
-                                            foreach (var prefabElem in effects)
-                                            {
-                                                // Debug.Log(hitEntity);
-                                                if (prefabElem.name == "Lightning") continue;
-                                                var effectInstance = ECB.Instantiate(prefabElem.Prefab);
-                                                // Associa o efeito ao alvo, via um componente “Target” ou via Parent
-                                                ECB.AddComponent(effectInstance, new EffectTarget { Value = hitEntity, effectGiver = lightningDurationElemnt.effectGiver });
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+                            closestDist = dist;
+                            bestTarget = hitEntity;
+                            bestPos = hit.Position;
                         }
                     }
                 }
-                hits.Dispose();
 
-                //Adiciona o tempo do começo do lightninDps(tick)
-                var lightningDpsTick = currentTick;
-                lightningDpsTick.Add(lightningDpsElement.dmgInterval);
-                //adiciona o tempo do próximo dps para lightning
-                LightningDpsBuff.AddCommandData(new LightningDps
+                // Se achou um alvo válido, adiciona à corrente
+                if (bestTarget != Entity.Null)
                 {
-                    Tick = currentTick,
-                    value = lightningDpsTick,
-                    damagePerTick = lightningDpsElement.damagePerTick,
-                    dmgInterval = lightningDpsElement.dmgInterval
-                });
-                //adicionar o tempo do próximo tick
+                    // Adicionamos diretamente ao buffer (sem ECB aqui) para leitura imediata no próximo salto
+                    lightningChainBuff.Add(new LightningChainInfo
+                    {
+                        target = bestTarget,
+                        position = bestPos
+                    });
+
+                    // O próximo salto sairá da posição DESTE inimigo
+                    currentSourcePos = bestPos;
+                }
+                else
+                {
+                    break; // Não há mais alvos no alcance, encerra a corrente
+                }
             }
-            if (endLightningDuration)
+
+            // 3. Aplica o dano a todos os atingidos salvos no buffer
+            foreach (var chainInfo in lightningChainBuff)
             {
-                ECB.RemoveComponent<LightningDps>(entity);
-                ECB.RemoveComponent<LightningDuration>(entity);
-                ECB.DestroyEntity(LightningVisual.ValueRO.particleEffect);
-                ECB.RemoveComponent<LightningVisual>(entity);
+                var health = SystemAPI.GetComponentRW<CurrentHealth>(chainInfo.target);
+                health.ValueRW.value -= (int)lightningChain.ValueRO.damage;
+                ECB.AppendToBuffer(visualEffect.ValueRO.particleUnitEffect, chainInfo);
             }
+            // Limpeza: Remove componentes para não processar novamente
+            ECB.RemoveComponent<LightningChain>(entity);
+            ECB.RemoveComponent<LightningChainInfo>(entity);
+            // ECB.DestroyEntity(visualEffect.ValueRO.particleUnitEffect);
+            ECB.AddComponent<DestroyEntityTag>(visualEffect.ValueRO.particleUnitEffect);
+
+            hits.Dispose();
         }
         //ponto que vai destruir os efeitos
         for (int i = 0; i < toDestroy.Length; i++)
             ECB.DestroyEntity(toDestroy[i]);
 
         toDestroy.Dispose();
+    }
+    // Função auxiliar para evitar repetição de alvos
+    private bool IsAlreadyInChain(DynamicBuffer<LightningChainInfo> buffer, Entity e)
+    {
+        for (int i = 0; i < buffer.Length; i++)
+            if (buffer[i].target == e) return true;
+        return false;
     }
 }

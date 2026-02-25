@@ -21,12 +21,20 @@ partial struct PlayerDashSystem : ISystem
     {
 
         NetworkTime networkTime = SystemAPI.GetSingleton<NetworkTime>();
+        BeginSimulationEntityCommandBufferSystem.Singleton ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();
+
         SetDashVector setDashVector = new SetDashVector
         {
             currentTick = networkTime.ServerTick,
             currentHealthLookup = SystemAPI.GetComponentLookup<CurrentHealth>(),
+            ECB = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged).AsParallelWriter(),
         };
-        VerifyCanDash verifyCanDash = new VerifyCanDash { currentTick = networkTime.ServerTick };
+        VerifyCanDash verifyCanDash = new VerifyCanDash
+        {
+            currentTick = networkTime.ServerTick,
+            currentEnergy = SystemAPI.GetComponentLookup<CurrentEnergy>(true),
+            energyBuffer = SystemAPI.GetBufferLookup<EnergyBufferElement>(true),
+        };
         PlayerDashJob playerDashJob = new PlayerDashJob { currentTick = networkTime.ServerTick };
 
         var h1 = setDashVector.ScheduleParallel(state.Dependency);
@@ -35,41 +43,15 @@ partial struct PlayerDashSystem : ISystem
 
         state.Dependency = h3;
     }
-    public partial struct VerifyCanDash : IJobEntity
-    {
-        [ReadOnly] public NetworkTick currentTick;
-        public void Execute(ref DashProperties dashProperties, in LocalTransform localTransform, in PlayerInput playerInput,
-                            DynamicBuffer<DashDuration> dashDuration, DynamicBuffer<DashCooldown> dashCooldown)
-        {
-            //verifica se ja não está no dash
-            if (!dashDuration.IsEmpty)
-            {
-                if (!dashDuration.GetDataAtTick(currentTick, out var dashDurationTick))
-                {
-                    dashDurationTick.value = NetworkTick.Invalid;
-                }
-                bool isDashing = !dashDurationTick.value.IsValid || !currentTick.IsNewerThan(dashDurationTick.value);
-                // Debug.Log("dashDuration is newer than: " + !currentTick.IsNewerThan(cooldownExpirationTickD.value));
-                dashProperties.isDashing = isDashing;
-            }
-
-            //verifica se não está no cooldown
-            if (!dashCooldown.GetDataAtTick(currentTick, out var cooldownExpirationTick))
-            {
-                cooldownExpirationTick.value = NetworkTick.Invalid;
-            }
-            bool canDash = !cooldownExpirationTick.value.IsValid || currentTick.IsNewerThan(cooldownExpirationTick.value);
-            dashProperties.canDash = canDash;
-
-        }
-    }
     public partial struct SetDashVector : IJobEntity
     {
         [ReadOnly] public NetworkTick currentTick;
         [ReadOnly] public ComponentLookup<CurrentHealth> currentHealthLookup;
+        public EntityCommandBuffer.ParallelWriter ECB;
 
         public void Execute(in DashProperties dashProperties, in LocalTransform localTransform, in PlayerInput playerInput, in MovementPlayer movementPlayer,
-                           DynamicBuffer<DashCommand> dashCommandBuffer, DynamicBuffer<DashDuration> dashDuration, DynamicBuffer<DashCooldown> dashCooldown, Entity entity)
+                           DynamicBuffer<DashCommand> dashCommandBuffer, DynamicBuffer<DashDuration> dashDuration, DynamicBuffer<DashCooldown> dashCooldown,
+                           Entity entity, [ChunkIndexInQuery] int sortKey)
         {
             if (!playerInput.dash.IsSet) return; //verifica se foi apertado o botao de dash
             if (dashProperties.isDashing) return;
@@ -93,16 +75,59 @@ partial struct PlayerDashSystem : ISystem
                 DashDirection = newDashDir
             };
             dashCommandBuffer.AddCommandData(newDashCommand);
+            var simulationTickRate = NetCodeConfig.Global.ClientServerTickRate.SimulationTickRate;
 
             //adiciona um tempo até poder usar o dash novamente
             var newCooldownTickDash = currentTick;
-            newCooldownTickDash.Add(dashProperties.cooldown);
+            newCooldownTickDash.Add((uint)(dashProperties.cooldown * simulationTickRate));
             dashCooldown.AddCommandData(new DashCooldown { Tick = currentTick, value = newCooldownTickDash });
 
             //Adiciona o tempo de duração do dash tipo. exp 1 sec
             var newDashDurationTick = currentTick;
-            newDashDurationTick.Add(dashProperties.duration);
+            newDashDurationTick.Add((uint)(dashProperties.duration * simulationTickRate));
             dashDuration.AddCommandData(new DashDuration { Tick = currentTick, value = newDashDurationTick });
+
+            ECB.AppendToBuffer(sortKey, entity, new EnergyBufferElement { value = (int)dashProperties.lostEnergy });
+        }
+    }
+    public partial struct VerifyCanDash : IJobEntity
+    {
+        [ReadOnly] public NetworkTick currentTick;
+        [ReadOnly] public ComponentLookup<CurrentEnergy> currentEnergy;
+        [ReadOnly] public BufferLookup<EnergyBufferElement> energyBuffer;
+
+        public void Execute(ref DashProperties dashProperties, in LocalTransform localTransform, in PlayerInput playerInput,
+                            DynamicBuffer<DashDuration> dashDuration, DynamicBuffer<DashCooldown> dashCooldown, Entity entity)
+        {
+            //reduz a energia a cada avanço
+
+            //verifica se ja não está no dash
+            if (!dashDuration.IsEmpty)
+            {
+                if (!dashDuration.GetDataAtTick(currentTick, out var dashDurationTick))
+                {
+                    dashDurationTick.value = NetworkTick.Invalid;
+                }
+                bool isDashing = !dashDurationTick.value.IsValid || !currentTick.IsNewerThan(dashDurationTick.value);
+                // Debug.Log("dashDuration is newer than: " + !currentTick.IsNewerThan(cooldownExpirationTickD.value));
+                dashProperties.isDashing = isDashing;
+            }
+
+            //verifica se não está no cooldown
+            if (!dashCooldown.GetDataAtTick(currentTick, out var cooldownExpirationTick))
+            {
+                cooldownExpirationTick.value = NetworkTick.Invalid;
+            }
+            bool canDash = !cooldownExpirationTick.value.IsValid || currentTick.IsNewerThan(cooldownExpirationTick.value);
+            if (energyBuffer.HasBuffer(entity))
+            {
+                var lostEnergy = dashProperties.lostEnergy;
+                if (currentEnergy[entity].value < lostEnergy)
+                {
+                    canDash = false;
+                }
+            }
+            dashProperties.canDash = canDash;
 
         }
     }
