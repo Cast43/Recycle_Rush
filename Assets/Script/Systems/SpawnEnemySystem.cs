@@ -2,6 +2,7 @@ using Unity.Burst;
 using Unity.Entities;
 using Unity.Transforms;
 using Unity.Mathematics;
+using Unity.Collections;
 using UnityEngine;
 
 [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
@@ -42,11 +43,12 @@ public partial struct SpawnEnemySystem : ISystem
                 minionSpawnAspect.IncrementWaveCount();
                 minionSpawnAspect.ResetEntitySpawnCounter();
                 minionSpawnAspect.ResetWaveTimer();
+                minionSpawnAspect.ResetExperienceSpawned();
             }
             minionSpawnAspect.DecrementedTimers(deltaTime);
             if (minionSpawnAspect.shouldSpawn && minionSpawnAspect.CountEntitiesSpawned < minionSpawnAspect.CountMaxEntitiesToSpawn)
             {
-                SpawnRandonlyInRing(ref state, minionSpawnAspect.spawnCenter, minionSpawnAspect.notSpawnRadius, minionSpawnAspect.spawnRadius, minionSpawnAspect.WaveCount);
+                SpawnRandonlyInRing(ref state, minionSpawnAspect.notSpawnRadius, minionSpawnAspect.spawnRadius, minionSpawnAspect.WaveCount);
                 minionSpawnAspect.IncrementEntitiesCount();
                 if (minionSpawnAspect.isWaveSpaned)
                 {
@@ -61,35 +63,98 @@ public partial struct SpawnEnemySystem : ISystem
             {
                 minionSpawnAspect.IsBossWave = true;
             }
+
+            // 1. Pega os dados de controle com permissão de Leitura e Escrita (RW = Read/Write)
+            if (!SystemAPI.TryGetSingletonRW<EventSpawnerState>(out var spawnerState)) break;
+            spawnerState.ValueRW.CurrentWave = minionSpawnAspect.WaveCount;
+
+            // 3. A NOVA MÁGICA: Só spawna se for a wave certa E ainda não tiver spawnado nela
+            if (minionSpawnAspect.WaveCount % minionSpawnAspect.EventInWave == 0 && spawnerState.ValueRO.LastWaveSpawned < spawnerState.ValueRO.CurrentWave)
+            {
+                if (minionSpawnAspect.WaveCount != 0)
+                {
+                    float3 centro = float3.zero; // Posição base
+
+                    SpawnEvent(ref state, centro, 15f);
+
+                    // 4. ATUALIZA O ESTADO: Salva que já geramos o evento desta wave!
+                    // Assim, mesmo que o evento seja destruído, este 'if' não será verdadeiro de novo.
+                    spawnerState.ValueRW.LastWaveSpawned = minionSpawnAspect.WaveCount;
+                }
+            }
         }
     }
-
-    private void SpawnRandonlyInRing(ref SystemState state, float3 center, float innerRadius, float outerRadius, int waveCount)
+    private void SpawnEvent(ref SystemState state, float3 centerPosition, float spawnRadius)
     {
-        BeginSimulationEntityCommandBufferSystem.Singleton ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();
+        var ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();
         EntityCommandBuffer ECB = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
 
+        Entity entitiesReferencesEntity = SystemAPI.GetSingletonEntity<EntitiesReferences>();
+        DynamicBuffer<EventsPrefabElement> eventsBuffer = SystemAPI.GetBuffer<EventsPrefabElement>(entitiesReferencesEntity);
+
+        // 1. Inicializa o Random do DOTS
+        // Usamos o tempo decorrido como semente (seed) para garantir que sempre seja aleatório.
+        // (A semente não pode ser 0, por isso o +1).
+        uint seed = (uint)(SystemAPI.Time.ElapsedTime * 1000) + 1;
+        Unity.Mathematics.Random random = new Unity.Mathematics.Random(seed);
+
+        // 2. Sorteia o evento
+        int eventIndex = random.NextInt(0, eventsBuffer.Length);
+        Entity eventPrefab = eventsBuffer[eventIndex].Prefab;
+
+        // 3. Calcula a posição aleatória em um círculo (Plano XZ)
+        float2 randomDir = random.NextFloat2Direction(); // Pega uma direção 2D aleatória
+        float randomDistance = random.NextFloat(0f, spawnRadius); // Pega uma distância aleatória até o limite
+
+        // Aplica a direção e a distância no eixo X e Z, mantendo o Y original
+        float3 randomPosition = centerPosition + new float3(randomDir.x * randomDistance, 0f, randomDir.y * randomDistance);
+
+        // 4. Instancia e posiciona
+        Entity newEvent = ECB.Instantiate(eventPrefab);
+        ECB.SetComponent(newEvent, LocalTransform.FromPosition(randomPosition));
+
+        // Dica: Se quiser que o evento comece imediatamente, lembre-se de trocar as tags!
+        // ECB.RemoveComponent<EventPendingTag>(newEvent);
+        // ECB.AddComponent<EventActiveTag>(newEvent);
+    }
+
+    private void SpawnRandonlyInRing(ref SystemState state, float innerRadius, float outerRadius, int waveCount)
+    {
+        var ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();
+        EntityCommandBuffer ECB = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
+
+        // 1. Buscar todos os Players (supondo que tenham um componente LocalTransform e um PlayerTag)
+        // Se você não tiver um "PlayerTag", use o componente que identifica seu player.
+        EntityQuery playerQuery = SystemAPI.QueryBuilder().WithAll<LocalTransform, PlayerInput>().Build();
+        var players = playerQuery.ToEntityArray(Allocator.Temp);
+
+        if (players.Length == 0) return; // Nenhum player no mapa, cancela spawn
+
+        // 2. Escolher um player aleatório
+        int randomPlayerIndex = UnityEngine.Random.Range(0, players.Length);
+        Entity targetPlayer = players[randomPlayerIndex];
+        float3 playerPosition = state.EntityManager.GetComponentData<LocalTransform>(targetPlayer).Position;
+
+        // 3. Pegar o Prefab do Buffer
         Entity entitiesReferencesEntity = SystemAPI.GetSingletonEntity<EntitiesReferences>();
         DynamicBuffer<EnemyPrefabElement> enemyBuffer = SystemAPI.GetBuffer<EnemyPrefabElement>(entitiesReferencesEntity);
 
         int enemyIndex = UnityEngine.Random.Range(0, enemyBuffer.Length);
-        Entity enemy = enemyBuffer[enemyIndex].prefab;
+        Entity enemyPrefab = enemyBuffer[enemyIndex].prefab;
 
+        // 4. Lógica do Anel (Mantida como a original, mas usando playerPosition como centro)
         float angle = UnityEngine.Random.Range(0f, math.PI * 2f);
         float r = math.sqrt(UnityEngine.Random.Range(innerRadius * innerRadius, outerRadius * outerRadius));
         float3 offset = new float3(r * math.cos(angle), 0f, r * math.sin(angle));
-        float3 randomPosition = center + offset;
+        float3 randomPosition = playerPosition + offset;
 
-        // var enemyXpLookup = SystemAPI.GetComponentLookup<CurrentExperience>();
-        // var enemyCurrentXp = enemyXpLookup[enemy];
-        // for (int i = 0; i < waveCount; i++)
-        {
-            ECB.SetComponent(enemy, new Level { current = waveCount });
-        }
+        // 5. Configurar e Spawnar
+        // Nota: Use Instantiate para não modificar o prefab original
+        Entity newEnemy = ECB.Instantiate(enemyPrefab);
+        ECB.SetComponent(newEnemy, new Level { current = waveCount });
+        ECB.SetComponent(newEnemy, LocalTransform.FromPosition(randomPosition));
 
-
-        SpawnOnPosition(ECB, enemy, randomPosition);
-        // Debug.Log("Spawn Enemy");
+        players.Dispose(); // Importante limpar o array temporário
     }
     private void SpawnOnPosition(EntityCommandBuffer ECB, Entity enemy, float3 position)
     {

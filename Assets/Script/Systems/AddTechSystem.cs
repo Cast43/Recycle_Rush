@@ -91,7 +91,7 @@ partial struct AddTechSystem : ISystem
                                 cooldownRestore = mod.cooldown
                             };
                             ECB.AddComponent<EnergyRestore>(entity, SolarEnergy);
-                            ECB.AddBuffer<EnergyRestoreCooldown>(entity);
+                            ECB.AddComponent<EnergyRestoreCooldown>(entity);
                         }
                         break;
                     case UpgradeModifier.AddBoostTurbine:

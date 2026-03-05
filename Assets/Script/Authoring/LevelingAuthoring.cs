@@ -8,6 +8,7 @@ public class LevelingAuthoring : MonoBehaviour
     public int maxExperience;
     public float maxExperienceModifier;
     public int startLevel = 1;
+    public int MaxCapacityGarbage = 10;
 
     public ModifierEntry[] modifiers;
 
@@ -18,6 +19,14 @@ public class LevelingAuthoring : MonoBehaviour
         public float value;
         public float divideWaveGain;
     }
+
+    public int plasticCount = 1;
+    public int paperCount = 1;
+    public int glassCount = 1;
+    public int metalCount = 1;
+    public int organicCount = 1;
+    public int notRecycleCount = 1;
+
     public class Baker : Baker<LevelingAuthoring>
     {
         public override void Bake(LevelingAuthoring authoring)
@@ -30,6 +39,16 @@ public class LevelingAuthoring : MonoBehaviour
             });
             AddComponent(entity, new Level { current = authoring.startLevel, previous = authoring.startLevel });
             AddComponent(entity, new CurrentExperience { value = 0 });
+            AddComponent(entity, new GarbageInventory
+            {
+                MaxCapacityPerType = authoring.MaxCapacityGarbage,
+                PlasticCount = authoring.plasticCount,
+                PaperCount = authoring.paperCount,
+                GlassCount = authoring.glassCount,
+                MetalCount = authoring.metalCount,
+                OrganicCount = authoring.organicCount,
+                NotRecycleCount = authoring.notRecycleCount,
+            });
             AddBuffer<UpgradesPending>(entity);
             AddBuffer<ExperienceBufferElement>(entity);
             AddBuffer<GetExperienceThisTick>(entity);

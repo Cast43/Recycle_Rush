@@ -31,9 +31,9 @@ public struct EnergyRestore : IComponentData
 }
 
 [GhostComponent(PrefabType = GhostPrefabType.AllPredicted)]
-public struct EnergyRestoreCooldown : ICommandData
+public struct EnergyRestoreCooldown : IComponentData
 {
-    public NetworkTick Tick { get; set; }
+    [GhostField]
     public NetworkTick value;
 }
 public struct EnergyRestoreMovement : IComponentData

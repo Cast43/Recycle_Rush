@@ -40,7 +40,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 719817629495475775}
-  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: -2432090755550338912, guid: 5cb618294b3928b4b91feca2f0bf84d1, type: 3}
 --- !u!23 &6423283847221638596
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -153,7 +153,7 @@ MonoBehaviour:
   OptimizationMode: 1
   Importance: 500
   MaxSendRate: 0
-  prefabId: e04efff5b5df6484b926a2ccb26fdae2
+  prefabId: af3383e54f32c74499d02915aba70c53
   HasOwner: 0
   SupportAutoCommandTarget: 1
   TrackInterpolationDelay: 0

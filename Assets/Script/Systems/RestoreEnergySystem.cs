@@ -4,70 +4,74 @@ using Unity.NetCode;
 using Unity.Physics;
 using Unity.Mathematics;
 using UnityEngine;
-using Unity.Collections;
 
 [UpdateInGroup(typeof(PredictedSimulationSystemGroup), OrderLast = true)]
-[WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
-//gerador de biomassa precisa disso
 [UpdateBefore(typeof(CalculateFrameExperienceSystem))]
-
 partial struct RestoreEnergySystem : ISystem
 {
     [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
         state.RequireForUpdate<NetworkTime>();
-
+        state.RequireForUpdate<ClientServerTickRate>();
     }
 
-    // [BurstCompile]
+    [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
-        NetworkTick currentTick = SystemAPI.GetSingleton<NetworkTime>().ServerTick;
-        var simulationTickRate = NetCodeConfig.Global.ClientServerTickRate.SimulationTickRate;
+        var networkTime = SystemAPI.GetSingleton<NetworkTime>();
+        NetworkTick currentTick = networkTime.ServerTick;
 
-        BeginSimulationEntityCommandBufferSystem.Singleton ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();
-        EntityCommandBuffer ECB = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
+        // Forma segura e oficial de pegar o TickRate
+        var simulationTickRate = SystemAPI.GetSingleton<ClientServerTickRate>().SimulationTickRate;
 
-        foreach (var (energyRestore, currentEnergy, MaxEnergy, energyRestoreCooldown, entity) in
-                SystemAPI.Query<RefRO<EnergyRestore>, RefRW<CurrentEnergy>, RefRO<MaxEnergy>, DynamicBuffer<EnergyRestoreCooldown>>().WithEntityAccess())
+        // 1. LÓGICA DE REGENERAÇÃO PASSIVA
+        foreach (var (energyRestore, currentEnergy, maxEnergy, energyRestoreCooldown) in
+                 SystemAPI.Query<RefRO<EnergyRestore>, RefRW<CurrentEnergy>, RefRO<MaxEnergy>, RefRW<EnergyRestoreCooldown>>().WithAll<Simulate>())
         {
-            if (currentEnergy.ValueRW.value >= MaxEnergy.ValueRO.value) continue;
-
-            if (energyRestoreCooldown.IsEmpty)
+            // Se a energia já está cheia, empurramos o cooldown para o futuro.
+            // Isso previne o "heal instantâneo" ao gastar a primeira barra de energia.
+            if (currentEnergy.ValueRO.value >= maxEnergy.ValueRO.value)
             {
-                var newCooldownRestoreEnergy = currentTick;
-                newCooldownRestoreEnergy.Add((uint)(energyRestore.ValueRO.cooldownRestore * simulationTickRate));
-                energyRestoreCooldown.AddCommandData(new EnergyRestoreCooldown { Tick = currentTick, value = newCooldownRestoreEnergy });
+                var resetTick = currentTick;
+                resetTick.Add((uint)(energyRestore.ValueRO.cooldownRestore * simulationTickRate));
+                energyRestoreCooldown.ValueRW.value = resetTick;
+                continue;
             }
 
-            if (!energyRestoreCooldown.GetDataAtTick(currentTick, out var cooldownExpirationTick))
+            // Se for a primeira vez rodando (Tick Inválido), apenas inicia o timer.
+            if (!energyRestoreCooldown.ValueRO.value.IsValid)
             {
-                cooldownExpirationTick.value = NetworkTick.Invalid;
+                var initTick = currentTick;
+                initTick.Add((uint)(energyRestore.ValueRO.cooldownRestore * simulationTickRate));
+                energyRestoreCooldown.ValueRW.value = initTick;
+                continue;
             }
 
-            bool canRestore = !cooldownExpirationTick.value.IsValid || currentTick.IsNewerThan(cooldownExpirationTick.value);
-
-            if (!canRestore) continue;
-
-            currentEnergy.ValueRW.value += energyRestore.ValueRO.amount;
-            if (MaxEnergy.ValueRO.value < currentEnergy.ValueRW.value)
+            // Verifica se o tick salvo já passou
+            if (currentTick.IsNewerThan(energyRestoreCooldown.ValueRO.value))
             {
-                currentEnergy.ValueRW.value = MaxEnergy.ValueRO.value;
+                // Restaura a energia e trava no valor máximo
+                currentEnergy.ValueRW.value = math.min(currentEnergy.ValueRW.value + energyRestore.ValueRO.amount, maxEnergy.ValueRO.value);
+
+                // Calcula o Tick futuro para a próxima regeneração
+                var nextCooldownTick = currentTick;
+                nextCooldownTick.Add((uint)(energyRestore.ValueRO.cooldownRestore * simulationTickRate));
+
+                // Salva o estado atualizado
+                energyRestoreCooldown.ValueRW.value = nextCooldownTick;
             }
-            energyRestoreCooldown.Clear();
-            // Debug.Log("restaurou " + energyRestore.ValueRO.amount);
-            //cooldown de ataque
         }
 
-        foreach (var (currentEnergy, maxEnergy, energyMovement, physicsVelocity, entity) in
-        SystemAPI.Query<RefRW<CurrentEnergy>, RefRO<MaxEnergy>,
-        RefRW<EnergyRestoreMovement>, RefRO<PhysicsVelocity>>().WithAll<Simulate>().WithEntityAccess())
+        // 2. LÓGICA DE REGENERAÇÃO POR MOVIMENTO
+        foreach (var (currentEnergy, maxEnergy, energyMovement, physicsVelocity) in
+                 SystemAPI.Query<RefRW<CurrentEnergy>, RefRO<MaxEnergy>, RefRW<EnergyRestoreMovement>, RefRO<PhysicsVelocity>>().WithAll<Simulate>())
         {
-            if (currentEnergy.ValueRW.value >= maxEnergy.ValueRO.value) continue;
+            if (currentEnergy.ValueRO.value >= maxEnergy.ValueRO.value) continue;
+
             if (energyMovement.ValueRO.distance >= energyMovement.ValueRO.maxDistance)
             {
-                currentEnergy.ValueRW.value += energyMovement.ValueRO.amount;
+                currentEnergy.ValueRW.value = math.min(currentEnergy.ValueRW.value + energyMovement.ValueRO.amount, maxEnergy.ValueRO.value);
                 energyMovement.ValueRW.distance = 0;
             }
             else
@@ -76,14 +80,15 @@ partial struct RestoreEnergySystem : ISystem
             }
         }
 
-        foreach (var (currentEnergy, maxEnergy, energyRestoreKill, killBuffer, entity) in
-        SystemAPI.Query<RefRW<CurrentEnergy>, RefRO<MaxEnergy>,
-        RefRW<EnergyRestoreKill>, DynamicBuffer<GetEnergyFromKill>>().WithAll<Simulate>().WithEntityAccess())
+        // 3. LÓGICA DE REGENERAÇÃO POR ABATE (KILLS)
+        foreach (var (currentEnergy, maxEnergy, energyRestoreKill, killBuffer) in
+                 SystemAPI.Query<RefRW<CurrentEnergy>, RefRO<MaxEnergy>, RefRO<EnergyRestoreKill>, DynamicBuffer<GetEnergyFromKill>>().WithAll<Simulate>())
         {
+            if (killBuffer.IsEmpty) continue;
+
             foreach (var kill in killBuffer)
             {
-                if (currentEnergy.ValueRW.value >= maxEnergy.ValueRO.value) continue;
-                // currentEnergy.ValueRW.value += energyRestoreKill.ValueRO.amount;
+                if (currentEnergy.ValueRO.value >= maxEnergy.ValueRO.value) break;
                 currentEnergy.ValueRW.value = math.min(currentEnergy.ValueRW.value + energyRestoreKill.ValueRO.amount, maxEnergy.ValueRO.value);
             }
             killBuffer.Clear();

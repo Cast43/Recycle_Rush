@@ -45,6 +45,7 @@ public struct LevelUpTag : IComponentData { }
 public struct GiveExperience : IComponentData
 {
     [GhostField] public int value;
+    [GhostField] public TrashType tarshType;
 }
 public struct AlreadyGiveExperienceEntity : IBufferElementData
 {
@@ -63,4 +64,50 @@ public struct GetExperienceThisTick : ICommandData
 {
     public NetworkTick Tick { get; set; }
     public int value;
+}
+
+public struct RandomSpawnExperience : IComponentData
+{
+    public float cooldown;
+    public int maxExperienceSpawned;
+    public int countExperienceSpawned;
+    public float3 spawnPosition;
+}
+[GhostComponent(PrefabType = GhostPrefabType.AllPredicted)]
+public struct RandomSpawnExperienceCooldown : IComponentData
+{
+    [GhostField]
+    public NetworkTick value;
+}
+public struct ExperienceGlobalRefence : IBufferElementData
+{
+    public Entity value;
+}
+
+[InternalBufferCapacity(8)]
+public struct ExperiencePrefabElement : IBufferElementData
+{
+    public Entity Prefab;
+}
+public enum TrashType : byte { Plastic, Paper, Glass, Iron, Organic, NotRecycle }
+public struct GarbageInventory : IComponentData
+{
+    // Quantidade atual de cada tipo
+    [GhostField] public int PlasticCount;
+    [GhostField] public int PaperCount;
+    [GhostField] public int GlassCount;
+    [GhostField] public int MetalCount;
+    [GhostField] public int OrganicCount;
+    [GhostField] public int NotRecycleCount;
+
+    // O limite máximo que o robô pode carregar de CADA tipo (ex: 10)
+    [GhostField] public int MaxCapacityPerType;
+    [GhostField] public int GarbageCount;
+}
+
+// 1. O Componente de Dados puro (ECS)
+public struct RecyclingBinData : IComponentData
+{
+    public float Radius;
+    public TrashType AcceptedType;
 }

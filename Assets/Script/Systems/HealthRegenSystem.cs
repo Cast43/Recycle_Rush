@@ -1,51 +1,61 @@
 using Unity.Burst;
 using Unity.Entities;
 using Unity.NetCode;
+using Unity.Mathematics;
 using UnityEngine;
-using Unity.Collections;
 
 [UpdateInGroup(typeof(PredictedSimulationSystemGroup), OrderLast = true)]
-[WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
 partial struct HealthRegenSystem : ISystem
 {
     [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
         state.RequireForUpdate<NetworkTime>();
-
+        state.RequireForUpdate<ClientServerTickRate>();
     }
 
-    // [BurstCompile]
+    [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
-        NetworkTick currentTick = SystemAPI.GetSingleton<NetworkTime>().ServerTick;
-        var simulationTickRate = NetCodeConfig.Global.ClientServerTickRate.SimulationTickRate;
+        var networkTime = SystemAPI.GetSingleton<NetworkTime>();
+        NetworkTick currentTick = networkTime.ServerTick;
 
-        foreach (var (healthRegen, currentHealth, maxHealth, healthRegenCooldown, entity) in
-                SystemAPI.Query<RefRO<HealthRegen>, RefRW<CurrentHealth>, RefRO<MaxHealth>, DynamicBuffer<HealthRegenCooldown>>().WithAll<GhostOwnerIsLocal>().WithEntityAccess())
+        var simulationTickRate = SystemAPI.GetSingleton<ClientServerTickRate>().SimulationTickRate;
+
+        foreach (var (healthRegen, currentHealth, maxHealth, healthRegenCooldown) in
+                 SystemAPI.Query<RefRO<HealthRegen>, RefRW<CurrentHealth>, RefRO<MaxHealth>, RefRW<HealthRegenCooldown>>().WithAll<Simulate>())
         {
-            if (currentHealth.ValueRO.value <= 0) return;
-            if (!healthRegenCooldown.GetDataAtTick(currentTick, out var cooldownExpirationTick))
+            // Se o robô morreu, não faz nada
+            if (currentHealth.ValueRO.value <= 0) continue;
+
+            // Se a vida está cheia ou não possui cura no status, empurra o cooldown para o futuro
+            if (currentHealth.ValueRO.value >= maxHealth.ValueRO.value || healthRegen.ValueRO.amount <= 0)
             {
-                cooldownExpirationTick.value = NetworkTick.Invalid;
+                var resetTick = currentTick;
+                resetTick.Add((uint)(healthRegen.ValueRO.cooldownRestore * simulationTickRate));
+                healthRegenCooldown.ValueRW.value = resetTick;
+                continue;
             }
 
-            bool canRestore = !cooldownExpirationTick.value.IsValid || currentTick.IsNewerThan(cooldownExpirationTick.value);
-
-            if (!canRestore) return;
-            if (healthRegen.ValueRO.amount <= 0) return;
-
-            currentHealth.ValueRW.value += healthRegen.ValueRO.amount;
-            if (maxHealth.ValueRO.value < currentHealth.ValueRW.value)
+            // Inicializa o timer se acabou de começar a contar (Tick Inválido)
+            if (!healthRegenCooldown.ValueRO.value.IsValid)
             {
-                currentHealth.ValueRW.value = maxHealth.ValueRO.value;
+                var initTick = currentTick;
+                initTick.Add((uint)(healthRegen.ValueRO.cooldownRestore * simulationTickRate));
+                healthRegenCooldown.ValueRW.value = initTick;
+                continue;
             }
-            Debug.Log("restaurou " + healthRegen.ValueRO.amount);
-            //cooldown de ataque
-            var newCooldownRestoreEnergy = currentTick;
-            newCooldownRestoreEnergy.Add((uint)(healthRegen.ValueRO.cooldownRestore * simulationTickRate));
-            healthRegenCooldown.AddCommandData(new HealthRegenCooldown { Tick = currentTick, value = newCooldownRestoreEnergy });
+
+            // Se o cooldown terminou, cura!
+            if (currentTick.IsNewerThan(healthRegenCooldown.ValueRO.value))
+            {
+                currentHealth.ValueRW.value = math.min(currentHealth.ValueRW.value + healthRegen.ValueRO.amount, maxHealth.ValueRO.value);
+
+                var nextCooldownTick = currentTick;
+                nextCooldownTick.Add((uint)(healthRegen.ValueRO.cooldownRestore * simulationTickRate));
+
+                healthRegenCooldown.ValueRW.value = nextCooldownTick;
+            }
         }
-
     }
 }

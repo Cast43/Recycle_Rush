@@ -16,6 +16,7 @@ public class EnemiesSpawnPropertiesAuthoring : MonoBehaviour
     public int notSpawnRadius = 20;
     public int SpawnRadius = 30;
     public int countBoss = 5;
+    public int eventInWave = 2;
     public class Baker : Baker<EnemiesSpawnPropertiesAuthoring>
     {
         public override void Bake(EnemiesSpawnPropertiesAuthoring authoring)
@@ -43,6 +44,12 @@ public class EnemiesSpawnPropertiesAuthoring : MonoBehaviour
                 modifierTimeBetweenEnemies = authoring.modifierTimeBetweenEnemies,
                 modifierMaxEnemiesSpawn = authoring.modifierMaxEnemiesSpawn,
                 bossInWave = authoring.countBoss,
+                eventInWave = authoring.eventInWave,
+            });
+            AddComponent(entity, new EventSpawnerState
+            {
+                CurrentWave = 0,
+                LastWaveSpawned = -1,
             });
         }
     }

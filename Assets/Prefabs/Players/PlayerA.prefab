@@ -244,8 +244,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   MaxLife: 5
-  healthRegenCooldown: 5
-  regenAmount: 0
+  healthRegenCooldown: 8
+  regenAmount: 1
 --- !u!114 &6619590767418275881
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -272,8 +272,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1f729146d2e36c24780c4b303075676b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxSpeed: 4
-  currentSpeed: 4
+  maxSpeed: 5
+  currentSpeed: 5
   dashSpeed: 8
   dashDuration: 0.5
   dashCooldown: 2.5
@@ -330,10 +330,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 99b58e1404eaa174390dda7f29787635, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxExperience: 80
+  maxExperience: 5
   maxExperienceModifier: 1.1
   startLevel: 0
+  MaxCapacityGarbage: 10
   modifiers: []
+  plasticCount: 1
+  paperCount: 1
+  glassCount: 1
+  metalCount: 1
+  organicCount: 1
+  notRecycleCount: 1
 --- !u!114 &-4669703099547100025
 MonoBehaviour:
   m_ObjectHideFlags: 0

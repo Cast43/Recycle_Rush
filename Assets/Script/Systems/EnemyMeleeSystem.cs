@@ -3,130 +3,142 @@ using Unity.Entities;
 using Unity.Transforms;
 using Unity.NetCode;
 using UnityEngine;
-using Unity.Physics.Systems;
-using Unity.Physics;
 using Unity.Mathematics;
 using Unity.Collections;
 
 [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
-[UpdateInGroup(typeof(PhysicsSystemGroup))] // nunca altera essa merda isso faz funcionar
-// [UpdateAfter(typeof())]
+[UpdateInGroup(typeof(SimulationSystemGroup))] // Removido o PhysicsSystemGroup já que não usamos mais a física para isso
 public partial struct EnemyMeleeSystem : ISystem
 {
+    private EntityQuery targetQuery;
+
     [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
         state.RequireForUpdate<NetworkTime>();
         state.RequireForUpdate<BeginSimulationEntityCommandBufferSystem.Singleton>();
+
+        // Cria uma query para buscar todos os possíveis alvos de dano de uma vez
+        targetQuery = SystemAPI.QueryBuilder()
+            .WithAll<DamageBufferElement, LocalTransform, Team>()
+            .WithNone<DestroyEntityTag>()
+            .Build();
     }
 
-    // [BurstCompile]
+    [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
-        // Limpa todos os buffers de AlreadyDamagedEntity antes de processar as colisões
-        // foreach (var buffer in SystemAPI.Query<DynamicBuffer<AlreadyDamagedEntity>>())
-        // {
-        //     buffer.Clear();
-        // }
+        var ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();
+        var networkTime = SystemAPI.GetSingleton<NetworkTime>();
 
-        BeginSimulationEntityCommandBufferSystem.Singleton ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();
-        EntityCommandBuffer ECB = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
-        NetworkTime networkTime = SystemAPI.GetSingleton<NetworkTime>();
+        // Coleta os dados de todos os possíveis alvos. 
+        // [DeallocateOnJobCompletion] no Job vai limpar isso da memória automaticamente após o uso.
+        var targetEntities = targetQuery.ToEntityArray(Allocator.TempJob);
+        var targetTransforms = targetQuery.ToComponentDataArray<LocalTransform>(Allocator.TempJob);
+        var targetTeams = targetQuery.ToComponentDataArray<Team>(Allocator.TempJob);
 
-        var damageOnTriggerJob = new MeleeDamageOnTriggerJob
+        var damageOnDistanceJob = new MeleeDamageOnDistanceJob
         {
             currentTick = networkTime.ServerTick,
-            teamLookup = SystemAPI.GetComponentLookup<Team>(true),
-            meleePropretiesLookup = SystemAPI.GetComponentLookup<MeleeAttackProperties>(true),
-            destroyLookup = SystemAPI.GetComponentLookup<DestroyEntityTag>(true),
-            meleeCooldownLookup = SystemAPI.GetBufferLookup<MeleeAttackCooldown>(true),
-            alreadyDamagedLookup = SystemAPI.GetBufferLookup<AlreadyDamagedEntity>(true),
-            damageBufferLookup = SystemAPI.GetBufferLookup<DamageBufferElement>(true),
-            ECB = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged),
+            targetEntities = targetEntities,
+            targetTransforms = targetTransforms,
+            targetTeams = targetTeams,
+            ECB = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged).AsParallelWriter()
         };
-        SimulationSingleton simulationSingleton = SystemAPI.GetSingleton<SimulationSingleton>();
-        state.Dependency = damageOnTriggerJob.Schedule(simulationSingleton, state.Dependency);
+
+        // Usa o ScheduleParallel para distribuir a checagem de distância em várias threads
+        state.Dependency = damageOnDistanceJob.ScheduleParallel(state.Dependency);
     }
 }
 
 [BurstCompile]
 [WithAll(typeof(Simulate))]
-public partial struct MeleeDamageOnTriggerJob : ICollisionEventsJob
+[WithNone(typeof(DestroyEntityTag))] // Não ataca se estiver sendo destruído
+public partial struct MeleeDamageOnDistanceJob : IJobEntity
 {
     [ReadOnly] public NetworkTick currentTick;
-    [ReadOnly] public ComponentLookup<Team> teamLookup;
-    [ReadOnly] public ComponentLookup<MeleeAttackProperties> meleePropretiesLookup;
-    [ReadOnly] public ComponentLookup<DestroyEntityTag> destroyLookup;
-    [ReadOnly] public BufferLookup<MeleeAttackCooldown> meleeCooldownLookup;
-    [ReadOnly] public BufferLookup<AlreadyDamagedEntity> alreadyDamagedLookup;
-    [ReadOnly] public BufferLookup<DamageBufferElement> damageBufferLookup;
-    public EntityCommandBuffer ECB;
-    public void Execute(CollisionEvent collisionEvent)
+
+    // Arrays contendo todos os possíveis alvos. Serão liberados da memória automaticamente após o job.
+    [DeallocateOnJobCompletion][ReadOnly] public NativeArray<Entity> targetEntities;
+    [DeallocateOnJobCompletion][ReadOnly] public NativeArray<LocalTransform> targetTransforms;
+    [DeallocateOnJobCompletion][ReadOnly] public NativeArray<Team> targetTeams;
+
+    public EntityCommandBuffer.ParallelWriter ECB;
+
+    // O IJobEntity itera automaticamente sobre todos os "Atacantes"
+    public void Execute(
+        Entity attackerEntity,
+        [ChunkIndexInQuery] int chunkIndex,
+        ref MeleeAttackProperties meleeProperties,
+        ref DynamicBuffer<MeleeAttackCooldown> cooldownBuffer,
+        ref DynamicBuffer<AlreadyDamagedEntity> alreadyDamagedBuffer,
+        in LocalTransform attackerTransform,
+        in Team attackerTeam)
     {
-        Entity damageDealingEntity;
-        Entity damageRecievingEntity;
-
-        if (damageBufferLookup.HasBuffer(collisionEvent.EntityA) &&
-            meleePropretiesLookup.HasComponent(collisionEvent.EntityB))
-        {
-            damageRecievingEntity = collisionEvent.EntityA;
-            damageDealingEntity = collisionEvent.EntityB;
-        }
-        else if (meleePropretiesLookup.HasComponent(collisionEvent.EntityA) &&
-                damageBufferLookup.HasBuffer(collisionEvent.EntityB))
-        {
-            damageDealingEntity = collisionEvent.EntityA;
-            damageRecievingEntity = collisionEvent.EntityB;
-        }
-        else
-        {
-            return;
-        }
-
-        if (!meleeCooldownLookup.HasBuffer(damageDealingEntity))
-            return;
-
-        var meleeCooldownBuffer = meleeCooldownLookup[damageDealingEntity];
-
-        if (!meleeCooldownBuffer.GetDataAtTick(currentTick, out var cooldownExpirationTick))
+        // 1. CHECAGEM DE COOLDOWN
+        if (!cooldownBuffer.GetDataAtTick(currentTick, out var cooldownExpirationTick))
         {
             cooldownExpirationTick.value = NetworkTick.Invalid;
         }
+
         bool canAttack = !cooldownExpirationTick.value.IsValid || currentTick.IsNewerThan(cooldownExpirationTick.value);
-        // Debug.Log(canAttack);
-
         if (!canAttack) return;
+        alreadyDamagedBuffer.Clear();
 
-        // dont aply damage multiple times
-        var alreadyDamagedBuffer = alreadyDamagedLookup[damageDealingEntity];
-        // foreach (var alreadyDamagedEntity in alreadyDamagedBuffer)
-        // {
-        //     // Debug.Log(alreadyDamagedEntity.value);
-        //     if (alreadyDamagedEntity.value.Equals(damageRecievingEntity)) return;
-        // }
-        //ignore friendly fire
-        if (teamLookup.TryGetComponent(damageDealingEntity, out var damageDealingTeam) &&
-            teamLookup.TryGetComponent(damageRecievingEntity, out var damageReceinvingTeam))
-        {
-            if (damageDealingTeam.faction == damageReceinvingTeam.faction) return;
-        }
-        var damageOnTrigger = meleePropretiesLookup[damageDealingEntity];
-        // Debug.Log("ataca");
+        bool attackedAtLeastOne = false;
 
-        //alterar isso porque deve resolver o destroy entity System pq se nao quando qualquer coisa for destruida ela vai tentar 
-        //adicionar uma coisa no buffer e vai bugar
-        if (!destroyLookup.HasComponent(damageRecievingEntity))
+        // Calcula o range ao quadrado (é mais rápido calcular distância ao quadrado do que usar math.distance que exige raiz quadrada)
+        // OBS: Certifique-se de que 'MeleeAttackProperties' possua um float 'attackRange'
+        float rangeSq = meleeProperties.attackRange * meleeProperties.attackRange;
+
+        // 2. ITERAÇÃO SOBRE OS ALVOS
+        for (int i = 0; i < targetEntities.Length; i++)
         {
-            ECB.AppendToBuffer(damageRecievingEntity, new DamageBufferElement { value = damageOnTrigger.damage });
+            Entity targetEntity = targetEntities[i];
+
+            // Impede que a entidade ataque a si mesma
+            if (targetEntity == attackerEntity) continue;
+
+            // Checagem de Fogo Amigo (ignora se for da mesma facção)
+            Team targetTeam = targetTeams[i];
+            if (attackerTeam.faction == targetTeam.faction) continue;
+
+            // 3. CHECAGEM DE DISTÂNCIA
+            LocalTransform targetTransform = targetTransforms[i];
+            float distSq = math.distancesq(attackerTransform.Position, targetTransform.Position);
+
+            if (distSq <= rangeSq)
+            {
+                // Verifica se já não tomou dano deste ataque específico (descomentei a sua lógica)
+                bool alreadyHit = false;
+                for (int d = 0; d < alreadyDamagedBuffer.Length; d++)
+                {
+                    if (alreadyDamagedBuffer[d].value.Equals(targetEntity))
+                    {
+                        alreadyHit = true;
+                        break;
+                    }
+                }
+
+                if (alreadyHit) continue;
+
+                // 4. APLICAÇÃO DO DANO
+                ECB.AppendToBuffer(chunkIndex, targetEntity, new DamageBufferElement { value = meleeProperties.damage });
+                ECB.AppendToBuffer(chunkIndex, attackerEntity, new AlreadyDamagedEntity { value = targetEntity });
+
+                attackedAtLeastOne = true;
+            }
         }
-        if (!destroyLookup.HasComponent(damageDealingEntity))
+
+        // 5. ATUALIZA O COOLDOWN (Se acertou alguém)
+        if (attackedAtLeastOne)
         {
-            ECB.AppendToBuffer(damageDealingEntity, new AlreadyDamagedEntity { value = damageRecievingEntity });
-            // Adiciona o cooldown para o próximo ataque
             var nextCooldownTick = currentTick;
-            nextCooldownTick.Add(damageOnTrigger.cooldownTickCount);
-            ECB.AppendToBuffer(damageDealingEntity, new MeleeAttackCooldown { Tick = currentTick, value = nextCooldownTick });
-        }
+            nextCooldownTick.Add(meleeProperties.cooldownTickCount);
 
+            // Limpa os hits antigos e aplica o novo cooldown
+            alreadyDamagedBuffer.Clear();
+            ECB.AppendToBuffer(chunkIndex, attackerEntity, new MeleeAttackCooldown { Tick = currentTick, value = nextCooldownTick });
+        }
     }
 }

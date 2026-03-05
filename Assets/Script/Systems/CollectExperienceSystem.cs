@@ -28,7 +28,7 @@ public partial struct CollectExperienceSystem : ISystem
         EntityCommandBuffer ECB = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
 
 
-        foreach (var (getExperience, localTransform, entity) in SystemAPI.Query<RefRW<GetExperienceInArea>, RefRO<LocalTransform>>().WithEntityAccess())
+        foreach (var (getExperience, GarbageInventory, localTransform, entity) in SystemAPI.Query<RefRW<GetExperienceInArea>, RefRW<GarbageInventory>, RefRO<LocalTransform>>().WithEntityAccess())
         {
 
             NativeList<DistanceHit> hits = new NativeList<DistanceHit>(Allocator.Temp);
@@ -44,12 +44,16 @@ public partial struct CollectExperienceSystem : ISystem
             };
             // var hitsList = new NativeList<DistanceHit>(Allocator.Temp);
 
+            if (GarbageInventory.ValueRO.GarbageCount >= GarbageInventory.ValueRO.MaxCapacityPerType)
+                return;
+
             if (collisionWorld.OverlapSphere(localTransform.ValueRO.Position, getExperience.ValueRO.radius, ref hits, collisionFilter))
             {
                 var GiverExperienceComponentLookup = SystemAPI.GetComponentLookup<GiveExperience>();
                 var GetCoreComponentLookup = SystemAPI.GetComponentLookup<GetCore>();
                 var areadyExperiencedLookup = SystemAPI.GetBufferLookup<AlreadyGiveExperienceEntity>();
                 var GiverExperienceBufferLookup = SystemAPI.GetBufferLookup<GetEnergyFromKill>();
+
                 foreach (var hit in hits)
                 {
                     if (areadyExperiencedLookup.HasBuffer(entity))
@@ -79,19 +83,42 @@ public partial struct CollectExperienceSystem : ISystem
                                 upgradeLevel = UpgradeLevel.Core
                             });
                         }
-
                         ECB.AppendToBuffer(entity, new AlreadyGiveExperienceEntity { value = hit.Entity });
                     }
-                    if (GiverExperienceComponentLookup.HasComponent(hit.Entity))
+
+                    switch (GiverExperienceComponentLookup[hit.Entity].tarshType)
                     {
-                        var giverExperience = GiverExperienceComponentLookup[hit.Entity];
-                        ECB.AppendToBuffer(entity, new ExperienceBufferElement { value = giverExperience.value });
+                        case TrashType.Plastic:
+                            GarbageInventory.ValueRW.PlasticCount++;
+                            break;
+                        case TrashType.Paper:
+                            GarbageInventory.ValueRW.PaperCount++;
+                            break;
+                        case TrashType.Glass:
+                            GarbageInventory.ValueRW.GlassCount++;
+                            break;
+                        case TrashType.Iron:
+                            GarbageInventory.ValueRW.MetalCount++;
+                            break;
+                        case TrashType.Organic:
+                            GarbageInventory.ValueRW.OrganicCount++;
+                            break;
+                        case TrashType.NotRecycle:
+                            GarbageInventory.ValueRW.NotRecycleCount++;
+                            break;
                     }
+                    GarbageInventory.ValueRW.GarbageCount++;
+
+                    // if (GiverExperienceComponentLookup.HasComponent(hit.Entity))
+                    // {
+                    //     var giverExperience = GiverExperienceComponentLookup[hit.Entity];
+                    //     ECB.AppendToBuffer(entity, new ExperienceBufferElement { value = giverExperience.value });
+                    // }
 
                     ECB.AddComponent<DestroyEntityTag>(hit.Entity);
                     if (GiverExperienceBufferLookup.HasBuffer(entity))
                     {
-                        ECB.AppendToBuffer(entity, new GetEnergyFromKill { amount = GiverExperienceComponentLookup[entity].value });
+                        ECB.AppendToBuffer(entity, new GetEnergyFromKill { amount = GiverExperienceComponentLookup[hit.Entity].value });
                     }
                 }
             }

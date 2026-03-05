@@ -553,8 +553,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2ecd3b04de5bc8047a8308869dbc2a07, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MaxLife: 10
-  healthRegenCooldown: 1
+  MaxLife: 20
+  healthRegenCooldown: 0
   regenAmount: 0
 --- !u!114 &8774793204707371089
 MonoBehaviour:

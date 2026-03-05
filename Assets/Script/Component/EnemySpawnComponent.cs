@@ -27,6 +27,7 @@ public struct WaveProperties : IComponentData
     public int countEntitiesSpawned;
     public int countMaxEntitiesToSpawn;
     public int bossInWave;
+    public int eventInWave;
     public float modifierTimeBetweenEnemies;
     public float modifierMaxEnemiesSpawn;
     public bool isBossWave;

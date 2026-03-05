@@ -175,6 +175,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   giveExperience: 30
+  tarshType: 3
 --- !u!114 &6558177699369748661
 MonoBehaviour:
   m_ObjectHideFlags: 0

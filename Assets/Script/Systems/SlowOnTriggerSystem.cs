@@ -14,6 +14,8 @@ partial struct SlowOnTriggerSystem : ISystem
     public void OnCreate(ref SystemState state)
     {
         state.RequireForUpdate<NetworkTime>();
+        // 1. REQUIRE THE UNMANAGED SINGLETON
+        state.RequireForUpdate<ClientServerTickRate>(); 
     }
 
     [BurstCompile]
@@ -24,7 +26,9 @@ partial struct SlowOnTriggerSystem : ISystem
         var collisionWorld = SystemAPI.GetSingleton<PhysicsWorldSingleton>().CollisionWorld;
         NetworkTime networkTime = SystemAPI.GetSingleton<NetworkTime>();
         NetworkTick currentTick = networkTime.ServerTick;
-        var simulationTickRate = NetCodeConfig.Global.ClientServerTickRate.SimulationTickRate;
+        
+        // 2. THE FIX: USE THE UNMANAGED SINGLETON INSTEAD OF MANAGED CONFIG
+        var simulationTickRate = SystemAPI.GetSingleton<ClientServerTickRate>().SimulationTickRate;
 
         var moveSpeedLookup = state.GetComponentLookup<MoveSpeed>();
         var teamLookup = state.GetComponentLookup<Team>();
@@ -78,7 +82,6 @@ partial struct SlowOnTriggerSystem : ISystem
                 // -------------------------------------------------------------
                 // 1. LÓGICA DE SAÍDA (OnTriggerExit)
                 // -------------------------------------------------------------
-                // Iteramos de TRÁS PARA FRENTE porque vamos remover itens do buffer
                 for (int i = alreadyDamagedBuffer.Length - 1; i >= 0; i--)
                 {
                     Entity trackedEntity = alreadyDamagedBuffer[i].value;
@@ -100,7 +103,7 @@ partial struct SlowOnTriggerSystem : ISystem
                 }
 
                 // -------------------------------------------------------------
-                // 2. LÓGICA DE ENTRADA (OnTriggerEnter) - Seu código otimizado
+                // 2. LÓGICA DE ENTRADA (OnTriggerEnter)
                 // -------------------------------------------------------------
                 foreach (var hit in hits)
                 {

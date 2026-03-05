@@ -23,10 +23,10 @@ public class HealthAuthoring : MonoBehaviour
                 amount = authoring.regenAmount,
                 cooldownRestore = (uint)authoring.healthRegenCooldown
             });
+            AddComponent(entity, new HealthRegenCooldown { });
 
             AddBuffer<DamageBufferElement>(entity);
             AddBuffer<DamageThisTick>(entity);
-            AddBuffer<HealthRegenCooldown>(entity);
 
             // AddComponent(entity, new CurseStackEffect { value = 0, maxStack = 3 });
             // AddBuffer<CurseDuration>(entity);

@@ -1037,31 +1037,27 @@ MonoBehaviour:
     image: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
     type: 0
   - name: Nitrogen
-    description: Make the robot faster
+    description: Increases life and life regeneration
     image: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
     type: 0
   - name: Precision
-    description: Make the robot faster
+    description: Increases damage and decreases firing time
     image: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
     type: 0
   - name: Shooting Far
-    description: Make the robot faster
+    description: It slightly increases the damage and range
     image: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
     type: 0
   - name: Turbo Mode
-    description: Make the robot faster
+    description: It increases speed and improves forward speed
     image: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
     type: 0
   - name: More Cadency
-    description: Make the robot faster
+    description: Increase the distance and decrease the shooting distance
     image: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
     type: 0
-  - name: More Cadency
-    description: Make the robot faster
-    image: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
-    type: 0
-  - name: More Cadency
-    description: Make the robot faster
+  - name: Speed
+    description: Increase speed
     image: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
     type: 0
   coreUpgradesUIInfo:
@@ -1074,6 +1070,16 @@ MonoBehaviour:
     image: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
     type: 1
   GOVisualUpgrades:
+  - GOVisual: {fileID: 0}
+    count: 0
+  - GOVisual: {fileID: 0}
+    count: 0
+  - GOVisual: {fileID: 0}
+    count: 0
+  - GOVisual: {fileID: 0}
+    count: 0
+  - GOVisual: {fileID: 0}
+    count: 0
   - GOVisual: {fileID: 0}
     count: 0
   - GOVisual: {fileID: 0}

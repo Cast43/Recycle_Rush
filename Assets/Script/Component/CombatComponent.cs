@@ -26,9 +26,9 @@ public struct HealthRegen : IComponentData
 }
 
 [GhostComponent(PrefabType = GhostPrefabType.AllPredicted)]
-public struct HealthRegenCooldown : ICommandData
+public struct HealthRegenCooldown : IComponentData
 {
-    public NetworkTick Tick { get; set; }
+    [GhostField]
     public NetworkTick value;
 }
 
@@ -100,6 +100,7 @@ public struct MeleeAttackProperties : IComponentData
 {
     public uint cooldownTickCount;
     public int damage;
+    public float attackRange;
 }
 
 

@@ -19,6 +19,12 @@ public class EntitiesReferencesAuthoring : MonoBehaviour
     [Header("Bosses")]
     public GameObject[] bossesPrefabs;
 
+    [Header("Experience")]
+    public GameObject[] ExperiencePrefabs;
+
+    [Header("Events")]
+    public GameObject[] EventsPrefabs;
+
     public class Baker : Baker<EntitiesReferencesAuthoring>
     {
         public override void Bake(EntitiesReferencesAuthoring authoring)
@@ -52,6 +58,22 @@ public class EntitiesReferencesAuthoring : MonoBehaviour
                 {
                     name = new FixedString64Bytes(bossPrefab.name),
                     prefab = GetEntity(bossPrefab, TransformUsageFlags.Dynamic)
+                });
+            }
+            var experienceBuffer = AddBuffer<ExperiencePrefabElement>(entity);
+            foreach (var experiencePrefab in authoring.ExperiencePrefabs)
+            {
+                experienceBuffer.Add(new ExperiencePrefabElement
+                {
+                    Prefab = GetEntity(experiencePrefab, TransformUsageFlags.Dynamic)
+                });
+            }
+            var eventsBuffer = AddBuffer<EventsPrefabElement>(entity);
+            foreach (var eventsPrefabs in authoring.EventsPrefabs)
+            {
+                eventsBuffer.Add(new EventsPrefabElement
+                {
+                    Prefab = GetEntity(eventsPrefabs, TransformUsageFlags.Dynamic)
                 });
             }
         }

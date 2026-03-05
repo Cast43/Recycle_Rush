@@ -22,7 +22,7 @@ public class EnergyAuthoting : MonoBehaviour
                 amount = authoring.energyRestoreAmount,
                 cooldownRestore = (uint)authoring.energyRestoreCooldown
             });
-            AddBuffer<EnergyRestoreCooldown>(entity);
+            AddComponent(entity, new EnergyRestoreCooldown { });
             AddBuffer<EnergyBufferElement>(entity);
             AddBuffer<GetEnergyThisTick>(entity);
         }

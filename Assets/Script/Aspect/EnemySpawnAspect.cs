@@ -6,13 +6,13 @@ public readonly partial struct EnemySpawnAspect : IAspect
     private readonly RefRW<EnemiesSpawnTimers> _enemySpawnTimers;
     private readonly RefRW<WaveProperties> waveProperties;
     private readonly RefRW<EnemiesSpawnProperties> _enemySpawnProperties;
+    private readonly RefRW<RandomSpawnExperience> _randomSpawnExperienceProperties;
     public readonly Entity Self;
     public int BossInWave
     {
         get => waveProperties.ValueRO.bossInWave;
         set => waveProperties.ValueRW.bossInWave = value;
     }
-
     public bool IsBossWave
     {
         get => waveProperties.ValueRO.isBossWave;
@@ -51,6 +51,17 @@ public readonly partial struct EnemySpawnAspect : IAspect
         get => waveProperties.ValueRO.countMaxEntitiesToSpawn;
         set => waveProperties.ValueRW.countMaxEntitiesToSpawn = value;
     }
+    public int CountExperienceSpawned
+    {
+        get => _randomSpawnExperienceProperties.ValueRO.countExperienceSpawned;
+        set => _randomSpawnExperienceProperties.ValueRW.countExperienceSpawned = value;
+    }
+    public int EventInWave
+    {
+        get => waveProperties.ValueRO.eventInWave;
+        set => waveProperties.ValueRW.eventInWave = value;
+    }
+
 
     public float timeBetweenEnemiesModifier => waveProperties.ValueRO.modifierTimeBetweenEnemies;
     public float modifierMaxEnemiesSpawn => waveProperties.ValueRO.modifierMaxEnemiesSpawn;
@@ -68,7 +79,6 @@ public readonly partial struct EnemySpawnAspect : IAspect
 
     public bool shouldSpawn => delaySpawnNextWave <= 0f && TimeToNextEnemy <= 0f;
     public bool isWaveSpaned => CountEntitiesSpawned >= CountToSpawnInWave;
-    public bool bossWave => CountEntitiesSpawned >= CountToSpawnInWave;
 
     public void DecrementedTimers(float deltaTime)
     {
@@ -108,6 +118,10 @@ public readonly partial struct EnemySpawnAspect : IAspect
     public void IncrementEntitiesCount()
     {
         waveProperties.ValueRW.countEntitiesSpawned++;
+    }
+    public void ResetExperienceSpawned()
+    {
+        CountExperienceSpawned = 0;
     }
 
 }
