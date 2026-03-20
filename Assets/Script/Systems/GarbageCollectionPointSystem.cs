@@ -109,6 +109,7 @@ public partial struct TrashDepositPhysicsSystem : ISystem
             if (amountDeposited > 0)
             {
                 // Devolve os dados modificados para o inventário do robô
+                inventory.GarbageCount -= amountDeposited;
                 InventoryLookup[robotEntity] = inventory;
                 ECB.AppendToBuffer(robotEntity, new ExperienceBufferElement { value = amountDeposited });
             }

@@ -10,15 +10,10 @@ using Unity.Mathematics;
 [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
 partial struct GoInGameServerSystem : ISystem
 {
-    public int playersCount;
     [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
-        playersCount = 0;
-        state.RequireForUpdate<EntitiesReferences>();
-        //precisa dessa merda pra funcionar o rpc
         state.RequireForUpdate<ReceiveRpcCommandRequest>();
-        state.RequireForUpdate<NetworkId>();
         EntityQueryBuilder entityQueryBuilder = new EntityQueryBuilder(Allocator.Temp).WithAll<GoInGameRequestRpc>().WithAll<ReceiveRpcCommandRequest>();
         state.RequireForUpdate(state.GetEntityQuery(entityQueryBuilder));
         entityQueryBuilder.Dispose();
@@ -27,60 +22,19 @@ partial struct GoInGameServerSystem : ISystem
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
-        EntitiesReferences entitiesReferences = SystemAPI.GetSingleton<EntitiesReferences>();
-        EntityCommandBuffer entityCommandBuffer = new EntityCommandBuffer(Unity.Collections.Allocator.Temp);
-        foreach ((RefRO<ReceiveRpcCommandRequest> receiveRpcCommandRequest, Entity entity)
+        EntityCommandBuffer ecb = new EntityCommandBuffer(Unity.Collections.Allocator.Temp);
+
+        foreach ((RefRO<ReceiveRpcCommandRequest> request, Entity entity)
             in SystemAPI.Query<RefRO<ReceiveRpcCommandRequest>>().WithAll<GoInGameRequestRpc>().WithEntityAccess())
         {
-            entityCommandBuffer.AddComponent<NetworkStreamInGame>(receiveRpcCommandRequest.ValueRO.SourceConnection);
-            // Debug.Log("Client connected to Server");
-            entityCommandBuffer.DestroyEntity(entity);
+            // Marca a conexão como "In Game" (logicamente presente)
+            ecb.AddComponent<NetworkStreamInGame>(request.ValueRO.SourceConnection);
 
-            Entity playerObjectEntity = Entity.Null;
+            // Adiciona a nossa nova Tag para dizer "este cara precisa de um corpo quando o jogo começar"
+            ecb.AddComponent<WaitingToSpawnTag>(request.ValueRO.SourceConnection);
 
-            if (playersCount == 0)
-            {
-                playerObjectEntity = entityCommandBuffer.Instantiate(entitiesReferences.playerRPrefab);
-            }
-            else if (playersCount == 1)
-            {
-                playerObjectEntity = entityCommandBuffer.Instantiate(entitiesReferences.playerBPrefab);
-            }
-            else if (playersCount == 2)
-            {
-                playerObjectEntity = entityCommandBuffer.Instantiate(entitiesReferences.playerYPrefab);
-            }
-            else
-            {
-                playerObjectEntity = entityCommandBuffer.Instantiate(entitiesReferences.playerGPrefab);
-            }
-            // Debug.Log(playersCount);
-            playersCount++;
-            //spawn Player
-            // Entity playerObjectEntity = entityCommandBuffer.Instantiate(entitiesReferences.playerRPrefab);
-            entityCommandBuffer.SetComponent(playerObjectEntity, LocalTransform.FromPosition(new float3(UnityEngine.Random.Range(-10, +10), 1, 0)));
-
-            //atribui o id do player ao gameobject do player
-            NetworkId networkId = SystemAPI.GetComponent<NetworkId>(receiveRpcCommandRequest.ValueRO.SourceConnection);
-
-            //adiciona o componente de owner ao player
-            entityCommandBuffer.AddComponent(playerObjectEntity, new GhostOwner
-            {
-                //atribui o valor do id do player
-                NetworkId = networkId.Value,
-            });
-
-            entityCommandBuffer.AddComponent(playerObjectEntity, new ConnectionEntity
-            {
-                //atribui o valor do id do player
-                Value = receiveRpcCommandRequest.ValueRO.SourceConnection,
-            });
-            //faz com que o player seja excluido se desconectado adicionando ele no link group
-            entityCommandBuffer.AppendToBuffer(receiveRpcCommandRequest.ValueRO.SourceConnection, new LinkedEntityGroup
-            {
-                Value = playerObjectEntity,
-            });
+            ecb.DestroyEntity(entity);
         }
-        entityCommandBuffer.Playback(state.EntityManager);
+        ecb.Playback(state.EntityManager);
     }
 }

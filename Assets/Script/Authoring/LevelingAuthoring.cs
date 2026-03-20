@@ -31,6 +31,8 @@ public class LevelingAuthoring : MonoBehaviour
     {
         public override void Bake(LevelingAuthoring authoring)
         {
+            int totalGarbage = authoring.plasticCount + authoring.paperCount + authoring.glassCount + authoring.metalCount + authoring.organicCount;
+
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
             AddComponent(entity, new MaxExperience
             {
@@ -48,7 +50,9 @@ public class LevelingAuthoring : MonoBehaviour
                 MetalCount = authoring.metalCount,
                 OrganicCount = authoring.organicCount,
                 NotRecycleCount = authoring.notRecycleCount,
+                GarbageCount = totalGarbage,
             });
+
             AddBuffer<UpgradesPending>(entity);
             AddBuffer<ExperienceBufferElement>(entity);
             AddBuffer<GetExperienceThisTick>(entity);

@@ -27,5 +27,4 @@ public struct AddComponentRpc : IRpcCommand
     public FixedString64Bytes ComponentName;
 }
 public struct DecreaseUpgradesPendingRpc : IRpcCommand { }
-public struct RequestChooseUpgrade : IComponentData { }
 public struct GetCore : IComponentData { }

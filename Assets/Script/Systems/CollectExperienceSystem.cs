@@ -86,28 +86,29 @@ public partial struct CollectExperienceSystem : ISystem
                         ECB.AppendToBuffer(entity, new AlreadyGiveExperienceEntity { value = hit.Entity });
                     }
 
+                    var amountTrash = GiverExperienceComponentLookup[hit.Entity].value;
                     switch (GiverExperienceComponentLookup[hit.Entity].tarshType)
                     {
                         case TrashType.Plastic:
-                            GarbageInventory.ValueRW.PlasticCount++;
+                            GarbageInventory.ValueRW.PlasticCount += amountTrash;
                             break;
                         case TrashType.Paper:
-                            GarbageInventory.ValueRW.PaperCount++;
+                            GarbageInventory.ValueRW.PaperCount += amountTrash;
                             break;
                         case TrashType.Glass:
-                            GarbageInventory.ValueRW.GlassCount++;
+                            GarbageInventory.ValueRW.GlassCount += amountTrash;
                             break;
                         case TrashType.Iron:
-                            GarbageInventory.ValueRW.MetalCount++;
+                            GarbageInventory.ValueRW.MetalCount += amountTrash;
                             break;
                         case TrashType.Organic:
-                            GarbageInventory.ValueRW.OrganicCount++;
+                            GarbageInventory.ValueRW.OrganicCount += amountTrash;
                             break;
                         case TrashType.NotRecycle:
-                            GarbageInventory.ValueRW.NotRecycleCount++;
+                            GarbageInventory.ValueRW.NotRecycleCount += amountTrash;
                             break;
                     }
-                    GarbageInventory.ValueRW.GarbageCount++;
+                    GarbageInventory.ValueRW.GarbageCount += amountTrash;
 
                     // if (GiverExperienceComponentLookup.HasComponent(hit.Entity))
                     // {

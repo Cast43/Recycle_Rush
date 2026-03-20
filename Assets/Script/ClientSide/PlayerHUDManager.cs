@@ -18,8 +18,8 @@ public class PlayerHUDManager : MonoBehaviour
     private EntityQuery _tickRateQuery;
     private EntityQuery _garbageInventoryQuery;
 
-    [SerializeField] private TextMeshProUGUI energyPercentageText;
-    [SerializeField] private TextMeshProUGUI robotHealthPercentageText;
+    [SerializeField] private UnityEngine.UI.Slider energyPercentageSlider;
+    [SerializeField] private UnityEngine.UI.Slider robotHealthPercentageSlider;
     [SerializeField] private TextMeshProUGUI waveCountText;
     [SerializeField] private UnityEngine.UI.Slider experienceBar;
     [SerializeField] private UnityEngine.UI.Slider energyCooldownSlider;
@@ -235,7 +235,7 @@ public class PlayerHUDManager : MonoBehaviour
     }
 
     // Métodos de UI
-    public void UpdateEnergyPercentage(float value) => energyPercentageText.text = $"{value:0}%";
+    public void UpdateEnergyPercentage(float value) => energyPercentageSlider.value = value;
 
     public void UpdateEnergyRestore(float cur, float max)
     {
@@ -251,8 +251,9 @@ public class PlayerHUDManager : MonoBehaviour
 
     public void UpdateRobotHealthPercentage(int cur, int max)
     {
-        robotHealthPercentageText.text = $"{cur}/{max}";
-        if (cur < 0) robotHealthPercentageText.text = $"{0}/{max}";
+        robotHealthPercentageSlider.value = cur;
+        if (cur < 0) robotHealthPercentageSlider.value = 0;
+        robotHealthPercentageSlider.maxValue = max;
     }
 
     public void UpdateExperienceBar(int cur, int max) { experienceBar.value = cur; experienceBar.maxValue = max; }

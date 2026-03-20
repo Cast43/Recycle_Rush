@@ -5,8 +5,6 @@ using UnityEngine;
 
 public class EntitiesReferencesAuthoring : MonoBehaviour
 {
-
-
     [Header("Jogadores")]
     public GameObject playerRPrefab;
     public GameObject playerBPrefab;
@@ -25,6 +23,7 @@ public class EntitiesReferencesAuthoring : MonoBehaviour
     [Header("Events")]
     public GameObject[] EventsPrefabs;
 
+    public GameObject enemyTutorialPrefab;
     public class Baker : Baker<EntitiesReferencesAuthoring>
     {
         public override void Bake(EntitiesReferencesAuthoring authoring)
@@ -38,6 +37,7 @@ public class EntitiesReferencesAuthoring : MonoBehaviour
                 playerBPrefab = GetEntity(authoring.playerBPrefab, TransformUsageFlags.Dynamic),
                 playerYPrefab = GetEntity(authoring.playerYPrefab, TransformUsageFlags.Dynamic),
                 playerGPrefab = GetEntity(authoring.playerGPrefab, TransformUsageFlags.Dynamic),
+                enemyTutorialPrefab = GetEntity(authoring.enemyTutorialPrefab, TransformUsageFlags.Dynamic),
             });
 
             // Adiciona buffer de inimigos
@@ -87,4 +87,5 @@ public struct EntitiesReferences : IComponentData
     public Entity playerBPrefab;
     public Entity playerYPrefab;
     public Entity playerGPrefab;
+    public Entity enemyTutorialPrefab;
 }

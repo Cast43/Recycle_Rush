@@ -14,14 +14,21 @@ public partial struct SpawnEnemySystem : ISystem
     public void OnCreate(ref SystemState state)
     {
         aliveEnemiesQuery = SystemAPI.QueryBuilder().WithAll<Enemy>().Build();
-    }
 
+        // Garante que o sistema só rode se existir um gerenciador de partida
+        state.RequireForUpdate<MatchStateComponent>();
+    }
     // [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
+        // Pega o estado atual da partida
+        var matchState = SystemAPI.GetSingleton<MatchStateComponent>().CurrentState;
+
+        // SÓ PERMITE O SPAWN SE A PARTIDA ESTIVER VALENDO (Tutorial já acabou)
+        if (matchState != MatchState.Playing) return;
+
         SpawnOverTime(ref state);
     }
-
     private void SpawnOverTime(ref SystemState state)
     {
         float deltaTime = SystemAPI.Time.DeltaTime;

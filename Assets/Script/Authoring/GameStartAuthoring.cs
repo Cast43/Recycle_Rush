@@ -9,8 +9,6 @@ public class GameStartAuthoring : MonoBehaviour
     public GameObject playerPrefabB;
     public GameObject playerPrefabC;
     public GameObject playerPrefabD;
-    public float timeToNextEnemy;
-    public int startWave;
     public class Baker : Baker<GameStartAuthoring>
     {
         public override void Bake(GameStartAuthoring authoring)
@@ -22,9 +20,9 @@ public class GameStartAuthoring : MonoBehaviour
                 playerPrefabB = GetEntity(authoring.playerPrefabB, TransformUsageFlags.None),
                 playerPrefabC = GetEntity(authoring.playerPrefabC, TransformUsageFlags.None),
                 playerPrefabD = GetEntity(authoring.playerPrefabD, TransformUsageFlags.None),
-                timeToNextEnemy = authoring.timeToNextEnemy,
-                startWave = authoring.startWave,
             });
+            AddComponent(entity, new MatchStateComponent { CurrentState = MatchState.WaitingForPlayers });
+            AddComponent(entity, new LobbyStateComponent { ConnectedPlayers = 0, ReadyPlayers = 0 });
         }
     }
 }

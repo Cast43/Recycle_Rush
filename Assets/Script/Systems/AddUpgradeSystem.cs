@@ -42,12 +42,19 @@ partial struct AddUpgradeSystem : ISystem
                             //preciso achar o player local para adicionar o efeito
                             foreach (var (effectsPrefab, connection, localPlayer) in SystemAPI.Query<DynamicBuffer<EffectPrefab>, RefRO<ConnectionEntity>>().WithEntityAccess())
                             {
-                                //encontra o player que enviou a conexao
                                 if (connection.ValueRO.Value == receiveRpcCommandRequest.ValueRO.SourceConnection)
                                 {
-                                    // Debug.Log($"adicionou o efeito {effect[i].Prefab}");
-                                    ECB.AppendToBuffer<EffectPrefab>(localPlayer, new EffectPrefab { Prefab = upgrades[i].Prefab, name = upgrades[i].Name });
+                                    // === A VERIFICAÇÃO CRÍTICA ===
+                                    var pendingBuffer = SystemAPI.GetBuffer<UpgradesPending>(localPlayer);
 
+                                    // Se o jogador não tem pontos na fila, ignora! Ele não pode receber melhorias.
+                                    if (pendingBuffer.Length == 0) continue;
+
+                                    // Gasta o ponto AGORA, antes de dar a recompensa.
+                                    pendingBuffer.RemoveAt(0);
+                                    // =============================
+
+                                    ECB.AppendToBuffer<EffectPrefab>(localPlayer, new EffectPrefab { Prefab = upgrades[i].Prefab, name = upgrades[i].Name });
                                 }
                             }
                         }
@@ -76,10 +83,14 @@ partial struct AddUpgradeSystem : ISystem
                             //preciso achar o player local para adicionar o efeito
                             foreach (var (LevelModifier, connection, localPlayer) in SystemAPI.Query<DynamicBuffer<StatusModifier>, RefRO<ConnectionEntity>>().WithEntityAccess())
                             {
-                                //encontra o player que enviou a conexao
                                 if (connection.ValueRO.Value == receiveRpcCommandRequest.ValueRO.SourceConnection)
                                 {
-                                    // Debug.Log($"adicionou o efeito {effect[i].Prefab}");
+                                    // === A VERIFICAÇÃO CRÍTICA ===
+                                    var pendingBuffer = SystemAPI.GetBuffer<UpgradesPending>(localPlayer);
+                                    if (pendingBuffer.Length == 0) continue;
+                                    pendingBuffer.RemoveAt(0);
+                                    // =============================
+
                                     BufferLookup<StatusModifier> statusModifierBuffer = SystemAPI.GetBufferLookup<StatusModifier>();
                                     var statusModifier = statusModifierBuffer[upgrades[i].Prefab];
                                     foreach (var status in statusModifier)
@@ -115,10 +126,15 @@ partial struct AddUpgradeSystem : ISystem
                             //preciso achar o player local para adicionar o efeito
                             foreach (var (addTech, connection, localPlayer) in SystemAPI.Query<DynamicBuffer<Tech>, RefRO<ConnectionEntity>>().WithEntityAccess())
                             {
-                                //encontra o player que enviou a conexao
+                                // Dentro do foreach do localPlayer...
                                 if (connection.ValueRO.Value == receiveRpcCommandRequest.ValueRO.SourceConnection)
                                 {
-                                    // Debug.Log($"adicionou o efeito {effect[i].Prefab}");
+                                    // === A VERIFICAÇÃO CRÍTICA ===
+                                    var pendingBuffer = SystemAPI.GetBuffer<UpgradesPending>(localPlayer);
+                                    if (pendingBuffer.Length == 0) continue;
+                                    pendingBuffer.RemoveAt(0);
+                                    // =============================
+
                                     BufferLookup<Tech> techBufferLookup = SystemAPI.GetBufferLookup<Tech>();
                                     var techBuffer = techBufferLookup[upgrades[i].Prefab];
                                     foreach (var tech in techBuffer)
@@ -145,22 +161,18 @@ partial struct AddUpgradeSystem : ISystem
 
         }
 
-        //sistema para remover o count dos upgrades pendentes 
-        foreach (var (receiveRpcCommandRequest, rpcEntity) in SystemAPI.Query<RefRO<ReceiveRpcCommandRequest>>().WithAll<DecreaseUpgradesPendingRpc>().WithEntityAccess())
-        {
-            //preciso achar o player local para remover um dos upgrades pending
-            foreach (var (upgradesPending, connection, localPlayer) in SystemAPI.Query<DynamicBuffer<UpgradesPending>, RefRO<ConnectionEntity>>().WithEntityAccess())
-            {
-                //encontra o player que enviou a conexao
-                if (connection.ValueRO.Value == receiveRpcCommandRequest.ValueRO.SourceConnection)
-                {
-                    var buffer = SystemAPI.GetBuffer<UpgradesPending>(localPlayer);
-                    if (buffer.Length > 0) buffer.RemoveAt(0);
-                    ECB.RemoveComponent<RequestChooseUpgrade>(localPlayer);
-                }
-            }
-            ECB.DestroyEntity(rpcEntity);
-        }
+        // foreach (var (receiveRpcCommandRequest, rpcEntity) in SystemAPI.Query<RefRO<ReceiveRpcCommandRequest>>().WithAll<DecreaseUpgradesPendingRpc>().WithEntityAccess())
+        // {
+        //     foreach (var (upgradesPending, connection, localPlayer) in SystemAPI.Query<DynamicBuffer<UpgradesPending>, RefRO<ConnectionEntity>>().WithEntityAccess())
+        //     {
+        //         if (connection.ValueRO.Value == receiveRpcCommandRequest.ValueRO.SourceConnection)
+        //         {
+        //             var buffer = SystemAPI.GetBuffer<UpgradesPending>(localPlayer);
+        //             if (buffer.Length > 0) buffer.RemoveAt(0);
+        //         }
+        //     }
+        //     ECB.DestroyEntity(rpcEntity);
+        // }
 
         ECB.Playback(state.EntityManager);
 

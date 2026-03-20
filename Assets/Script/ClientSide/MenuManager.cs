@@ -175,4 +175,27 @@ public class MenuManager : MonoBehaviour
         return null;
     }
 
+    public void SendReadySignal()
+    {
+        // Precisamos encontrar o mundo do Cliente ativo
+        foreach (var world in World.All)
+        {
+            if (world.IsClient() && !world.IsThinClient())
+            {
+                var em = world.EntityManager;
+
+                // Cria a entidade do RPC
+                var rpcEntity = em.CreateEntity();
+                em.AddComponent<PlayerReadyRpc>(rpcEntity);
+                em.AddComponent<SendRpcCommandRequest>(rpcEntity);
+
+                Debug.Log("Sinal de Pronto enviado ao servidor!");
+
+                // Opcional: Desativar o botão para o jogador não ficar clicando
+                gameObject.SetActive(false);
+                break;
+            }
+        }
+    }
+
 }

@@ -17,6 +17,12 @@ partial struct AddEffectUIClientRPCSystem : ISystem
     // [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
+
+        if (AddUpgradesUIManager.Instance == null)
+        {
+            // Só entra aqui se a UI realmente não existir na cena.
+            return;
+        }
         EntityCommandBuffer ECB = new EntityCommandBuffer(Unity.Collections.Allocator.Temp);
         foreach ((RefRO<ReceiveRpcCommandRequest> receiveRpcCommandRequest, RefRO<ShowUpgradesRPC> showUpgrades, Entity entity)
             in SystemAPI.Query<RefRO<ReceiveRpcCommandRequest>, RefRO<ShowUpgradesRPC>>().WithEntityAccess())

@@ -9,111 +9,148 @@ using UnityEngine;
 [UpdateAfter(typeof(CalculateFrameExperienceSystem))]
 partial struct UpdateStatusSystem : ISystem
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     public void OnCreate(ref SystemState state)
     {
-
     }
 
-    // Update is called once per frame
+    [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
         EntityCommandBuffer ECB = new EntityCommandBuffer(Allocator.Temp);
 
         foreach (var (buffer, entity) in SystemAPI.Query<DynamicBuffer<StatusModifier>>().WithAll<UpdateStatus>().WithEntityAccess())
         {
-            // i = level.ValueRO.current;
-            // Apply each modifier according to current level
+            // 1. Lemos a existência (HasComponent) e os valores (GetComponent) UMA VEZ antes do loop.
+            bool hasMaxHealth = SystemAPI.HasComponent<MaxHealth>(entity);
+            var maxHealth = hasMaxHealth ? SystemAPI.GetComponent<MaxHealth>(entity) : default;
+
+            bool hasCurrentHealth = SystemAPI.HasComponent<CurrentHealth>(entity);
+            var currentHealth = hasCurrentHealth ? SystemAPI.GetComponent<CurrentHealth>(entity) : default;
+            bool hasEnemy = SystemAPI.HasComponent<Enemy>(entity);
+
+            bool hasMelee = SystemAPI.HasComponent<MeleeAttackProperties>(entity);
+            var meleeAttack = hasMelee ? SystemAPI.GetComponent<MeleeAttackProperties>(entity) : default;
+
+            bool hasShoot = SystemAPI.HasComponent<ShootAttackProperties>(entity);
+            var shootAttack = hasShoot ? SystemAPI.GetComponent<ShootAttackProperties>(entity) : default;
+
+            bool hasMoveSpeed = SystemAPI.HasComponent<MoveSpeed>(entity);
+            var moveSpeed = hasMoveSpeed ? SystemAPI.GetComponent<MoveSpeed>(entity) : default;
+            bool hasPlayerInput = SystemAPI.HasComponent<PlayerInput>(entity);
+            bool hasMovement = SystemAPI.HasComponent<Movement>(entity);
+
+            bool hasTargetRadius = SystemAPI.HasComponent<TargetRadius>(entity);
+            var targetRadius = hasTargetRadius ? SystemAPI.GetComponent<TargetRadius>(entity) : default;
+
+            bool hasXpArea = SystemAPI.HasComponent<GetExperienceInArea>(entity);
+            var experienceInArea = hasXpArea ? SystemAPI.GetComponent<GetExperienceInArea>(entity) : default;
+
+            bool hasHealthRegen = SystemAPI.HasComponent<HealthRegen>(entity);
+            var healthRegen = hasHealthRegen ? SystemAPI.GetComponent<HealthRegen>(entity) : default;
+
+            // Flags para sabermos se precisamos salvar o componente no ECB no final
+            bool saveHealth = false, saveMelee = false, saveShoot = false;
+            bool saveMoveSpeed = false, saveTargetRadius = false;
+            bool saveXpArea = false, saveHealthRegen = false;
+
+            // 2. Aplicamos TODOS os modificadores nas variáveis locais em memória
             foreach (var mod in buffer)
             {
                 switch (mod.Type)
                 {
                     case UpgradeModifier.IncreaseHealth:
-                        if (state.EntityManager.HasComponent<MaxHealth>(entity))
+                        if (hasMaxHealth)
                         {
-                            var maxHealth = state.EntityManager.GetComponentData<MaxHealth>(entity);
                             maxHealth.value += (int)mod.Value;
-                            ECB.SetComponent(entity, maxHealth);
-                        }
-                        if (state.EntityManager.HasComponent<Enemy>(entity))
-                        {
-                            var maxHealth = state.EntityManager.GetComponentData<MaxHealth>(entity);
-                            var currentHealth = state.EntityManager.GetComponentData<CurrentHealth>(entity);
-                            maxHealth.value += (int)mod.Value;
-                            currentHealth.value = maxHealth.value;
-                            ECB.SetComponent(entity, maxHealth);
-                            ECB.SetComponent(entity, currentHealth);
+                            saveHealth = true;
+
+                            if (hasEnemy && hasCurrentHealth)
+                            {
+                                currentHealth.value = maxHealth.value;
+                            }
                         }
                         break;
+
                     case UpgradeModifier.IncreaseDamage:
-                        if (state.EntityManager.HasComponent<MeleeAttackProperties>(entity))
+                        if (hasMelee)
                         {
-                            var meleeAttack = state.EntityManager.GetComponentData<MeleeAttackProperties>(entity);
-                            meleeAttack.damage = (int)(meleeAttack.damage + ((mod.Value)));
-                            ECB.SetComponent(entity, meleeAttack);
+                            meleeAttack.damage += (int)mod.Value;
+                            saveMelee = true;
                         }
-                        if (state.EntityManager.HasComponent<ShootAttackProperties>(entity))
+                        if (hasShoot)
                         {
-                            var shootAttack = state.EntityManager.GetComponentData<ShootAttackProperties>(entity);
-                            shootAttack.damage = (int)(shootAttack.damage + ((mod.Value)));
-                            ECB.SetComponent(entity, shootAttack);
+                            shootAttack.damage += (int)mod.Value;
+                            saveShoot = true;
                         }
                         break;
+
                     case UpgradeModifier.DecreaseShootTime:
-                        if (state.EntityManager.HasComponent<ShootAttackProperties>(entity))
+                        if (hasShoot)
                         {
-                            var shootAttack = state.EntityManager.GetComponentData<ShootAttackProperties>(entity);
-                            shootAttack.cooldownTickCount = (uint)(shootAttack.cooldownTickCount / ((mod.Value) + 1));
-                            ECB.SetComponent(entity, shootAttack);
+                            shootAttack.cooldownTickCount = (uint)(shootAttack.cooldownTickCount / (mod.Value + 1));
+                            saveShoot = true;
                         }
                         break;
+
                     case UpgradeModifier.IncreaseSpeed:
-                        if (state.EntityManager.HasComponent<PlayerInput>(entity))
+                        // No seu código original, se a entidade tivesse PlayerInput E Movement, 
+                        // a velocidade era somada duas vezes. Assumi que isso era um bug e unifiquei a lógica.
+                        if (hasMoveSpeed && (hasPlayerInput || hasMovement))
                         {
-                            var ms = state.EntityManager.GetComponentData<MoveSpeed>(entity);
-                            ms.maxSpeed += mod.Value;
-                            ECB.SetComponent(entity, ms);
-                        }
-                        if (state.EntityManager.HasComponent<Movement>(entity))
-                        {
-                            var ms = state.EntityManager.GetComponentData<MoveSpeed>(entity);
-                            ms.maxSpeed += mod.Value;
-                            ECB.SetComponent(entity, ms);
+                            moveSpeed.maxSpeed += mod.Value;
+                            saveMoveSpeed = true;
                         }
                         break;
+
                     case UpgradeModifier.IncreseRange:
-                        if (state.EntityManager.HasComponent<ShootAttackProperties>(entity))
+                        if (hasShoot)
                         {
-                            var shootAttack = state.EntityManager.GetComponentData<ShootAttackProperties>(entity);
-                            shootAttack.bulletLifeTime += (uint)((mod.Value));
+                            shootAttack.bulletLifeTime += (uint)mod.Value;
                             shootAttack.bulletSpeed += (mod.Value / shootAttack.bulletSpeed + 1);
-                            ECB.SetComponent(entity, shootAttack);
+                            saveShoot = true;
                         }
-                        if (state.EntityManager.HasComponent<TargetRadius>(entity))
+                        if (hasTargetRadius)
                         {
-                            var targetRadius = state.EntityManager.GetComponentData<TargetRadius>(entity);
-                            targetRadius.value += (mod.Value);
-                            ECB.SetComponent(entity, targetRadius);
+                            targetRadius.value += mod.Value;
+                            saveTargetRadius = true;
                         }
                         break;
+
                     case UpgradeModifier.IncreaseXpArea:
-                        if (state.EntityManager.HasComponent<GetExperienceInArea>(entity))
+                        if (hasXpArea)
                         {
-                            var experienceInArea = state.EntityManager.GetComponentData<GetExperienceInArea>(entity);
-                            experienceInArea.radius += ((mod.Value));
-                            ECB.SetComponent(entity, experienceInArea);
+                            experienceInArea.radius += mod.Value;
+                            saveXpArea = true;
                         }
                         break;
+
                     case UpgradeModifier.IncreaseHealthRegen:
-                        if (state.EntityManager.HasComponent<HealthRegen>(entity))
+                        if (hasHealthRegen)
                         {
-                            var healthRegen = state.EntityManager.GetComponentData<HealthRegen>(entity);
-                            healthRegen.amount += (int)(mod.Value);
-                            ECB.SetComponent(entity, healthRegen);
+                            healthRegen.amount += (int)mod.Value;
+                            saveHealthRegen = true;
                         }
                         break;
                 }
+
+                // Debug log pode ficar muito pesado se houver muitos mods, mas mantive como estava.
+                Debug.Log(mod.Type);
             }
+
+            // 3. Gravamos as alterações UMA ÚNICA VEZ no ECB por entidade
+            if (saveHealth)
+            {
+                ECB.SetComponent(entity, maxHealth);
+                if (hasEnemy && hasCurrentHealth) ECB.SetComponent(entity, currentHealth);
+            }
+            if (saveMelee) ECB.SetComponent(entity, meleeAttack);
+            if (saveShoot) ECB.SetComponent(entity, shootAttack);
+            if (saveMoveSpeed) ECB.SetComponent(entity, moveSpeed);
+            if (saveTargetRadius) ECB.SetComponent(entity, targetRadius);
+            if (saveXpArea) ECB.SetComponent(entity, experienceInArea);
+            if (saveHealthRegen) ECB.SetComponent(entity, healthRegen);
+
+            // Limpeza
             buffer.Clear();
             ECB.RemoveComponent<UpdateStatus>(entity);
         }

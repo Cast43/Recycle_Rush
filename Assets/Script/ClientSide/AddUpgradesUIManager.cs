@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
-using System;
+
 public class AddUpgradesUIManager : MonoBehaviour
 {
     [SerializeField]
@@ -33,33 +33,36 @@ public class AddUpgradesUIManager : MonoBehaviour
         public GameObject GOVisual;
         public int count;
     }
+
     public UpgradeLevel currentUpgradeLevel = UpgradeLevel.Commum;
+
+    public static AddUpgradesUIManager Instance { get; private set; }
+
+    void Awake()
+    {
+        if (Instance == null)
+            Instance = this;
+        else
+            Destroy(gameObject);
+    }
+
+    void Start()
+    {
+        gameObject.SetActive(false);
+    }
 
     public void ShowUpgrades(UpgradeLevel level)
     {
+        gameObject.SetActive(true);
         currentUpgradeLevel = level;
         SetUpgradesInHUD();
     }
-    // void OnEnable()
-    // {
-    //     SetUpgradesInHUD();
-    // }
-    //pega o mundo do servidor para encontrar o playerLocal
+
     World GetClientWorld()
     {
         foreach (var world in World.All)
         {
-            // NetCode cria mundos com "ClientWorld" no nome
             if (world.Name.Contains("ClientWorld"))
-                return world;
-        }
-        return null;
-    }
-    World GetServerWorld()
-    {
-        foreach (var world in World.All)
-        {
-            if (world.Name.Contains("ServerWorld"))
                 return world;
         }
         return null;
@@ -68,78 +71,45 @@ public class AddUpgradesUIManager : MonoBehaviour
     void SetUpgradesInHUD()
     {
         var clientWorld = GetClientWorld();
-        if (clientWorld == null)
-        {
-            Debug.LogWarning("ClientWorld não encontrada ainda.");
-            return;
-        }
+        if (clientWorld == null) return;
 
         var em = clientWorld.EntityManager;
 
-        // Encontra o player local usando GhostOwnerIsLocal (método robusto)
         EntityQuery playerQuery = em.CreateEntityQuery(
             ComponentType.ReadOnly<PlayerInput>(),
             ComponentType.ReadOnly<GhostOwnerIsLocal>());
 
-        if (playerQuery.IsEmptyIgnoreFilter)
-        {
-            Debug.LogWarning("Nenhum player local encontrado (GhostOwnerIsLocal).");
-            return;
-        }
+        if (playerQuery.IsEmptyIgnoreFilter) return;
 
         Entity clientLocalPlayerEntity;
         using (var players = playerQuery.ToEntityArray(Allocator.Temp))
         {
             clientLocalPlayerEntity = players.Length > 0 ? players[0] : Entity.Null;
         }
-        if (clientLocalPlayerEntity == Entity.Null)
-        {
-            Debug.LogWarning("Não encontrei o player local para atualizar HUD.");
-            return;
-        }
+        if (clientLocalPlayerEntity == Entity.Null) return;
 
-        // Busca GlobalEffectPrefab no client world (deve vir como ghost)
         EntityQuery globalEffectQuery = em.CreateEntityQuery(ComponentType.ReadOnly<GlobalUpgradesPrefab>());
-        if (globalEffectQuery.IsEmptyIgnoreFilter)
-        {
-            Debug.LogWarning("Nenhuma entidade GlobalEffectPrefab encontrada no client world.");
-            return;
-        }
+        if (globalEffectQuery.IsEmptyIgnoreFilter) return;
 
         Entity globalEffectEntity;
         using (var globals = globalEffectQuery.ToEntityArray(Allocator.Temp))
         {
             globalEffectEntity = globals.Length > 0 ? globals[0] : Entity.Null;
         }
-        if (globalEffectEntity == Entity.Null)
-        {
-            Debug.LogWarning("GlobalEffect entity não encontrada.");
-            return;
-        }
+        if (globalEffectEntity == Entity.Null) return;
 
-        // Confere buffers
-        if (!em.HasBuffer<EffectPrefab>(clientLocalPlayerEntity))
-        {
-            Debug.LogWarning("Player local não tem buffer EffectPrefab.");
-            return;
-        }
-        if (!em.HasBuffer<GlobalUpgradesPrefab>(globalEffectEntity))
-        {
-            Debug.LogWarning("GlobalEffect entity não tem buffer GlobalEffectPrefab.");
-            return;
-        }
+        if (!em.HasBuffer<EffectPrefab>(clientLocalPlayerEntity)) return;
+        if (!em.HasBuffer<GlobalUpgradesPrefab>(globalEffectEntity)) return;
 
         var playerEffects = em.GetBuffer<EffectPrefab>(clientLocalPlayerEntity);
         var globalEffects = em.GetBuffer<GlobalUpgradesPrefab>(globalEffectEntity);
 
         if (!CanAddEffects(playerEffects, globalEffects))
         {
-            Debug.LogWarning("Não há mais efeitos para adicionar");
             DisableAddEffects();
             return;
         }
 
-        // Limpa UI e monta opções
         foreach (var item in GOUpgradesUI) item.SetActive(false);
 
         List<UpgradeUIInfo> AddEffectsInHUD = new List<UpgradeUIInfo>();
@@ -155,52 +125,35 @@ public class AddUpgradesUIManager : MonoBehaviour
             SetEffectUI(AddEffectsInHUD[i], i);
         }
     }
+
     bool CanAddEffects(DynamicBuffer<EffectPrefab> playerEffects, DynamicBuffer<GlobalUpgradesPrefab> globalEffects)
     {
-        // Se não há efeitos globais, não há nada para adicionar
-        if (globalEffects.IsEmpty)
-            return false;
+        if (globalEffects.IsEmpty) return false;
+        if (playerEffects.IsEmpty) return true;
 
-        // Se o player não tem efeitos, podemos adicionar qualquer um
-        if (playerEffects.IsEmpty)
-            return true;
-
-        // Para cada efeito global...
         for (int i = 0; i < globalEffects.Length; i++)
         {
             var globalEffectElement = globalEffects[i].Prefab;
             bool foundInPlayer = false;
 
-            // Verifica se já está no player
             for (int j = 0; j < playerEffects.Length; j++)
             {
                 if (globalEffectElement == playerEffects[j].Prefab)
                 {
                     foundInPlayer = true;
-                    break; // já achou, não precisa continuar comparando esse
+                    break;
                 }
             }
 
-            // Se não foi encontrado no player, ainda há efeito para adicionar
-            if (!foundInPlayer)
-                return true;
+            if (!foundInPlayer) return true;
         }
-
-        // Todos os efeitos globais já estão no player
         return false;
     }
 
-    //verificar efeitos que ja estão no player para não adicionar
-    UpgradeUIInfo GetRandomEffect(DynamicBuffer<EffectPrefab> serverPlayerEffects, DynamicBuffer<GlobalUpgradesPrefab> globalEffects,
-                                List<UpgradeUIInfo> AddEffectsInHUD)
+    UpgradeUIInfo GetRandomEffect(DynamicBuffer<EffectPrefab> serverPlayerEffects, DynamicBuffer<GlobalUpgradesPrefab> globalEffects, List<UpgradeUIInfo> AddEffectsInHUD)
     {
         UpgradeUIInfo addEffectUI = null;
-
-        if (globalEffects.IsEmpty)
-        {
-            Debug.LogWarning("Não há efeitos no GlobalEffects");
-            return null;
-        }
+        if (globalEffects.IsEmpty) return null;
 
         HashSet<int> testados = new HashSet<int>();
 
@@ -208,29 +161,20 @@ public class AddUpgradesUIManager : MonoBehaviour
         {
             int randomEffectValue = UnityEngine.Random.Range(0, globalEffects.Length);
 
-            // Evita repetir o mesmo índice
-            if (!testados.Add(randomEffectValue))
-                continue;
+            if (!testados.Add(randomEffectValue)) continue;
 
             var globalEffectName = globalEffects[randomEffectValue].Name.ToString();
-            // var globalEffectPrefab = globalEffects[randomEffectValue].Prefab;
-
-
             bool addThisEffect = true;
 
-            // Verifica se o efeito já está no player
             foreach (var playerEffect in serverPlayerEffects)
             {
-                // Debug.Log($"Passando pelo efeito global: {globalEffectName} e player {playerEffect.name}");
                 if (globalEffectName == playerEffect.name)
                 {
-                    // Debug.Log($"Efeito já no player: {globalEffectName}");
                     addThisEffect = false;
                     continue;
                 }
             }
 
-            // Verifica se o efeito já está na HUD
             if (addThisEffect)
             {
                 foreach (var item in AddEffectsInHUD)
@@ -243,7 +187,6 @@ public class AddUpgradesUIManager : MonoBehaviour
                 }
             }
 
-            // Se for válido, procura no effectsUIInfo
             if (addThisEffect)
             {
                 if (currentUpgradeLevel == UpgradeLevel.Commum)
@@ -270,10 +213,8 @@ public class AddUpgradesUIManager : MonoBehaviour
                 }
             }
         }
-
         return addEffectUI;
     }
-
 
     void SetEffectUI(UpgradeUIInfo upgrade, int goIndex)
     {
@@ -282,89 +223,41 @@ public class AddUpgradesUIManager : MonoBehaviour
         var name = GOUpgradesUI[goIndex].transform.Find("Name").GetComponent<TMP_Text>();
         var button = GOUpgradesUI[goIndex].GetComponent<Button>();
 
-        if (!image)
-        {
-            Debug.LogWarning("precisa de um objeto imagem na effect UI"); return;
-        }
-        if (!description)
-        {
-            Debug.LogWarning("precisa de um objeto description na effect UI"); return;
-        }
-        if (!name)
-        {
-            Debug.LogWarning("precisa de um objeto nome na effect UI"); return;
-        }
-        if (!button)
-        {
-            Debug.LogWarning("precisa de um componente Button no objeto para adicionar onClick");
-            return;
-        }
+        if (!image || !description || !name || !button) return;
 
         image.sprite = upgrade.image;
         description.text = upgrade.description;
         name.text = upgrade.name;
 
-        // Remove listeners antigos para evitar duplicação
         button.onClick.RemoveAllListeners();
-
-        // // Captura o nome do efeito para usar no listener
-        // string upgradeName = effect.name;
-
-        // Adiciona o listener, chamando chooseEffects com o nome
         button.onClick.AddListener(() => ChooseEffect(upgrade));
     }
+
     void ChooseEffect(UpgradeUIInfo upgrade)
     {
         var entityManager = GetClientWorld().EntityManager;
-
-        // Cria a entidade RPC
         var rpcEntity = entityManager.CreateEntity();
 
-        // Procura a entidade que representa a conexão com o servidor
-        var query = entityManager.CreateEntityQuery(typeof(NetworkStreamConnection));
-        var connectionEntity = Entity.Null;
-        if (query.CalculateEntityCount() > 0)
-        {
-            connectionEntity = query.GetSingletonEntity();
-            // Debug.Log($"Entidade de conexão encontrada: {connectionEntity}");
-        }
-        else
-        {
-            Debug.LogWarning("Nenhuma conexão encontrada ainda!");
-        }
-
-        // Adiciona o componente do RPC
         if (upgrade.type == UpgradeType.Status)
         {
-            entityManager.AddComponentData(rpcEntity, new ModifierStatusRpc
-            {
-                ModifierName = new FixedString64Bytes(upgrade.name)
-            });
+            entityManager.AddComponentData(rpcEntity, new ModifierStatusRpc { ModifierName = new FixedString64Bytes(upgrade.name) });
         }
         else if (upgrade.type == UpgradeType.Effect)
         {
-            entityManager.AddComponentData(rpcEntity, new AddEffectRpc
-            {
-                EffectName = new FixedString64Bytes(upgrade.name)
-            });
+            entityManager.AddComponentData(rpcEntity, new AddEffectRpc { EffectName = new FixedString64Bytes(upgrade.name) });
         }
         else
         {
-            entityManager.AddComponentData(rpcEntity, new AddComponentRpc
-            {
-                ComponentName = new FixedString64Bytes(upgrade.name)
-            });
+            entityManager.AddComponentData(rpcEntity, new AddComponentRpc { ComponentName = new FixedString64Bytes(upgrade.name) });
         }
 
         entityManager.AddComponent<SendRpcCommandRequest>(rpcEntity);
-        // Adiciona SendRpcCommandRequest com TargetConnection
-        // entityManager.AddComponentData(rpcEntity, new ConnectionEntity { Value = connectionEntity });
-        Debug.LogWarning($"rpcEnviado!{upgrade.name}");
+        Debug.LogWarning($"rpcEnviado! {upgrade.name}");
 
         SetUpgradeVisualCount(upgrade);
-
-        DisableAddEffects();
+        DisableAddEffects(); // Isso fecha a tela e aciona a trava de 1s do ECS automaticamente!
     }
+
     void DisableAddEffects()
     {
         for (int i = 0; i < GOUpgradesUI.Length; i++)
@@ -372,14 +265,6 @@ public class AddUpgradesUIManager : MonoBehaviour
             GOUpgradesUI[i].SetActive(false);
         }
         gameObject.SetActive(false);
-
-        //envia um RPC para diminuir upgrades pending 
-        var entityManager = GetClientWorld().EntityManager;
-        var rpcEntity = entityManager.CreateEntity();
-
-        entityManager.AddComponentData(rpcEntity, new DecreaseUpgradesPendingRpc { });
-
-        entityManager.AddComponent<SendRpcCommandRequest>(rpcEntity);
     }
 
     void SetUpgradeVisualCount(UpgradeUIInfo upgrade)
@@ -394,6 +279,7 @@ public class AddUpgradesUIManager : MonoBehaviour
             }
         }
     }
+
     public void DisableAllUpgradesVisual()
     {
         foreach (var visual in GOVisualUpgrades)
