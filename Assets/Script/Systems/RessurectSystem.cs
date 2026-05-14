@@ -9,7 +9,7 @@ using Unity.Mathematics;
 using Unity.Collections;
 
 [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
-// [UpdateInGroup(typeof(PredictedSimulationSystemGroup), OrderLast = true)]
+[UpdateInGroup(typeof(PausableSimulationGroup))]
 partial struct RessurectSystem : ISystem
 {
     [BurstCompile]
@@ -153,5 +153,3 @@ partial struct RessurectSystem : ISystem
         }
     }
 }
-
-

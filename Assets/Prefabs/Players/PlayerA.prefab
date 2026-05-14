@@ -107,7 +107,6 @@ GameObject:
   - component: {fileID: 357815296403494025}
   - component: {fileID: 2478120488542937865}
   - component: {fileID: 8287433019369763991}
-  - component: {fileID: -2184867060790840893}
   m_Layer: 8
   m_Name: PlayerA
   m_TagString: Untagged
@@ -331,7 +330,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 99b58e1404eaa174390dda7f29787635, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxExperience: 5
+  maxExperience: 1
   maxExperienceModifier: 1.1
   startLevel: 0
   MaxCapacityGarbage: 10
@@ -437,18 +436,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   meshFilho: {fileID: 7829576326830782810}
   flashDuration: 0.2
---- !u!114 &-2184867060790840893
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4411393761261615811}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9600a2ac7eecb24449d796f3cc3fef00, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &6728840892501591999
 GameObject:
   m_ObjectHideFlags: 0

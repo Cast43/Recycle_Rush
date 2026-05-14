@@ -7,7 +7,7 @@ using Unity.NetCode;
 using UnityEngine;
 using Unity.Collections;
 
-[UpdateInGroup(typeof(SimulationSystemGroup))]
+[UpdateInGroup(typeof(PausableSimulationGroup))] // MÁGICA: Apenas troque o grupo aqui!
 partial struct AreaAttackSystem : ISystem
 {
     public void OnCreate(ref SystemState state)
@@ -16,9 +16,11 @@ partial struct AreaAttackSystem : ISystem
         state.RequireForUpdate<BeginSimulationEntityCommandBufferSystem.Singleton>();
     }
 
-    // [BurstCompile]
+    [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
+        if (SystemAPI.TryGetSingleton<MatchStateComponent>(out var ms) && ms.IsPaused) return;
+
         BeginSimulationEntityCommandBufferSystem.Singleton ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();
         NetworkTime networkTime = SystemAPI.GetSingleton<NetworkTime>();
         var simulationTickRate = NetCodeConfig.Global.ClientServerTickRate.SimulationTickRate;

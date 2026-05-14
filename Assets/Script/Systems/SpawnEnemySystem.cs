@@ -6,6 +6,7 @@ using Unity.Collections;
 using UnityEngine;
 
 [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
+[UpdateInGroup(typeof(PausableSimulationGroup))]
 public partial struct SpawnEnemySystem : ISystem
 {
     private EntityQuery aliveEnemiesQuery;
@@ -21,6 +22,8 @@ public partial struct SpawnEnemySystem : ISystem
     // [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
+        if (SystemAPI.TryGetSingleton<MatchStateComponent>(out var ms) && ms.IsPaused) return;
+
         // Pega o estado atual da partida
         var matchState = SystemAPI.GetSingleton<MatchStateComponent>().CurrentState;
 

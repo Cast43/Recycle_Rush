@@ -8,15 +8,10 @@ using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
 
-// [UpdateInGroup(typeof(PredictedSimulationSystemGroup))] // nunca altera essa merda isso faz funcionar
 [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
-[UpdateInGroup(typeof(PhysicsSystemGroup))] // nunca altera essa merda isso faz funcionar
-[UpdateAfter(typeof(PhysicsSimulationGroup))]
+[UpdateInGroup(typeof(PausablePhysicsGroup))]
 [UpdateBefore(typeof(ExportPhysicsWorld))]
 [WithNone(typeof(NeedRessurection))]
-// [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))] // nunca altera essa merda isso faz funcionar
-// [UpdateAfter(typeof(ExportPhysicsWorld))]
-// [UpdateBefore(typeof(PhysicsSystemGroup))]
 partial struct FindTargetSystem : ISystem
 {
     [BurstCompile]

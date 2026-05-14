@@ -7,7 +7,7 @@ using Unity.Collections;
 using UnityEngine;
 
 [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
-// [UpdateInGroup(typeof(GhostInputSystemGroup))]
+[UpdateInGroup(typeof(PausableSimulationGroup))]
 partial struct EnemyFollowSystem : ISystem
 {
     [BurstCompile]

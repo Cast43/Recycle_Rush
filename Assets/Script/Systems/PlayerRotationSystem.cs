@@ -5,7 +5,7 @@ using Unity.NetCode;
 using Unity.Collections;
 using UnityEngine;
 
-[UpdateInGroup(typeof(PredictedSimulationSystemGroup))]
+[UpdateInGroup(typeof(PausablePredictedGroup))]
 public partial struct PlayerRotationSystem : ISystem
 {
     [BurstCompile]
@@ -28,4 +28,3 @@ public partial struct PlayerRotationSystem : ISystem
         }
     }
 }
-

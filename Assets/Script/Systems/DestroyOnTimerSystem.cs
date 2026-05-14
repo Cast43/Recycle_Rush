@@ -3,7 +3,8 @@ using Unity.Entities;
 using Unity.NetCode;
 using Unity.Collections;
 
-[UpdateInGroup(typeof(PredictedSimulationSystemGroup))]
+// Atualizado para usar o novo grupo de simulação pausável
+[UpdateInGroup(typeof(PausableSimulationGroup))]
 partial struct DestroyOnTimerSystem : ISystem
 {
     public void OnCreate(ref SystemState state)

@@ -5,7 +5,7 @@ using Unity.Physics;
 using Unity.Mathematics;
 using UnityEngine;
 
-[UpdateInGroup(typeof(PredictedSimulationSystemGroup), OrderLast = true)]
+[UpdateInGroup(typeof(PausablePredictedGroup), OrderLast = true)]
 [UpdateBefore(typeof(CalculateFrameExperienceSystem))]
 partial struct RestoreEnergySystem : ISystem
 {

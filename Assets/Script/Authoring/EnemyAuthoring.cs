@@ -15,7 +15,7 @@ public class EnemyAuthoting : MonoBehaviour
     }
 }
 
-public struct Enemy : IInputComponentData
+public struct Enemy : IComponentData
 {
 
 }

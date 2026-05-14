@@ -17,8 +17,11 @@ public struct GameConfig : IComponentData
 public struct MatchStateComponent : IComponentData
 {
     [GhostField] public MatchState CurrentState;
+    [GhostField] public bool IsPaused;
 }
 public struct WaitingToSpawnTag : IComponentData { }
+
+public struct GamePlayingTag : IComponentData { }
 
 // O RPC que o cliente envia para o servidor
 public struct PlayerReadyRpc : IRpcCommand { }
@@ -40,4 +43,7 @@ public struct TutorialProgress : IComponentData
 
     // Se o jogador já terminou todo o tutorial
     [GhostField] public bool IsCompleted;
+
+    // Guarda a referência do inimigo para checar apenas quando ele morre
+    public Entity SpawnedEnemy;
 }

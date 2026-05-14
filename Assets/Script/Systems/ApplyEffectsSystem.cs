@@ -9,8 +9,7 @@ using Unity.Mathematics;
 using Unity.Collections;
 
 [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
-// [UpdateBefore(typeof(CalculateFrameDamageSystem))]
-[UpdateInGroup(typeof(SimulationSystemGroup))]
+[UpdateInGroup(typeof(PausableSimulationGroup))]
 public partial struct ApplyEffectsSystem : ISystem
 {
     public void OnCreate(ref SystemState state)

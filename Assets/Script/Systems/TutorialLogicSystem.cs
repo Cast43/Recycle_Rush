@@ -11,15 +11,11 @@ public partial struct TutorialLogicSystem : ISystem
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
-        if (!SystemAPI.HasSingleton<MatchStateComponent>()) return;
-        if (SystemAPI.GetSingleton<MatchStateComponent>().CurrentState != MatchState.Tutorial) return;
-
         // Garante que temos as referências dos prefabs para poder spawnar o inimigo
         if (!SystemAPI.HasSingleton<EntitiesReferences>()) return;
         var entitiesReferences = SystemAPI.GetSingleton<EntitiesReferences>();
 
-        var enemyQuery = SystemAPI.QueryBuilder().WithAll<Enemy>().Build();
-        int enemiesAlive = enemyQuery.CalculateEntityCount();
+        var healthLookup = SystemAPI.GetComponentLookup<CurrentHealth>(true);
 
         // Criamos o ECB para poder instanciar entidades e adicionar componentes de forma segura
         var ecb = new EntityCommandBuffer(Allocator.Temp);
@@ -34,8 +30,6 @@ public partial struct TutorialLogicSystem : ISystem
                     // PASSO 0: Missão de Andar
                     if (math.lengthsq(playerMove.ValueRO.moveVector) > 0.01f)
                     {
-                        progress.ValueRW.CurrentStep = 1;
-
                         // === SPAWN DO INIMIGO AQUI ===
                         // Instancia o prefab do inimigo (certifique-se de que "enemyPrefab" existe no seu EntitiesReferences)
                         Entity spawnedEnemy = ecb.Instantiate(entitiesReferences.enemyTutorialPrefab);
@@ -43,12 +37,37 @@ public partial struct TutorialLogicSystem : ISystem
                         // Define a posição: Pega a posição do jogador e adiciona 3 unidades no eixo X e Z para não nascer em cima dele
                         float3 spawnPos = transform.ValueRO.Position + new float3(3f, 0f, 3f);
                         ecb.SetComponent(spawnedEnemy, LocalTransform.FromPosition(spawnPos));
+                        
+                        // IMPORTANTE: Atualizamos o componente via ECB em vez de .ValueRW!
+                        // O ECB saberá corrigir o ID temporário (-1) de 'spawnedEnemy'
+                        // para o ID real no exato momento em que ele executar o ecb.Playback().
+                        var newProgress = progress.ValueRO;
+                        newProgress.CurrentStep = 1;
+                        newProgress.SpawnedEnemy = spawnedEnemy;
+                        ecb.SetComponent(entity, newProgress);
                     }
                     break;
 
                 case 1:
                     // PASSO 1: Missão de destruir os inimigos
-                    if (enemiesAlive == 0)
+                    bool enemyDead = false;
+                    if (!SystemAPI.Exists(progress.ValueRO.SpawnedEnemy))
+                    {
+                        enemyDead = true;
+                    }
+                    else if (healthLookup.HasComponent(progress.ValueRO.SpawnedEnemy))
+                    {
+                        if (healthLookup[progress.ValueRO.SpawnedEnemy].value <= 0)
+                        {
+                            enemyDead = true;
+                        }
+                    }
+                    else
+                    {
+                        enemyDead = true;
+                    }
+
+                    if (enemyDead)
                     {
                         progress.ValueRW.CurrentStep = 2;
                     }
@@ -56,7 +75,7 @@ public partial struct TutorialLogicSystem : ISystem
 
                 case 2:
                     // PASSO 2: Missão de Coleta
-                    if (SystemAPI.GetComponent<GarbageInventory>(entity).GarbageCount > 0)
+                    if (SystemAPI.HasComponent<GarbageInventory>(entity) && SystemAPI.GetComponent<GarbageInventory>(entity).GarbageCount > 0)
                     {
                         progress.ValueRW.CurrentStep = 3;
                     }
@@ -64,9 +83,7 @@ public partial struct TutorialLogicSystem : ISystem
 
                 case 3:
                     // PASSO 3: Missão de Reciclagem
-                    // Só avança quando a sucata zerar E o seu sistema principal de XP 
-                    // der o ponto de upgrade (UpgradesPending > 0).
-                    if (SystemAPI.GetComponent<GarbageInventory>(entity).GarbageCount <= 0)
+                    if (SystemAPI.HasBuffer<UpgradesPending>(entity))
                     {
                         var pending = SystemAPI.GetBuffer<UpgradesPending>(entity);
                         if (pending.Length > 0)
@@ -78,13 +95,13 @@ public partial struct TutorialLogicSystem : ISystem
 
                 case 4:
                     // PASSO 4: Escolher o Upgrade
-                    // O jogador está com a UI aberta escolhendo. 
-                    // Quando ele escolher, o seu AddUpgradeSystem vai consumir esse item do buffer.
-                    // Assim que a fila zerar, o tutorial sabe que a escolha foi feita!
-                    var pendingCheck = SystemAPI.GetBuffer<UpgradesPending>(entity);
-                    if (pendingCheck.Length == 0)
+                    if (SystemAPI.HasBuffer<UpgradesPending>(entity))
                     {
-                        progress.ValueRW.CurrentStep = 5;
+                        var pendingCheck = SystemAPI.GetBuffer<UpgradesPending>(entity);
+                        if (pendingCheck.Length == 0)
+                        {
+                            progress.ValueRW.CurrentStep = 5;
+                        }
                     }
                     break;
 

@@ -35,6 +35,9 @@ public class MenuManager : MonoBehaviour
     }
     public void LeaveMatch()
     {
+        // Garante que o tempo volte ao normal caso o jogador saia da partida com o jogo pausado
+        Time.timeScale = 1f;
+
         var world = World.DefaultGameObjectInjectionWorld;
         if (world == null) return;
 

@@ -5,9 +5,7 @@ using Unity.Physics;
 using Unity.Physics.Systems;
 using UnityEngine;
 
-[UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
-[UpdateAfter(typeof(PhysicsSystemGroup))]
-[UpdateAfter(typeof(PhysicsSimulationGroup))]
+[UpdateInGroup(typeof(PausablePhysicsGroup))]
 // [BurstCompile]
 public partial struct TrashDepositPhysicsSystem : ISystem
 {

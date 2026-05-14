@@ -5,8 +5,7 @@ using Unity.Physics;
 using Unity.Collections;
 using UnityEngine;
 
-[UpdateInGroup(typeof(PhysicsSystemGroup))] // nunca altera essa merda isso faz funcionar
-// [UpdateAfter(typeof(CalculateFrameDamageSystem))]
+[UpdateInGroup(typeof(PausablePhysicsGroup))]
 partial struct DestroyOnTriggerSystem : ISystem
 {
     [BurstCompile]

@@ -7,7 +7,7 @@ using Unity.Physics;
 using Unity.Collections;
 
 [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
-[UpdateInGroup(typeof(SimulationSystemGroup))]
+[UpdateInGroup(typeof(PausableSimulationGroup))]
 partial struct SlowOnTriggerSystem : ISystem
 {
     [BurstCompile]

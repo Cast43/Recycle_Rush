@@ -18,12 +18,27 @@ public partial struct CalculateFrameExperienceSystem : ISystem
     {
         NetworkTick currentTick = SystemAPI.GetSingleton<NetworkTime>().ServerTick;
 
+        // 1. PASSO GLOBAL: Somar a experiência coletada por TODOS os jogadores no frame
+        int totalGlobalExperienceThisFrame = 0;
+        foreach (var (experienceBuffer, AlreadyGiveExperience, getExpThisTickBuffer) in 
+                SystemAPI.Query<DynamicBuffer<ExperienceBufferElement>, DynamicBuffer<AlreadyGiveExperienceEntity>, DynamicBuffer<GetExperienceThisTick>>().WithAll<Simulate>())
+        {
+            foreach (var experience in experienceBuffer)
+            {
+                totalGlobalExperienceThisFrame += experience.value;
+            }
+            
+            experienceBuffer.Clear();
+        }
+
+        // 2. PASSO INDIVIDUAL: Distribuir o montante global para todos e limpar os buffers
         foreach (var (experienceBuffer, AlreadyGiveExperience, getExpThisTickBuffer, entity) in
                 SystemAPI.Query<DynamicBuffer<ExperienceBufferElement>, DynamicBuffer<AlreadyGiveExperienceEntity>, DynamicBuffer<GetExperienceThisTick>>().WithAll<Simulate>().WithEntityAccess())
         {
-            if (experienceBuffer.IsEmpty)
+            if (totalGlobalExperienceThisFrame == 0)
             {
                 getExpThisTickBuffer.AddCommandData(new GetExperienceThisTick { Tick = currentTick, value = 0 });
+                AlreadyGiveExperience.Clear();
             }
             else
             {
@@ -32,13 +47,11 @@ public partial struct CalculateFrameExperienceSystem : ISystem
                 {
                     totalExperience = getExperienceThisTick.value;
                 }
-                foreach (var experience in experienceBuffer)
-                {
-                    totalExperience += experience.value;
-                }
-                // Debug.Log("o jogador " + entity + " ganhou " + totalExperience + " de Xp");
+
+                // Adiciona o bolão global da equipe na experiência deste jogador
+                totalExperience += totalGlobalExperienceThisFrame;
+
                 getExpThisTickBuffer.AddCommandData(new GetExperienceThisTick { Tick = currentTick, value = totalExperience });
-                experienceBuffer.Clear();
                 AlreadyGiveExperience.Clear();
             }
         }

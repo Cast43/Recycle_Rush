@@ -7,12 +7,18 @@ using Unity.NetCode;
 using UnityEngine;
 using Unity.Collections;
 
-[UpdateInGroup(typeof(PredictedSimulationSystemGroup))]
+[UpdateInGroup(typeof(PausablePredictedGroup))]
 partial struct ArrowSystem : ISystem
 {
-    // [BurstCompile]
+    [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
+        bool isPaused = false;
+        if (SystemAPI.TryGetSingleton<MatchStateComponent>(out var matchState))
+        {
+            isPaused = matchState.IsPaused;
+        }
+
         BeginSimulationEntityCommandBufferSystem.Singleton ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();
         EntityCommandBuffer entityCommandBuffer = new EntityCommandBuffer(Allocator.Temp);
 
@@ -23,9 +29,16 @@ partial struct ArrowSystem : ISystem
         foreach (var (physicsVelocity, arrow, direction, localTransform, arrowEntity) in
                 SystemAPI.Query<RefRW<PhysicsVelocity>, RefRO<Arrow>, RefRO<Direction>, RefRO<LocalTransform>>().WithAll<Simulate>().WithEntityAccess())
         {
-            physicsVelocity.ValueRW.Linear = direction.ValueRO.lookDirection * arrow.ValueRO.moveSpeed;
-            physicsVelocity.ValueRW.Angular = float3.zero;
-
+            if (isPaused)
+            {
+                physicsVelocity.ValueRW.Linear = float3.zero;
+                physicsVelocity.ValueRW.Angular = float3.zero;
+            }
+            else
+            {
+                physicsVelocity.ValueRW.Linear = direction.ValueRO.lookDirection * arrow.ValueRO.moveSpeed;
+                physicsVelocity.ValueRW.Angular = float3.zero;
+            }
         }
 
         // state.Dependency = new ArrowJob

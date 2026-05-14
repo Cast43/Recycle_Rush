@@ -7,7 +7,7 @@ using Unity.Physics;
 using Unity.Collections;
 
 [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
-[UpdateInGroup(typeof(SimulationSystemGroup))]
+[UpdateInGroup(typeof(PausableSimulationGroup))]
 public partial struct DamageAreaSystem : ISystem
 {
     private ComponentLookup<CurrentHealth> healthLookup;

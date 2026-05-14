@@ -7,9 +7,7 @@ using Unity.Transforms;
 using Unity.Collections;
 using UnityEngine;
 
-// [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
-[UpdateInGroup(typeof(PhysicsSystemGroup))] // nunca altera essa merda isso faz funcionar
-[UpdateAfter(typeof(PhysicsSimulationGroup))]
+[UpdateInGroup(typeof(PausablePhysicsGroup))]
 
 public partial struct DamageOnTriggerSystem : ISystem
 {
@@ -111,5 +109,3 @@ public partial struct BulletDamageOnTriggerJob : ITriggerEventsJob
         ECB.AppendToBuffer(damageRecievingEntity, new DamageBufferElement { value = damageOnTrigger.value, owner = arrowOwner.Value });
     }
 }
-
-

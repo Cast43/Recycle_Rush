@@ -7,7 +7,7 @@ using Unity.Mathematics;
 using Unity.Collections;
 
 [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
-[UpdateInGroup(typeof(SimulationSystemGroup))] // Removido o PhysicsSystemGroup já que não usamos mais a física para isso
+[UpdateInGroup(typeof(PausableSimulationGroup))]
 public partial struct EnemyMeleeSystem : ISystem
 {
     private EntityQuery targetQuery;

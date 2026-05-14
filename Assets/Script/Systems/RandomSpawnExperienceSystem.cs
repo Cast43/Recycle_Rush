@@ -17,6 +17,8 @@ public partial struct RandomSpawnExperienceSystem : ISystem
 
     public void OnUpdate(ref SystemState state)
     {
+        if (SystemAPI.TryGetSingleton<MatchStateComponent>(out var matchState) && matchState.IsPaused) return;
+
         BeginSimulationEntityCommandBufferSystem.Singleton ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();
         EntityCommandBuffer ECB = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
 

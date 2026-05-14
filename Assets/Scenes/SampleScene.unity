@@ -1467,59 +1467,6 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
---- !u!1 &317943290
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 317943292}
-  - component: {fileID: 317943291}
-  m_Layer: 0
-  m_Name: TutorialHUDManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &317943291
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 317943290}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 42aa8606bf82ae9438444d77fd0d7801, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  tutorialHUDPanel: {fileID: 1995600605}
-  objectiveText: {fileID: 149899165}
-  stepTexts:
-  - Use as teclas W,A,S,D para se mover.
-  - Derrote os inimigos aparecendo
-  - "Colete os itens recicl\xE1veis espalhados."
-  - "Leve os itens at\xE9 as zonas reciclaveis com as respectivas cores."
-  - Escolha um melhoramento.
-  - Espere outros jogadores terminarem o tutorial
---- !u!4 &317943292
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 317943290}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 717.30566, y: 185.46815, z: 3.9149654}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &323746516
 GameObject:
   m_ObjectHideFlags: 0
@@ -10942,7 +10889,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1995600606
 RectTransform:
   m_ObjectHideFlags: 0
@@ -11793,7 +11740,6 @@ SceneRoots:
   - {fileID: 1444839198}
   - {fileID: 1192151903}
   - {fileID: 1494456909}
-  - {fileID: 317943292}
   - {fileID: 1604159497}
   - {fileID: 1625121461}
   - {fileID: 1708444938568289075}

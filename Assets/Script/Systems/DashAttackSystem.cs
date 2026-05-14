@@ -7,7 +7,7 @@ using Unity.NetCode;
 using Unity.Collections;
 using UnityEngine;
 
-[UpdateInGroup(typeof(SimulationSystemGroup))]
+[UpdateInGroup(typeof(PausableSimulationGroup))]
 partial struct DashAttackSystem : ISystem
 {
     [BurstCompile]

@@ -7,7 +7,7 @@ using Unity.NetCode;
 using Unity.Collections;
 using UnityEngine;
 
-[UpdateInGroup(typeof(PredictedSimulationSystemGroup))]
+[UpdateInGroup(typeof(PausablePredictedGroup))]
 partial struct PlayerDashSystem : ISystem
 {
     [BurstCompile]

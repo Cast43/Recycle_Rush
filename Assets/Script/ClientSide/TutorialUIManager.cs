@@ -18,45 +18,30 @@ public class TutorialUIManager : MonoBehaviour
 
     private void Update()
     {
-        // Busca o mundo do cliente para ler os dados sincronizados
+        EntityManager? em = null;
+
+        // Busca o mundo do cliente (se estiver usando Netcode local)
         foreach (var world in World.All)
         {
             if (world.IsClient() && !world.IsThinClient())
             {
-                var em = world.EntityManager;
-
-                // Cria a query para ler o estado da partida
-                var matchQuery = em.CreateEntityQuery(typeof(MatchStateComponent));
-
-                if (matchQuery.HasSingleton<MatchStateComponent>())
-                {
-                    var matchState = matchQuery.GetSingleton<MatchStateComponent>();
-
-                    // 1. LIGA OU DESLIGA A HUD DEPENDENDO DO ESTADO
-                    if (matchState.CurrentState == MatchState.Tutorial)
-                    {
-                        if (!tutorialHUDPanel.activeSelf)
-                            tutorialHUDPanel.SetActive(true);
-
-                        // 2. ATUALIZA O TEXTO DO OBJETIVO (Opcional, mas recomendado)
-                        UpdateTutorialObjective(em);
-                    }
-                    else
-                    {
-                        if (tutorialHUDPanel.activeSelf)
-                            tutorialHUDPanel.SetActive(false);
-                    }
-                }
+                em = world.EntityManager;
                 break; // Achou o mundo do cliente, pode parar o loop
             }
+        }
+
+        // Se não achou mundo de cliente, tenta usar o mundo padrão (Single-Player puro)
+        if (em == null && World.DefaultGameObjectInjectionWorld != null)
+        {
+            em = World.DefaultGameObjectInjectionWorld.EntityManager;
         }
     }
 
     // Método auxiliar para ler o progresso do jogador local
     private void UpdateTutorialObjective(EntityManager em)
     {
-        // Pega o progresso apenas do avatar que pertence ao jogador desta máquina
-        var progressQuery = em.CreateEntityQuery(typeof(TutorialProgress), typeof(GhostOwnerIsLocal));
+        // Pega o progresso de qualquer entidade que tenha TutorialProgress na cena
+        var progressQuery = em.CreateEntityQuery(typeof(TutorialProgress));
 
         if (progressQuery.HasSingleton<TutorialProgress>())
         {

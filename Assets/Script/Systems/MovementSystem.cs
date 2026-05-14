@@ -7,6 +7,7 @@ using Unity.NetCode;
 using Unity.Collections;
 using UnityEngine;
 
+// Movido para PredictedSimulationSystemGroup para que possa rodar durante o pause e zerar a velocidade.
 [UpdateInGroup(typeof(PredictedSimulationSystemGroup))]
 partial struct MovementSystem : ISystem
 {
@@ -19,12 +20,19 @@ partial struct MovementSystem : ISystem
     // [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
+        bool isPaused = false;
+        if (SystemAPI.TryGetSingleton<MatchStateComponent>(out var matchState))
+        {
+            isPaused = matchState.IsPaused;
+        }
+
         NetworkTime networkTime = SystemAPI.GetSingleton<NetworkTime>();
 
         PlayerMoveJob playerMoveJob = new PlayerMoveJob { currentTick = networkTime.ServerTick };
         MoveJob MoveJob = new MoveJob
         {
             currentTick = networkTime.ServerTick,
+            isPaused = isPaused, // Passa o estado de pause para o job
             dontMoveOnTimer = SystemAPI.GetBufferLookup<DontMoveOnTimer>(true),
         };
         RotationJob RotationJob = new RotationJob
@@ -34,10 +42,20 @@ partial struct MovementSystem : ISystem
             deltaTime = SystemAPI.Time.DeltaTime,
         };
 
+        // Movimento do jogador e inimigos (PlayerMoveJob, MoveJob) rodam sempre para poderem parar no pause.
         var h1 = playerMoveJob.ScheduleParallel(state.Dependency);
         var h2 = MoveJob.ScheduleParallel(h1);
-        var h3 = RotationJob.ScheduleParallel(h2);
-        state.Dependency = h3;
+
+        // A rotação só acontece se o jogo NÃO estiver pausado.
+        if (!isPaused)
+        {
+            var h3 = RotationJob.ScheduleParallel(h2);
+            state.Dependency = h3;
+        }
+        else
+        {
+            state.Dependency = h2;
+        }
     }
 }
 
@@ -45,6 +63,7 @@ partial struct MovementSystem : ISystem
 public partial struct MoveJob : IJobEntity
 {
     [ReadOnly] public NetworkTick currentTick;
+    [ReadOnly] public bool isPaused;
     [ReadOnly] public BufferLookup<DontMoveOnTimer> dontMoveOnTimer;
     public void Execute(in Movement movement, ref PhysicsVelocity physicsVelocity, ref LocalTransform localTransform, in MoveSpeed speed, in Entity entity)
     {
@@ -64,6 +83,14 @@ public partial struct MoveJob : IJobEntity
                 physicsVelocity.Linear = float3.zero;
                 return;//está no intervalo de preparação ataque e deve esperar
             }
+        }
+
+        // Se o jogo está pausado, zera a velocidade e para.
+        // Isso afeta principalmente os inimigos, já que o input do jogador já foi zerado no PlayerInputSystem.
+        if (isPaused)
+        {
+            physicsVelocity.Linear = float3.zero;
+            return;
         }
 
         physicsVelocity.Angular = float3.zero;

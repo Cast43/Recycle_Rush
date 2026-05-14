@@ -41,41 +41,12 @@ public partial struct MatchFlowSystem : ISystem
         {
             if (waitingCount > 0 && readyCount == waitingCount)
             {
-                matchStateRW.ValueRW.CurrentState = MatchState.Tutorial;
-            }
-        }
-        else if (currentState == MatchState.Tutorial || currentState == MatchState.Playing)
-        {
-            if (waitingCount > 0) SpawnPlayers(ref state);
-        }
-
-        // NOVA LÓGICA: Verifica se o Tutorial acabou
-        if (currentState == MatchState.Tutorial)
-        {
-            int totalPlayers = 0;
-            int completedPlayers = 0;
-
-            // Passa por todos os jogadores que estão no tutorial
-            foreach (var progress in SystemAPI.Query<RefRO<TutorialProgress>>())
-            {
-                totalPlayers++;
-
-                // Conta quantos já têm a flag IsCompleted como true
-                if (progress.ValueRO.IsCompleted)
-                {
-                    completedPlayers++;
-                }
-            }
-
-            // Se existe alguém na sala e a quantidade de pessoas que completaram 
-            // é igual ao total de pessoas jogando...
-            if (totalPlayers > 0 && completedPlayers == totalPlayers)
-            {
-                UnityEngine.Debug.Log("Todos completaram o Tutorial! Mudando para o Jogo Real.");
-
-                // Muda o estado! A HUD do tutorial vai sumir para todos os clientes.
                 matchStateRW.ValueRW.CurrentState = MatchState.Playing;
             }
+        }
+        else if (currentState == MatchState.Playing)
+        {
+            if (waitingCount > 0) SpawnPlayers(ref state);
         }
     }
 
@@ -96,8 +67,6 @@ public partial struct MatchFlowSystem : ISystem
             else playerPrefab = entitiesReferences.playerGPrefab;
 
             Entity playerAvatar = ecb.Instantiate(playerPrefab);
-
-            // ecb.AddComponent(playerAvatar, new TutorialProgress { CurrentStep = 0, IsCompleted = false });
 
             // Posição de Spawn (Você pode ter um array de posições baseadas no ID do jogador depois)
             ecb.SetComponent(playerAvatar, LocalTransform.FromPosition(new float3(UnityEngine.Random.Range(-10, +10), 1, 0)));

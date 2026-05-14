@@ -254,7 +254,7 @@ public class AddUpgradesUIManager : MonoBehaviour
         entityManager.AddComponent<SendRpcCommandRequest>(rpcEntity);
         Debug.LogWarning($"rpcEnviado! {upgrade.name}");
 
-        SetUpgradeVisualCount(upgrade);
+        // SetUpgradeVisualCount(upgrade);
         DisableAddEffects(); // Isso fecha a tela e aciona a trava de 1s do ECS automaticamente!
     }
 

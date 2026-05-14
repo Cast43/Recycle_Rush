@@ -6,21 +6,22 @@ using UnityEngine;
 using Unity.Mathematics;
 using Unity.Collections;
 
-[UpdateInGroup(typeof(LateSimulationSystemGroup))]
+[UpdateInGroup(typeof(PausableLateSimulationGroup))]
 [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
 [WithNone(typeof(NeedRessurection))]
 partial struct AutoShootSystem : ISystem
 {
-    // [BurstCompile]
+    [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
         state.RequireForUpdate<NetworkTime>();
         state.RequireForUpdate<BeginSimulationEntityCommandBufferSystem.Singleton>();
     }
 
-    // [BurstCompile]
+    [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
+        if (SystemAPI.TryGetSingleton<MatchStateComponent>(out var matchState) && matchState.IsPaused) return;
 
         BeginSimulationEntityCommandBufferSystem.Singleton ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();
         NetworkTime networkTime = SystemAPI.GetSingleton<NetworkTime>();

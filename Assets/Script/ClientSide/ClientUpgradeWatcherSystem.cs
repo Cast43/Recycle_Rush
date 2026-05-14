@@ -4,36 +4,58 @@ using Unity.NetCode;
 [WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation)]
 public partial class ClientUpgradeWatcherSystem : SystemBase
 {
-    // Livro caixa local: quantas vezes já abrimos a tela para os upgrades atuais
-    private int upgradesProcessadosLocalmente = 0;
+    private int lastFilaServidor = 0;
+    private int pendingRpcs = 0;
+    private bool wasUiActive = false;
 
     protected override void OnUpdate()
     {
         if (AddUpgradesUIManager.Instance == null) return;
 
+        bool isUiActive = AddUpgradesUIManager.Instance.gameObject.activeSelf;
+
+        // Se a UI estava aberta e agora fechou, assumimos que o jogador enviou um RPC de escolha
+        if (wasUiActive && !isUiActive)
+        {
+            pendingRpcs++;
+        }
+        wasUiActive = isUiActive;
+
         foreach (var (pendingBuffer, ghost) in SystemAPI.Query<DynamicBuffer<UpgradesPending>, RefRO<GhostOwnerIsLocal>>().WithAll<PlayerInput>())
         {
-            int tamanhoFilaServidor = pendingBuffer.Length;
+            int atualFilaServidor = pendingBuffer.Length;
 
-            // 1. O servidor processou nosso clique e descontou da fila principal.
-            // Sincronizamos nossa contagem local para baixo para acompanhar o servidor.
-            if (tamanhoFilaServidor < upgradesProcessadosLocalmente)
+            // Se a fila zerou no servidor, podemos resetar a contagem local de segurança
+            if (atualFilaServidor == 0)
             {
-                upgradesProcessadosLocalmente = tamanhoFilaServidor;
+                pendingRpcs = 0;
             }
-
-            // 2. Se a fila do servidor tem mais itens do que nós já processamos,
-            // significa que ganhamos um nível novo (ou acumulamos).
-            if (tamanhoFilaServidor > upgradesProcessadosLocalmente && !AddUpgradesUIManager.Instance.gameObject.activeSelf)
+            // Se o servidor processou escolhas (a fila diminuiu), descontamos dos nossos RPCs pendentes
+            else if (atualFilaServidor < lastFilaServidor)
             {
-                // Lê o nível do upgrade (buscando no índice correto caso o jogador upe 2x de uma vez)
-                UpgradeLevel currentLevel = pendingBuffer[upgradesProcessadosLocalmente].upgradeLevel;
+                int consumidos = lastFilaServidor - atualFilaServidor;
+                pendingRpcs -= consumidos;
+                if (pendingRpcs < 0) pendingRpcs = 0;
+            }
+            
+            lastFilaServidor = atualFilaServidor;
+
+            int efetivamentePendentes = atualFilaServidor - pendingRpcs;
+
+            // Se o jogador ainda tem upgrades para responder e a UI está fechada
+            if (efetivamentePendentes > 0 && !isUiActive)
+            {
+                // Garante que não vamos ler fora dos limites do array do buffer
+                int indexToRead = pendingRpcs;
+                if (indexToRead >= atualFilaServidor) indexToRead = atualFilaServidor - 1;
+                if (indexToRead < 0) indexToRead = 0;
+
+                UpgradeLevel currentLevel = pendingBuffer[indexToRead].upgradeLevel;
 
                 AddUpgradesUIManager.Instance.ShowUpgrades(currentLevel);
-
-                // Marcamos que a tela foi aberta para este ponto específico.
-                // A tela não vai tentar abrir de novo no frame seguinte enquanto espera a internet!
-                upgradesProcessadosLocalmente++;
+                
+                // Atualizamos para não tentar abrir múltiplas vezes no mesmo frame
+                wasUiActive = true; 
             }
         }
     }

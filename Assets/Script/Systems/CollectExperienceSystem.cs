@@ -8,9 +8,7 @@ using Unity.Collections;
 using UnityEngine;
 
 [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
-[UpdateInGroup(typeof(PhysicsSystemGroup))] // nunca altera essa merda isso faz funcionar
-[UpdateAfter(typeof(PhysicsSimulationGroup))]
-// [UpdateBefore(typeof(AfterPhysicsSystemGroup))]
+[UpdateInGroup(typeof(PausablePhysicsGroup))]
 
 public partial struct CollectExperienceSystem : ISystem
 {
@@ -126,4 +124,3 @@ public partial struct CollectExperienceSystem : ISystem
         }
     }
 }
-

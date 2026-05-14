@@ -7,9 +7,8 @@ using Unity.Transforms;
 using Unity.Collections;
 using UnityEngine;
 
-// [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
-[UpdateInGroup(typeof(PhysicsSystemGroup))] // nunca altera essa merda isso faz funcionar
-[UpdateAfter(typeof(PhysicsSimulationGroup))]
+[WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
+[UpdateInGroup(typeof(PausablePhysicsGroup))]
 public partial struct EffectOnTriggerSystem : ISystem
 {
     // [BurstCompile]

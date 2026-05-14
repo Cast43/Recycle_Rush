@@ -6,6 +6,7 @@ using Unity.Transforms;
 using Unity.Mathematics;
 using Unity.Collections;
 
+[UpdateInGroup(typeof(PausableSimulationGroup))]
 partial struct RotationSystem : ISystem
 {
     [BurstCompile]

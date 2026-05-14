@@ -4,7 +4,7 @@ using Unity.NetCode;
 using Unity.Mathematics;
 using UnityEngine;
 
-[UpdateInGroup(typeof(PredictedSimulationSystemGroup), OrderLast = true)]
+[UpdateInGroup(typeof(PausablePredictedGroup), OrderLast = true)]
 partial struct HealthRegenSystem : ISystem
 {
     [BurstCompile]
