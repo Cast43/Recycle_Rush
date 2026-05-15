@@ -421,7 +421,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 54ae82f41db1f2240a4a3f408a845f7e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  techs: []
+  techs:
+  - type: 8
+    amount: 10
+    modifier: 1
+    distance: 0
+    maxDistance: 0
+    cooldown: 0
 --- !u!114 &8287433019369763991
 MonoBehaviour:
   m_ObjectHideFlags: 0

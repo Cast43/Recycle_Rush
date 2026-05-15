@@ -248,7 +248,7 @@ public class AddUpgradesUIManager : MonoBehaviour
         }
         else
         {
-            entityManager.AddComponentData(rpcEntity, new AddComponentRpc { ComponentName = new FixedString64Bytes(upgrade.name) });
+            entityManager.AddComponentData(rpcEntity, new AddTechRpc { ComponentName = new FixedString64Bytes(upgrade.name) });
         }
 
         entityManager.AddComponent<SendRpcCommandRequest>(rpcEntity);

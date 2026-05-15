@@ -42,11 +42,11 @@ public struct EnergyRestoreMovement : IComponentData
     public float maxDistance;
     public int amount;
 }
-public struct EnergyRestoreKill : IComponentData
+public struct BiomassEnergyGenerator : IComponentData
 {
     public int amount;
 }
-public struct GetEnergyFromKill : IBufferElementData
+public struct GetEnergyFromOrganic : IBufferElementData
 {
     public int amount;
 }

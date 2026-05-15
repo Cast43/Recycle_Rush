@@ -261,7 +261,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d49fb653c1130146a57d4937cf93563, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  giveExperience: 10
 --- !u!114 &936200965256116006
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -361,9 +360,6 @@ MonoBehaviour:
   - {fileID: 1953607005591944673, guid: 34973389b49e60c419dc0d2f6506879e, type: 3}
   - {fileID: 1953607005591944673, guid: a046cb46281beb644a78e983d4dde079, type: 3}
   - {fileID: 1953607005591944673, guid: 1298d1f7cc409e944a1c01985277ddfe, type: 3}
-  - {fileID: 1953607005591944673, guid: 9cbcf5fdbee360040882a85bb9124248, type: 3}
-  - {fileID: 1953607005591944673, guid: fad4b430b731a9040a0245767e8a8ab4, type: 3}
-  - {fileID: 1953607005591944673, guid: e04efff5b5df6484b926a2ccb26fdae2, type: 3}
   - {fileID: 1953607005591944673, guid: c3fc12b8b3bfec24cabfa6ece3c502e4, type: 3}
   - {fileID: 1953607005591944673, guid: 32cf52adde1a56b4187f42a85a8f7f4d, type: 3}
   - {fileID: 1953607005591944673, guid: e45994ee6e6510f48b70edd04493bf0a, type: 3}
@@ -373,6 +369,9 @@ MonoBehaviour:
   - {fileID: 1953607005591944673, guid: d4c83fc7cbaf96c4bab262390ed7c907, type: 3}
   - {fileID: 1953607005591944673, guid: 189d00f500c83a344aba1a059e99a951, type: 3}
   - {fileID: 1953607005591944673, guid: 7ccfa8e51ff2b2940ab8d27957778134, type: 3}
+  - {fileID: 1834581554691170506, guid: 4781a9960576e8a4887dd3fbb5b89e06, type: 3}
+  - {fileID: 8359676959987243126, guid: ae3ee19117db1ef4c9850d0bedfe3735, type: 3}
+  - {fileID: 7568545757775073581, guid: f59e77db8e48ad845bc7fd9e818c190d, type: 3}
 --- !u!114 &-7793230913537335546
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -388,6 +387,7 @@ MonoBehaviour:
   maxExperience: 1
   maxExperienceModifier: 0
   startLevel: 1
+  MaxCapacityGarbage: 10
   modifiers:
   - type: 0
     value: 1
@@ -398,6 +398,12 @@ MonoBehaviour:
   - type: 3
     value: 0.01
     divideWaveGain: 0
+  plasticCount: 1
+  paperCount: 1
+  glassCount: 1
+  metalCount: 1
+  organicCount: 1
+  notRecycleCount: 1
 --- !u!1 &5315488179751079938
 GameObject:
   m_ObjectHideFlags: 0

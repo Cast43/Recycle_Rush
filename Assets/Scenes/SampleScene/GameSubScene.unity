@@ -653,7 +653,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cooldown: 1
-  maxExperienceSpawned: 45
+  maxExperienceSpawned: 20
   countExperienceSpawned: 0
   spawnPosition:
     x: 50

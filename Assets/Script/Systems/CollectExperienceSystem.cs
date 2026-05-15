@@ -50,7 +50,7 @@ public partial struct CollectExperienceSystem : ISystem
                 var GiverExperienceComponentLookup = SystemAPI.GetComponentLookup<GiveExperience>();
                 var GetCoreComponentLookup = SystemAPI.GetComponentLookup<GetCore>();
                 var areadyExperiencedLookup = SystemAPI.GetBufferLookup<AlreadyGiveExperienceEntity>();
-                var GiverExperienceBufferLookup = SystemAPI.GetBufferLookup<GetEnergyFromKill>();
+                var GiverExperienceBufferLookup = SystemAPI.GetBufferLookup<GetEnergyFromOrganic>();
 
                 foreach (var hit in hits)
                 {
@@ -117,7 +117,10 @@ public partial struct CollectExperienceSystem : ISystem
                     ECB.AddComponent<DestroyEntityTag>(hit.Entity);
                     if (GiverExperienceBufferLookup.HasBuffer(entity))
                     {
-                        ECB.AppendToBuffer(entity, new GetEnergyFromKill { amount = GiverExperienceComponentLookup[hit.Entity].value });
+                        if(GiverExperienceComponentLookup[hit.Entity].tarshType == TrashType.Organic)
+                        {
+                            ECB.AppendToBuffer(entity, new GetEnergyFromOrganic { amount = GiverExperienceComponentLookup[hit.Entity].value });
+                        }
                     }
                 }
             }

@@ -51,23 +51,23 @@ partial struct AddTechSystem : ISystem
 
                         break;
                     case UpgradeModifier.AddBiomassGenerator:
-                        if (state.EntityManager.HasComponent<EnergyRestoreKill>(entity))
+                        if (state.EntityManager.HasComponent<BiomassEnergyGenerator>(entity))
                         {
-                            var previousBiomass = state.EntityManager.GetComponentData<EnergyRestoreKill>(entity);
-                            var BiomassMotor = new EnergyRestoreKill
+                            var previousBiomass = state.EntityManager.GetComponentData<BiomassEnergyGenerator>(entity);
+                            var BiomassMotor = new BiomassEnergyGenerator
                             {
                                 amount = (int)mod.modifier + previousBiomass.amount,
                             };
-                            ECB.SetComponent<EnergyRestoreKill>(entity, BiomassMotor);
+                            ECB.SetComponent<BiomassEnergyGenerator>(entity, BiomassMotor);
                         }
                         else
                         {
-                            var BiomassMotor = new EnergyRestoreKill
+                            var BiomassMotor = new BiomassEnergyGenerator
                             {
                                 amount = (int)mod.amount,
                             };
-                            ECB.AddComponent<EnergyRestoreKill>(entity, BiomassMotor);
-                            ECB.AddBuffer<GetEnergyFromKill>(entity);
+                            ECB.AddComponent<BiomassEnergyGenerator>(entity, BiomassMotor);
+                            ECB.AddBuffer<GetEnergyFromOrganic>(entity);
                         }
 
                         break;

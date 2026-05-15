@@ -80,18 +80,18 @@ partial struct RestoreEnergySystem : ISystem
             }
         }
 
-        // 3. LÓGICA DE REGENERAÇÃO POR ABATE (KILLS)
-        foreach (var (currentEnergy, maxEnergy, energyRestoreKill, killBuffer) in
-                 SystemAPI.Query<RefRW<CurrentEnergy>, RefRO<MaxEnergy>, RefRO<EnergyRestoreKill>, DynamicBuffer<GetEnergyFromKill>>().WithAll<Simulate>())
+        // 3. LÓGICA DE REGENERAÇÃO POR COLETAR MATERIAIS ORGÂNICOS
+        foreach (var (currentEnergy, maxEnergy, biomassGenerator, organicCollectedBuffer) in
+                 SystemAPI.Query<RefRW<CurrentEnergy>, RefRO<MaxEnergy>, RefRO<BiomassEnergyGenerator>, DynamicBuffer<GetEnergyFromOrganic>>().WithAll<Simulate>())
         {
-            if (killBuffer.IsEmpty) continue;
+            if (organicCollectedBuffer.IsEmpty) continue;
 
-            foreach (var kill in killBuffer)
+            foreach (var material in organicCollectedBuffer)
             {
                 if (currentEnergy.ValueRO.value >= maxEnergy.ValueRO.value) break;
-                currentEnergy.ValueRW.value = math.min(currentEnergy.ValueRW.value + energyRestoreKill.ValueRO.amount, maxEnergy.ValueRO.value);
+                currentEnergy.ValueRW.value = math.min(currentEnergy.ValueRW.value + biomassGenerator.ValueRO.amount, maxEnergy.ValueRO.value);
             }
-            killBuffer.Clear();
+            organicCollectedBuffer.Clear();
         }
     }
 }

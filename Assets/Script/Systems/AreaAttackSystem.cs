@@ -14,6 +14,7 @@ partial struct AreaAttackSystem : ISystem
     {
         state.RequireForUpdate<NetworkTime>();
         state.RequireForUpdate<BeginSimulationEntityCommandBufferSystem.Singleton>();
+        state.RequireForUpdate<ClientServerTickRate>();
     }
 
     [BurstCompile]
@@ -23,7 +24,7 @@ partial struct AreaAttackSystem : ISystem
 
         BeginSimulationEntityCommandBufferSystem.Singleton ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();
         NetworkTime networkTime = SystemAPI.GetSingleton<NetworkTime>();
-        var simulationTickRate = NetCodeConfig.Global.ClientServerTickRate.SimulationTickRate;
+        var simulationTickRate = SystemAPI.GetSingleton<ClientServerTickRate>().SimulationTickRate;
 
 
         state.Dependency = new AreaAttack

@@ -111,9 +111,9 @@ partial struct AddUpgradeSystem : ISystem
         // 3. SISTEMA PARA ADICIONAR COMPONENTE (TECH)
         // ==========================================
         foreach ((RefRO<ReceiveRpcCommandRequest> receiveRpcCommandRequest, Entity rpcEntity)
-            in SystemAPI.Query<RefRO<ReceiveRpcCommandRequest>>().WithAll<AddComponentRpc>().WithEntityAccess())
+            in SystemAPI.Query<RefRO<ReceiveRpcCommandRequest>>().WithAll<AddTechRpc>().WithEntityAccess())
         {
-            var recievedPower = SystemAPI.GetComponent<AddComponentRpc>(rpcEntity);
+            var recievedPower = SystemAPI.GetComponent<AddTechRpc>(rpcEntity);
 
             int sourceNetId = -1;
             if (networkIdLookup.HasComponent(receiveRpcCommandRequest.ValueRO.SourceConnection))

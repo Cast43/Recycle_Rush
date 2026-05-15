@@ -22,7 +22,7 @@ public struct ModifierStatusRpc : IRpcCommand
 {
     public FixedString64Bytes ModifierName;
 }
-public struct AddComponentRpc : IRpcCommand
+public struct AddTechRpc : IRpcCommand
 {
     public FixedString64Bytes ComponentName;
 }
