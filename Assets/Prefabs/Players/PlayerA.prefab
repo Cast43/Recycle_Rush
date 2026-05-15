@@ -330,7 +330,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 99b58e1404eaa174390dda7f29787635, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxExperience: 1
+  maxExperience: 3
   maxExperienceModifier: 1.1
   startLevel: 0
   MaxCapacityGarbage: 10
@@ -379,8 +379,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2f64decf758bc3f43b13f3ab1504651a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxEnergy: 100
-  startEnergy: 100
+  maxEnergy: 60
+  startEnergy: 60
   energyRestoreCooldown: 5
   energyRestoreAmount: 5
 --- !u!114 &-3475810099924927038

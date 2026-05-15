@@ -498,7 +498,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   attackCooldownTime: 3
   attackRange: 1
-  damage: 2
+  damage: 1
   netCodeConfig: {fileID: 11400000, guid: 75d8a62403cd4664593908df3234abf7, type: 2}
 --- !u!114 &5667797811977463275
 MonoBehaviour:
@@ -512,7 +512,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d49fb653c1130146a57d4937cf93563, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  giveExperience: 100
 --- !u!114 &9170499870357616437
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -609,13 +608,20 @@ MonoBehaviour:
   maxExperience: 1
   maxExperienceModifier: 0
   startLevel: 1
+  MaxCapacityGarbage: 10
   modifiers:
   - type: 0
     value: 1
     divideWaveGain: 1.5
   - type: 1
     value: 1
-    divideWaveGain: 4
+    divideWaveGain: 3
   - type: 3
     value: 0.02
     divideWaveGain: 0
+  plasticCount: 1
+  paperCount: 1
+  glassCount: 1
+  metalCount: 1
+  organicCount: 1
+  notRecycleCount: 1

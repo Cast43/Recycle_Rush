@@ -368,9 +368,9 @@ MonoBehaviour:
   m_HandleRect: {fileID: 0}
   m_Direction: 0
   m_MinValue: 0
-  m_MaxValue: 100
+  m_MaxValue: 60
   m_WholeNumbers: 0
-  m_Value: 100
+  m_Value: 60
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -11702,11 +11702,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5642477047531160292, guid: 8bfed0f16fb73734a921d90ddeb5b5b2, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 664.58997
+      value: 0.00012207
       objectReference: {fileID: 0}
     - target: {fileID: 5642477047531160292, guid: 8bfed0f16fb73734a921d90ddeb5b5b2, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -25.353035
+      value: -0.0000076294
       objectReference: {fileID: 0}
     - target: {fileID: 5642477047531160292, guid: 8bfed0f16fb73734a921d90ddeb5b5b2, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
