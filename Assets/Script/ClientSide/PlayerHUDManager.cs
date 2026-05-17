@@ -11,7 +11,6 @@ public class PlayerHUDManager : MonoBehaviour
     private World _clientWorld;
     private World _ServerWorld;
 
-    // Queries para buscar os dados de forma otimizada
     private EntityQuery _localPlayerQuery;
     private EntityQuery _waveQuery;
     private EntityQuery _networkTimeQuery;
@@ -32,6 +31,7 @@ public class PlayerHUDManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI glassText;
     [SerializeField] private TextMeshProUGUI metalText;
     [SerializeField] private TextMeshProUGUI organicText;
+    [SerializeField] private TextMeshProUGUI totalGarbageText;
 
     private void Awake()
     {
@@ -54,6 +54,7 @@ public class PlayerHUDManager : MonoBehaviour
 
         UpdateLocalPlayerData();
         UpdateGlobalData();
+        UpdateVisualUpgradesVisibility();
     }
 
     private void FindClientWorld()
@@ -108,11 +109,9 @@ public class PlayerHUDManager : MonoBehaviour
     {
         if (_localPlayerQuery == default || _localPlayerQuery.IsEmptyIgnoreFilter) return;
 
-        // Verifica se as queries de tempo existem e possuem o singleton
         if (_networkTimeQuery == default || _tickRateQuery == default) return;
         if (!_networkTimeQuery.HasSingleton<NetworkTime>() || !_tickRateQuery.HasSingleton<ClientServerTickRate>()) return;
 
-        // Puxa os dados usando as Queries
         var networkTime = _networkTimeQuery.GetSingleton<NetworkTime>();
         var tickRateConfig = _tickRateQuery.GetSingleton<ClientServerTickRate>();
 
@@ -128,9 +127,6 @@ public class PlayerHUDManager : MonoBehaviour
             UpdateEnergyPercentage(energy.value);
         }
 
-        // ==========================================
-        // COOLDOWN DE ENERGIA SEGURO
-        // ==========================================
         if (em.HasComponent<EnergyRestoreCooldown>(entity) && em.HasComponent<EnergyRestore>(entity))
         {
             var currentCooldown = em.GetComponentData<EnergyRestoreCooldown>(entity);
@@ -158,9 +154,6 @@ public class PlayerHUDManager : MonoBehaviour
             }
         }
 
-        // ==========================================
-        // COOLDOWN DE VIDA SEGURO
-        // ==========================================
         if (em.HasComponent<HealthRegenCooldown>(entity) && em.HasComponent<HealthRegen>(entity))
         {
             var currentCooldown = em.GetComponentData<HealthRegenCooldown>(entity);
@@ -207,9 +200,6 @@ public class PlayerHUDManager : MonoBehaviour
             UpdateExperienceBar(exp.value, maxExp.value);
         }
 
-        // ==========================================
-        // ATUALIZAÇÃO DO INVENTÁRIO DE LIXO
-        // ==========================================
         if (_garbageInventoryQuery != default && !_garbageInventoryQuery.IsEmptyIgnoreFilter)
         {
             using var inventoryEntities = _garbageInventoryQuery.ToEntityArray(Allocator.Temp);
@@ -218,8 +208,19 @@ public class PlayerHUDManager : MonoBehaviour
             if (em.HasComponent<GarbageInventory>(invEntity))
             {
                 var inventory = em.GetComponentData<GarbageInventory>(invEntity);
-                UpdateGarbageInventoryCounts(inventory.PlasticCount, inventory.PaperCount, inventory.GlassCount, inventory.MetalCount, inventory.OrganicCount);
+                UpdateGarbageInventoryCounts(inventory.PlasticCount, inventory.PaperCount, inventory.GlassCount, inventory.MetalCount, inventory.OrganicCount, inventory.GarbageCount, inventory.MaxCapacityPerType);
             }
+        }
+    }
+
+    private void UpdateVisualUpgradesVisibility()
+    {
+        if (AddUpgradesUIManager.Instance != null)
+        {
+            bool isChoosingUpgrade = AddUpgradesUIManager.Instance.gameObject.activeSelf;
+            bool isHoldingButton = Input.GetKey(KeyCode.Tab);
+            
+            AddUpgradesUIManager.Instance.SetVisualUpgradesActive(isChoosingUpgrade || isHoldingButton);
         }
     }
 
@@ -259,14 +260,33 @@ public class PlayerHUDManager : MonoBehaviour
     public void UpdateExperienceBar(int cur, int max) { experienceBar.value = cur; experienceBar.maxValue = max; }
     public void UpdateWaveCount(int value) => waveCountText.text = $"Wave: {value}";
 
-    // Novo método para o Inventário de Lixo
-    public void UpdateGarbageInventoryCounts(int plastic, int paper, int glass, int metal, int organic)
+    public void UpdateGarbageInventoryCounts(int plastic, int paper, int glass, int metal, int organic, int total, int maxCapacity)
     {
         if (plasticText != null) plasticText.text = plastic.ToString();
         if (paperText != null) paperText.text = paper.ToString();
         if (glassText != null) glassText.text = glass.ToString();
         if (metalText != null) metalText.text = metal.ToString();
         if (organicText != null) organicText.text = organic.ToString();
+        if (totalGarbageText != null) totalGarbageText.text = $"{total} / {maxCapacity}";
+
+        UpdateTextColor(plasticText, plastic, maxCapacity);
+        UpdateTextColor(paperText, paper, maxCapacity);
+        UpdateTextColor(glassText, glass, maxCapacity);
+        UpdateTextColor(metalText, metal, maxCapacity);
+        UpdateTextColor(organicText, organic, maxCapacity);
+        UpdateTextColor(totalGarbageText, total, maxCapacity);
+    }
+
+    private void UpdateTextColor(TextMeshProUGUI textComponent, int currentAmount, int maxCapacity)
+    {
+        if (textComponent == null) return;
+
+        if (currentAmount >= maxCapacity)
+            textComponent.color = Color.red;
+        else if (currentAmount >= maxCapacity / 2f)
+            textComponent.color = Color.yellow;
+        else
+            textComponent.color = Color.white;
     }
 
     public void ShowLoseHUD() => LoseHUD.SetActive(true);

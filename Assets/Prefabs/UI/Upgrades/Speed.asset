@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Speed
   m_EditorClassIdentifier: 
   upgradeName: Speed
-  description: 
+  description: velocidade
   image: {fileID: 0}
   type: 0

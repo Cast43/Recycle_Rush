@@ -16,10 +16,9 @@ public class AddUpgradesUIManager : MonoBehaviour
     public UpgradeUIInfoSO[] coreUpgradesUIInfo;
 
     [Header("Visual Upgrades HUD")]
-    [SerializeField] private GameObject visualUpgradePrefab; // Prefab do item visual (Image + Texto de Count)
-    [SerializeField] private Transform visualUpgradesParent; // Objeto pai (um Horizontal/Grid Layout Group)
+    [SerializeField] private GameObject visualUpgradePrefab;
+    [SerializeField] private Transform visualUpgradesParent;
 
-    // Dicionário para guardar os objetos instanciados e suas quantidades
     private Dictionary<string, (GameObject go, int count)> activeVisualUpgrades = new Dictionary<string, (GameObject go, int count)>();
 
     public UpgradeLevel currentUpgradeLevel = UpgradeLevel.Commum;
@@ -162,7 +161,6 @@ public class AddUpgradesUIManager : MonoBehaviour
                     continue;
                 }
             }
-
             if (addThisEffect)
             {
                 foreach (var item in AddEffectsInHUD)
@@ -174,7 +172,6 @@ public class AddUpgradesUIManager : MonoBehaviour
                     }
                 }
             }
-
             if (addThisEffect)
             {
                 if (currentUpgradeLevel == UpgradeLevel.Commum)
@@ -206,16 +203,37 @@ public class AddUpgradesUIManager : MonoBehaviour
 
     void SetEffectUI(UpgradeUIInfoSO upgrade, int goIndex)
     {
-        var image = GOUpgradesUI[goIndex].transform.Find("Image").GetComponent<Image>();
-        var description = GOUpgradesUI[goIndex].transform.Find("Description").GetComponent<TMP_Text>();
-        var name = GOUpgradesUI[goIndex].transform.Find("Name").GetComponent<TMP_Text>();
-        var button = GOUpgradesUI[goIndex].GetComponent<Button>();
+        GameObject uiParent = GOUpgradesUI[goIndex];
+        Image image = null;
+        TMP_Text description = null;
+        TMP_Text nameText = null;
+        var button = uiParent.GetComponent<Button>();
 
-        if (!image || !description || !name || !button) return;
+        foreach (var img in uiParent.GetComponentsInChildren<Image>(true))
+        {
+            if (img.gameObject.name == "Image" || img.gameObject.name == "Icon") { image = img; break; }
+        }
+        if (image == null)
+        {
+            var imgs = uiParent.GetComponentsInChildren<Image>(true);
+            image = imgs.Length > 1 ? imgs[1] : (imgs.Length > 0 ? imgs[0] : null);
+        }
+
+        foreach (var txt in uiParent.GetComponentsInChildren<TMP_Text>(true))
+        {
+            if (txt.gameObject.name == "Description") description = txt;
+            if (txt.gameObject.name == "Name") nameText = txt;
+        }
+
+        if (image == null || description == null || nameText == null || button == null)
+        {
+            Debug.LogError($"[AddUpgradesUIManager] Falha na UI '{uiParent.name}'. Certifique-se de que os nomes dos textos são 'Name' e 'Description', e que exista um 'Image'.");
+            return;
+        }
 
         image.sprite = upgrade.image;
         description.text = upgrade.description;
-        name.text = upgrade.upgradeName;
+        nameText.text = upgrade.upgradeName;
 
         button.onClick.RemoveAllListeners();
         button.onClick.AddListener(() => ChooseEffect(upgrade));
@@ -243,7 +261,7 @@ public class AddUpgradesUIManager : MonoBehaviour
         Debug.LogWarning($"rpcEnviado! {upgrade.upgradeName}");
 
         SetUpgradeVisualCount(upgrade);
-        DisableAddEffects(); // Isso fecha a tela e aciona a trava de 1s do ECS automaticamente!
+        DisableAddEffects();
     }
 
     void DisableAddEffects()
@@ -259,19 +277,25 @@ public class AddUpgradesUIManager : MonoBehaviour
     {
         if (activeVisualUpgrades.ContainsKey(upgrade.upgradeName))
         {
-            // Já existe na tela, só atualiza o número
             var data = activeVisualUpgrades[upgrade.upgradeName];
             data.count++;
             data.go.GetComponentInChildren<TMP_Text>().text = data.count.ToString();
-            activeVisualUpgrades[upgrade.upgradeName] = data; // Salva de volta no dicionário
+            activeVisualUpgrades[upgrade.upgradeName] = data;
         }
         else
         {
-            // Primeira vez, cria do zero
             GameObject newVisual = Instantiate(visualUpgradePrefab, visualUpgradesParent);
             
-            // Pega a imagem (se estiver num filho chamado "Image") e o texto (no próprio objeto ou filhos)
-            var image = newVisual.transform.Find("Image")?.GetComponent<Image>();
+            Image image = null;
+            foreach (var img in newVisual.GetComponentsInChildren<Image>(true))
+            {
+                if (img.gameObject.name == "Image" || img.gameObject.name == "Icon") { image = img; break; }
+            }
+            if (image == null) 
+            {
+                var imgs = newVisual.GetComponentsInChildren<Image>(true);
+                image = imgs.Length > 1 ? imgs[1] : (imgs.Length > 0 ? imgs[0] : null);
+            }
             if (image != null) image.sprite = upgrade.image;
             
             var countText = newVisual.GetComponentInChildren<TMP_Text>();
@@ -289,5 +313,13 @@ public class AddUpgradesUIManager : MonoBehaviour
                 Destroy(kvp.Value.go);
         }
         activeVisualUpgrades.Clear();
+    }
+
+    public void SetVisualUpgradesActive(bool isActive)
+    {
+        if (visualUpgradesParent != null && visualUpgradesParent.gameObject.activeSelf != isActive)
+        {
+            visualUpgradesParent.gameObject.SetActive(isActive);
+        }
     }
 }
