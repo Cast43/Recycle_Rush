@@ -10,10 +10,20 @@ using UnityEngine;
 [UpdateInGroup(typeof(PredictedSimulationSystemGroup))]
 public partial struct CleanupEventSystem : ISystem
 {
+    private NativeHashMap<Entity, float3> previousPositions;
+
     [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
         state.RequireForUpdate<NetworkTime>();
+        previousPositions = new NativeHashMap<Entity, float3>(8, Allocator.Persistent);
+    }
+
+    [BurstCompile]
+    public void OnDestroy(ref SystemState state)
+    {
+        if (previousPositions.IsCreated)
+            previousPositions.Dispose();
     }
 
     [BurstCompile]
@@ -40,11 +50,13 @@ public partial struct CleanupEventSystem : ISystem
             if (objective.ValueRO.Type != EventType.Cleanup && objective.ValueRO.Type != EventType.KingOfTheHill) 
                 continue;
 
+            float distanceWalkedInZone = 0f;
             bool playerInZone = false;
 
             // Verifica se algum jogador está dentro do raio (ignorando o eixo Y)
             for (int i = 0; i < players.Length; i++)
             {
+                Entity playerEntity = players[i];
                 float3 eventPos = transform.ValueRO.Position;
                 float3 playerPos = playerTransforms[i].Position;
                 
@@ -56,14 +68,33 @@ public partial struct CleanupEventSystem : ISystem
                 if (distSq <= radius.ValueRO.value * radius.ValueRO.value)
                 {
                     playerInZone = true;
-                    break; // Se um estiver dentro, já conta (pode mudar para contar mais rápido se tiver mais gente)
+                    
+                    // Pega a distância caminhada pelo jogador neste exato frame
+                    if (previousPositions.TryGetValue(playerEntity, out float3 prevPos))
+                    {
+                        float movedDist = math.distance(playerTransforms[i].Position, prevPos);
+                        distanceWalkedInZone += movedDist;
+                    }
                 }
             }
 
-            if (playerInZone)
+            float progressToAdd = 0f;
+            
+            // Se for do tipo Limpeza (Cleanup), o progresso é a distância caminhada
+            if (objective.ValueRO.Type == EventType.Cleanup)
             {
-                // Aumenta o progresso (Tempo)
-                objective.ValueRW.Progress += deltaTime;
+                progressToAdd = distanceWalkedInZone;
+            }
+            // Se for Rei do Pedaço (King of the Hill), o progresso é tempo (deltaTime)
+            else if (objective.ValueRO.Type == EventType.KingOfTheHill && playerInZone)
+            {
+                progressToAdd = deltaTime;
+            }
+
+            if (progressToAdd > 0)
+            {
+                // Aumenta o progresso
+                objective.ValueRW.Progress += progressToAdd;
 
                 // Checa se o objetivo de tempo foi alcançado
                 if (objective.ValueRO.Progress >= objective.ValueRO.TargetValue)
@@ -73,6 +104,12 @@ public partial struct CleanupEventSystem : ISystem
                     ecb.AddComponent<DestroyEntityTag>(entity); // Destrói o evento ao acabar
                 }
             }
+        }
+
+        // Atualiza a posição atual dos jogadores para usar no próximo frame
+        for (int i = 0; i < players.Length; i++)
+        {
+            previousPositions[players[i]] = playerTransforms[i].Position;
         }
 
         players.Dispose();
