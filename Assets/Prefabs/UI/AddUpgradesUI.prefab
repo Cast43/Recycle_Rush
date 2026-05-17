@@ -1000,110 +1000,27 @@ MonoBehaviour:
   - {fileID: 8472780072568809060}
   - {fileID: 4304511743319546768}
   upgradesUIInfo:
-  - name: Biomass Energy
-    description: Collecting garbage garants energy
-    image: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
-    type: 2
-  - name: Eolic Turbine
-    description: Gain energy moving
-    image: {fileID: 21300000, guid: f5c1317ada7ee5843bd4384e2ef8cc5d, type: 3}
-    type: 2
-  - name: Solar Energy
-    description: Generate more energy over time
-    image: {fileID: 21300000, guid: d7370de4b60cbd243a62bd72fec74651, type: 3}
-    type: 2
-  - name: Damage
-    description: Deal more damage but cost more energy
-    image: {fileID: 21300000, guid: c530d0389c7205841b811d780a4c98b4, type: 3}
-    type: 0
-  - name: Collect Zone
-    description: Get objects more easily
-    image: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
-    type: 0
-  - name: Increase Health
-    description: Give plant more life
-    image: {fileID: 21300000, guid: 22a298554dc5e314eb9e657c00c0e2ad, type: 3}
-    type: 0
-  - name: Irrigation
-    description: Regen plants life by time
-    image: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
-    type: 0
-  - name: Shoot Distance
-    description: See enemies from distance
-    image: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
-    type: 0
-  - name: Shoot Time
-    description: Shoot more quickly
-    image: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
-    type: 0
-  - name: Nitrogen
-    description: Increases life and life regeneration
-    image: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
-    type: 0
-  - name: Precision
-    description: Increases damage and decreases firing time
-    image: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
-    type: 0
-  - name: Shooting Far
-    description: It slightly increases the damage and range
-    image: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
-    type: 0
-  - name: Turbo Mode
-    description: It increases speed and improves forward speed
-    image: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
-    type: 0
-  - name: More Cadency
-    description: Increase the distance and decrease the shooting distance
-    image: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
-    type: 0
-  - name: Speed
-    description: Increase speed
-    image: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
-    type: 0
+  - {fileID: 11400000, guid: 0d1937838771cb44f8a641ab3ff8d44e, type: 2}
+  - {fileID: 11400000, guid: 85a5924e3f975a5438996ddba7163d0d, type: 2}
+  - {fileID: 11400000, guid: 6af4ed17a85efff4ba91fcadb719ad49, type: 2}
+  - {fileID: 11400000, guid: 3d3419507168b2d4aaa8b597a8518f87, type: 2}
+  - {fileID: 11400000, guid: c35f893d37bccf7468aa02a0af522f72, type: 2}
+  - {fileID: 11400000, guid: 26b41484abbe998498b0bc4a9caa4750, type: 2}
+  - {fileID: 11400000, guid: c7c73a89dd6f71f459e86e9f36199d2a, type: 2}
+  - {fileID: 11400000, guid: 7ffe69ebaea8b2a4eb3ea7447c035155, type: 2}
+  - {fileID: 11400000, guid: 45b6017db4194b9498b6396f6144693c, type: 2}
+  - {fileID: 11400000, guid: d582f16b9e77cea43b387e23292d4441, type: 2}
+  - {fileID: 11400000, guid: f40328b168be93d469e748267ddcc362, type: 2}
+  - {fileID: 11400000, guid: b9f3daaa83560ba4b85e50659bfffed1, type: 2}
+  - {fileID: 11400000, guid: 48879c59778171f488f589b251e5a074, type: 2}
+  - {fileID: 11400000, guid: 96e1e5be2ca2ee0449575ba0e72d2753, type: 2}
+  - {fileID: 11400000, guid: 04ccc1450ad1d3e44b19c67c7b75ef83, type: 2}
+  - {fileID: 11400000, guid: 83f9c1ecb26fd98438e6e7253f1262ad, type: 2}
   coreUpgradesUIInfo:
-  - name: Lightning Charge
-    description: Shoots now generates a chain damage
-    image: {fileID: 21300000, guid: 2cc05024761b8744ca56f8799eb541d9, type: 3}
-    type: 1
-  - name: Chemical Recycling
-    description: Degrades objects as time passes
-    image: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
-    type: 1
-  GOVisualUpgrades:
-  - GOVisual: {fileID: 0}
-    count: 0
-  - GOVisual: {fileID: 0}
-    count: 0
-  - GOVisual: {fileID: 0}
-    count: 0
-  - GOVisual: {fileID: 0}
-    count: 0
-  - GOVisual: {fileID: 0}
-    count: 0
-  - GOVisual: {fileID: 0}
-    count: 0
-  - GOVisual: {fileID: 0}
-    count: 0
-  - GOVisual: {fileID: 0}
-    count: 0
-  - GOVisual: {fileID: 0}
-    count: 0
-  - GOVisual: {fileID: 0}
-    count: 0
-  - GOVisual: {fileID: 0}
-    count: 0
-  - GOVisual: {fileID: 0}
-    count: 0
-  - GOVisual: {fileID: 0}
-    count: 0
-  - GOVisual: {fileID: 0}
-    count: 0
-  - GOVisual: {fileID: 0}
-    count: 0
-  - GOVisual: {fileID: 0}
-    count: 0
-  - GOVisual: {fileID: 0}
-    count: 0
+  - {fileID: 0}
+  - {fileID: 0}
+  visualUpgradePrefab: {fileID: 0}
+  visualUpgradesParent: {fileID: 0}
   currentUpgradeLevel: 0
 --- !u!1 &4304511743319546768
 GameObject:

@@ -11,28 +11,16 @@ public class AddUpgradesUIManager : MonoBehaviour
     [SerializeField]
     public GameObject[] GOUpgradesUI;
 
-    [System.Serializable]
-    public class UpgradeUIInfo
-    {
-        public string name;
-        public string description;
-        public Sprite image;
-        public UpgradeType type;
-    }
-
     [SerializeField]
-    public UpgradeUIInfo[] upgradesUIInfo;
-    public UpgradeUIInfo[] coreUpgradesUIInfo;
+    public UpgradeUIInfoSO[] upgradesUIInfo;
+    public UpgradeUIInfoSO[] coreUpgradesUIInfo;
 
-    [SerializeField]
-    public GOVisualUpgradesHUD[] GOVisualUpgrades;
+    [Header("Visual Upgrades HUD")]
+    [SerializeField] private GameObject visualUpgradePrefab; // Prefab do item visual (Image + Texto de Count)
+    [SerializeField] private Transform visualUpgradesParent; // Objeto pai (um Horizontal/Grid Layout Group)
 
-    [System.Serializable]
-    public class GOVisualUpgradesHUD
-    {
-        public GameObject GOVisual;
-        public int count;
-    }
+    // Dicionário para guardar os objetos instanciados e suas quantidades
+    private Dictionary<string, (GameObject go, int count)> activeVisualUpgrades = new Dictionary<string, (GameObject go, int count)>();
 
     public UpgradeLevel currentUpgradeLevel = UpgradeLevel.Commum;
 
@@ -112,7 +100,7 @@ public class AddUpgradesUIManager : MonoBehaviour
 
         foreach (var item in GOUpgradesUI) item.SetActive(false);
 
-        List<UpgradeUIInfo> AddEffectsInHUD = new List<UpgradeUIInfo>();
+        List<UpgradeUIInfoSO> AddEffectsInHUD = new List<UpgradeUIInfoSO>();
         foreach (var go in GOUpgradesUI)
         {
             var added = GetRandomEffect(playerEffects, globalEffects, AddEffectsInHUD);
@@ -150,9 +138,9 @@ public class AddUpgradesUIManager : MonoBehaviour
         return false;
     }
 
-    UpgradeUIInfo GetRandomEffect(DynamicBuffer<EffectPrefab> serverPlayerEffects, DynamicBuffer<GlobalUpgradesPrefab> globalEffects, List<UpgradeUIInfo> AddEffectsInHUD)
+    UpgradeUIInfoSO GetRandomEffect(DynamicBuffer<EffectPrefab> serverPlayerEffects, DynamicBuffer<GlobalUpgradesPrefab> globalEffects, List<UpgradeUIInfoSO> AddEffectsInHUD)
     {
-        UpgradeUIInfo addEffectUI = null;
+        UpgradeUIInfoSO addEffectUI = null;
         if (globalEffects.IsEmpty) return null;
 
         HashSet<int> testados = new HashSet<int>();
@@ -179,7 +167,7 @@ public class AddUpgradesUIManager : MonoBehaviour
             {
                 foreach (var item in AddEffectsInHUD)
                 {
-                    if (globalEffectName == item.name)
+                    if (globalEffectName == item.upgradeName)
                     {
                         addThisEffect = false;
                         break;
@@ -193,7 +181,7 @@ public class AddUpgradesUIManager : MonoBehaviour
                 {
                     foreach (var item in upgradesUIInfo)
                     {
-                        if (item.name == globalEffectName)
+                        if (item.upgradeName == globalEffectName)
                         {
                             addEffectUI = item;
                             break;
@@ -204,7 +192,7 @@ public class AddUpgradesUIManager : MonoBehaviour
                 {
                     foreach (var item in coreUpgradesUIInfo)
                     {
-                        if (item.name == globalEffectName)
+                        if (item.upgradeName == globalEffectName)
                         {
                             addEffectUI = item;
                             break;
@@ -216,7 +204,7 @@ public class AddUpgradesUIManager : MonoBehaviour
         return addEffectUI;
     }
 
-    void SetEffectUI(UpgradeUIInfo upgrade, int goIndex)
+    void SetEffectUI(UpgradeUIInfoSO upgrade, int goIndex)
     {
         var image = GOUpgradesUI[goIndex].transform.Find("Image").GetComponent<Image>();
         var description = GOUpgradesUI[goIndex].transform.Find("Description").GetComponent<TMP_Text>();
@@ -227,34 +215,34 @@ public class AddUpgradesUIManager : MonoBehaviour
 
         image.sprite = upgrade.image;
         description.text = upgrade.description;
-        name.text = upgrade.name;
+        name.text = upgrade.upgradeName;
 
         button.onClick.RemoveAllListeners();
         button.onClick.AddListener(() => ChooseEffect(upgrade));
     }
 
-    void ChooseEffect(UpgradeUIInfo upgrade)
+    void ChooseEffect(UpgradeUIInfoSO upgrade)
     {
         var entityManager = GetClientWorld().EntityManager;
         var rpcEntity = entityManager.CreateEntity();
 
         if (upgrade.type == UpgradeType.Status)
         {
-            entityManager.AddComponentData(rpcEntity, new ModifierStatusRpc { ModifierName = new FixedString64Bytes(upgrade.name) });
+            entityManager.AddComponentData(rpcEntity, new ModifierStatusRpc { ModifierName = new FixedString64Bytes(upgrade.upgradeName) });
         }
         else if (upgrade.type == UpgradeType.Effect)
         {
-            entityManager.AddComponentData(rpcEntity, new AddEffectRpc { EffectName = new FixedString64Bytes(upgrade.name) });
+            entityManager.AddComponentData(rpcEntity, new AddEffectRpc { EffectName = new FixedString64Bytes(upgrade.upgradeName) });
         }
         else
         {
-            entityManager.AddComponentData(rpcEntity, new AddTechRpc { ComponentName = new FixedString64Bytes(upgrade.name) });
+            entityManager.AddComponentData(rpcEntity, new AddTechRpc { ComponentName = new FixedString64Bytes(upgrade.upgradeName) });
         }
 
         entityManager.AddComponent<SendRpcCommandRequest>(rpcEntity);
-        Debug.LogWarning($"rpcEnviado! {upgrade.name}");
+        Debug.LogWarning($"rpcEnviado! {upgrade.upgradeName}");
 
-        // SetUpgradeVisualCount(upgrade);
+        SetUpgradeVisualCount(upgrade);
         DisableAddEffects(); // Isso fecha a tela e aciona a trava de 1s do ECS automaticamente!
     }
 
@@ -267,25 +255,39 @@ public class AddUpgradesUIManager : MonoBehaviour
         gameObject.SetActive(false);
     }
 
-    void SetUpgradeVisualCount(UpgradeUIInfo upgrade)
+    void SetUpgradeVisualCount(UpgradeUIInfoSO upgrade)
     {
-        foreach (var visual in GOVisualUpgrades)
+        if (activeVisualUpgrades.ContainsKey(upgrade.upgradeName))
         {
-            if (visual.GOVisual.name == upgrade.name)
-            {
-                visual.GOVisual.SetActive(true);
-                visual.count++;
-                visual.GOVisual.GetComponentInChildren<TMP_Text>().text = visual.count.ToString();
-            }
+            // Já existe na tela, só atualiza o número
+            var data = activeVisualUpgrades[upgrade.upgradeName];
+            data.count++;
+            data.go.GetComponentInChildren<TMP_Text>().text = data.count.ToString();
+            activeVisualUpgrades[upgrade.upgradeName] = data; // Salva de volta no dicionário
+        }
+        else
+        {
+            // Primeira vez, cria do zero
+            GameObject newVisual = Instantiate(visualUpgradePrefab, visualUpgradesParent);
+            
+            // Pega a imagem (se estiver num filho chamado "Image") e o texto (no próprio objeto ou filhos)
+            var image = newVisual.transform.Find("Image")?.GetComponent<Image>();
+            if (image != null) image.sprite = upgrade.image;
+            
+            var countText = newVisual.GetComponentInChildren<TMP_Text>();
+            if (countText != null) countText.text = "1";
+
+            activeVisualUpgrades.Add(upgrade.upgradeName, (newVisual, 1));
         }
     }
 
     public void DisableAllUpgradesVisual()
     {
-        foreach (var visual in GOVisualUpgrades)
+        foreach (var kvp in activeVisualUpgrades)
         {
-            visual.GOVisual.SetActive(false);
-            visual.count = 0;
+            if (kvp.Value.go != null)
+                Destroy(kvp.Value.go);
         }
+        activeVisualUpgrades.Clear();
     }
 }
