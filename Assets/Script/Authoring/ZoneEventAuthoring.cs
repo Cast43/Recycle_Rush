@@ -6,6 +6,7 @@ using Unity.NetCode;
 public class ZoneEventAuthoring : MonoBehaviour
 {
     public float maxTime = 100;
+    public float radius = 5f; // Adiciona o raio do evento
 
     public class Baker : Baker<ZoneEventAuthoring>
     {
@@ -18,6 +19,11 @@ public class ZoneEventAuthoring : MonoBehaviour
                 Type = EventType.Cleanup,
                 Progress = 0,
                 TargetValue = authoring.maxTime,
+            });
+            
+            AddComponent(entity, new EventAreaRadius
+            {
+                value = authoring.radius
             });
         }
     }

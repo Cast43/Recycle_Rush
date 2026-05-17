@@ -14,6 +14,8 @@ public enum EventType { Cleanup, KingOfTheHill, Transport }
 // Tags de Estado do Evento
 public struct EventPendingTag : IComponentData { }
 public struct EventActiveTag : IComponentData { }
+public struct EventCompletedTag : IComponentData { }
+public struct EventAreaRadius : IComponentData { public float value; }
 
 public struct EventObjective : IComponentData
 {
