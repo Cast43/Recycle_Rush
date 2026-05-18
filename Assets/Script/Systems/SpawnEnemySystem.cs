@@ -123,9 +123,8 @@ public partial struct SpawnEnemySystem : ISystem
         Entity newEvent = ECB.Instantiate(eventPrefab);
         ECB.SetComponent(newEvent, LocalTransform.FromPosition(randomPosition));
 
-        // Inicia o evento imediatamente
-        ECB.RemoveComponent<EventPendingTag>(newEvent);
-        ECB.AddComponent<EventActiveTag>(newEvent);
+        // O evento já nasce com EventActiveTag através do Baker.
+        // Não precisamos alterar tags aqui, o que mantém o Netcode perfeitamente sincronizado.
     }
 
     private void SpawnRandonlyInRing(ref SystemState state, float innerRadius, float outerRadius, int waveCount)

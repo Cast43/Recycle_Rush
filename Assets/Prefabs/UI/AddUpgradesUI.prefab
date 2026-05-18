@@ -1019,7 +1019,7 @@ MonoBehaviour:
   coreUpgradesUIInfo:
   - {fileID: 0}
   - {fileID: 0}
-  visualUpgradePrefab: {fileID: 0}
+  visualUpgradePrefab: {fileID: 1193899522245193069, guid: 74487c33b61a64d4596fc6823c9e66fa, type: 3}
   visualUpgradesParent: {fileID: 0}
   currentUpgradeLevel: 0
 --- !u!1 &4304511743319546768

@@ -11,17 +11,23 @@ public struct EventsPrefabElement : IBufferElementData
 }
 // Tipos de recompensas/eventos
 public enum EventType { Cleanup, KingOfTheHill, Transport }
-// Tags de Estado do Evento
-public struct EventPendingTag : IComponentData { }
-public struct EventActiveTag : IComponentData { }
-public struct EventCompletedTag : IComponentData { }
-public struct EventAreaRadius : IComponentData { public float value; }
 
+// Tags de Estado do Evento
+[GhostComponent]
+public struct EventPendingTag : IComponentData { }
+[GhostComponent]
+public struct EventActiveTag : IComponentData { }
+[GhostComponent]
+public struct EventCompletedTag : IComponentData { }
+[GhostComponent]
+public struct EventAreaRadius : IComponentData { [GhostField] public float value; }
+
+[GhostComponent]
 public struct EventObjective : IComponentData
 {
-    public EventType Type;
-    public float Progress;      // 0.0 a 1.0
-    public float TargetValue;   // Tempo necessário ou quantidade de inimigos
+    [GhostField] public EventType Type;
+    [GhostField] public float Progress;      // 0.0 a 1.0
+    [GhostField] public float TargetValue;   // Tempo necessário ou quantidade de inimigos
 }
 
 // Componentes Específicos de cada Evento

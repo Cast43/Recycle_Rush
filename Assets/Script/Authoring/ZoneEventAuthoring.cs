@@ -13,7 +13,8 @@ public class ZoneEventAuthoring : MonoBehaviour
         public override void Bake(ZoneEventAuthoring authoring)
         {
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
-            AddComponent(entity, new EventPendingTag { });
+            AddComponent(entity, new EventActiveTag { });
+            
             AddComponent(entity, new EventObjective
             {
                 Type = EventType.Cleanup,
