@@ -43,10 +43,12 @@ partial struct SlowOnTriggerSystem : ISystem
                 durationAreaSlow.ValueRW.tick = initTick;
                 return;
             }
-            if (!durationAreaSlow.ValueRO.tick.IsNewerThan(currentTick))
+
+            bool isExpired = !durationAreaSlow.ValueRO.tick.IsNewerThan(currentTick);
+            bool isBeingDestroyed = SystemAPI.HasComponent<DestroyEntityTag>(entity);
+
+            if (isExpired || isBeingDestroyed)
             {
-                // Se a OverlapSphere não pegou NINGUÉM neste frame, mas o buffer tem gente, 
-                // significa que todo mundo que estava lá dentro saiu.
                 for (int i = alreadyDamagedBuffer.Length - 1; i >= 0; i--)
                 {
                     Entity trackedEntity = alreadyDamagedBuffer[i].value;
@@ -58,7 +60,10 @@ partial struct SlowOnTriggerSystem : ISystem
                     }
                 }
                 alreadyDamagedBuffer.Clear(); // Limpa todo mundo de uma vez
-                ECB.AddComponent<DestroyEntityTag>(entity);
+                if (!isBeingDestroyed)
+                {
+                    ECB.AddComponent<DestroyEntityTag>(entity);
+                }
                 return;
             }
 

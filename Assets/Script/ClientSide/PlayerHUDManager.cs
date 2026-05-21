@@ -9,13 +9,11 @@ public class PlayerHUDManager : MonoBehaviour
     public static PlayerHUDManager Instance;
 
     private World _clientWorld;
-    private World _ServerWorld;
 
     private EntityQuery _localPlayerQuery;
     private EntityQuery _waveQuery;
     private EntityQuery _networkTimeQuery;
     private EntityQuery _tickRateQuery;
-    private EntityQuery _garbageInventoryQuery;
     private EntityQuery _eventQuery;
 
     [SerializeField] private UnityEngine.UI.Slider energyPercentageSlider;
@@ -56,11 +54,6 @@ public class PlayerHUDManager : MonoBehaviour
             FindClientWorld();
             return;
         }
-        if (_ServerWorld == null || !_ServerWorld.IsCreated)
-        {
-            FindServertWorld();
-            return;
-        }
 
         UpdateLocalPlayerData();
         UpdateGlobalData();
@@ -76,20 +69,10 @@ public class PlayerHUDManager : MonoBehaviour
                 _clientWorld = world;
                 var em = _clientWorld.EntityManager;
 
-                // Query do Player
+                // Query do Player - usa PlayerInput e GhostOwnerIsLocal para achar inequivocamente o avatar local
                 _localPlayerQuery = em.CreateEntityQuery(
                     ComponentType.ReadOnly<GhostOwnerIsLocal>(),
-                    ComponentType.ReadOnly<CurrentHealth>(),
-                    ComponentType.ReadOnly<CurrentEnergy>(),
-                    ComponentType.ReadOnly<CurrentExperience>(),
-                    ComponentType.ReadOnly<MaxHealth>(),
-                    ComponentType.ReadOnly<MaxExperience>()
-                );
-
-                // Query do Inventário (Separada para garantir que não quebre a leitura de vida se o inventário não estiver presente instantaneamente)
-                _garbageInventoryQuery = em.CreateEntityQuery(
-                    ComponentType.ReadOnly<GhostOwnerIsLocal>(),
-                    ComponentType.ReadOnly<GarbageInventory>()
+                    ComponentType.ReadOnly<PlayerInput>()
                 );
 
                 // Queries dos Singletons de Tempo e Rede
@@ -97,21 +80,8 @@ public class PlayerHUDManager : MonoBehaviour
                 _tickRateQuery = em.CreateEntityQuery(typeof(ClientServerTickRate));
 
                 _eventQuery = em.CreateEntityQuery(ComponentType.ReadOnly<EventObjective>(), ComponentType.ReadOnly<EventActiveTag>());
-
-                break;
-            }
-        }
-    }
-
-    private void FindServertWorld()
-    {
-        foreach (var world in World.All)
-        {
-            if (world.IsServer())
-            {
-                _ServerWorld = world;
-                var em = _ServerWorld.EntityManager;
                 _waveQuery = em.CreateEntityQuery(ComponentType.ReadOnly<WaveProperties>());
+
                 break;
             }
         }
@@ -121,16 +91,23 @@ public class PlayerHUDManager : MonoBehaviour
     {
         if (_localPlayerQuery == default || _localPlayerQuery.IsEmptyIgnoreFilter) return;
 
-        if (_networkTimeQuery == default || _tickRateQuery == default) return;
-        if (!_networkTimeQuery.HasSingleton<NetworkTime>() || !_tickRateQuery.HasSingleton<ClientServerTickRate>()) return;
-
-        var networkTime = _networkTimeQuery.GetSingleton<NetworkTime>();
-        var tickRateConfig = _tickRateQuery.GetSingleton<ClientServerTickRate>();
-
         var em = _clientWorld.EntityManager;
 
         using var entities = _localPlayerQuery.ToEntityArray(Allocator.Temp);
+        if (entities.Length == 0) return;
         var entity = entities[0];
+
+        bool hasTimeSingletons = _networkTimeQuery != default && _tickRateQuery != default &&
+                                 _networkTimeQuery.HasSingleton<NetworkTime>() && _tickRateQuery.HasSingleton<ClientServerTickRate>();
+
+        NetworkTime networkTime = default;
+        ClientServerTickRate tickRateConfig = default;
+
+        if (hasTimeSingletons)
+        {
+            networkTime = _networkTimeQuery.GetSingleton<NetworkTime>();
+            tickRateConfig = _tickRateQuery.GetSingleton<ClientServerTickRate>();
+        }
 
         // Atualização de Energia
         if (em.HasComponent<CurrentEnergy>(entity))
@@ -139,7 +116,7 @@ public class PlayerHUDManager : MonoBehaviour
             UpdateEnergyPercentage(energy.value);
         }
 
-        if (em.HasComponent<EnergyRestoreCooldown>(entity) && em.HasComponent<EnergyRestore>(entity))
+        if (hasTimeSingletons && em.HasComponent<EnergyRestoreCooldown>(entity) && em.HasComponent<EnergyRestore>(entity) && em.HasComponent<CurrentEnergy>(entity) && em.HasComponent<MaxEnergy>(entity))
         {
             var currentCooldown = em.GetComponentData<EnergyRestoreCooldown>(entity);
             var energyRestore = em.GetComponentData<EnergyRestore>(entity);
@@ -166,7 +143,7 @@ public class PlayerHUDManager : MonoBehaviour
             }
         }
 
-        if (em.HasComponent<HealthRegenCooldown>(entity) && em.HasComponent<HealthRegen>(entity))
+        if (hasTimeSingletons && em.HasComponent<HealthRegenCooldown>(entity) && em.HasComponent<HealthRegen>(entity) && em.HasComponent<CurrentHealth>(entity) && em.HasComponent<MaxHealth>(entity))
         {
             var currentCooldown = em.GetComponentData<HealthRegenCooldown>(entity);
             var healthRestore = em.GetComponentData<HealthRegen>(entity);
@@ -212,16 +189,10 @@ public class PlayerHUDManager : MonoBehaviour
             UpdateExperienceBar(exp.value, maxExp.value);
         }
 
-        if (_garbageInventoryQuery != default && !_garbageInventoryQuery.IsEmptyIgnoreFilter)
+        if (em.HasComponent<GarbageInventory>(entity))
         {
-            using var inventoryEntities = _garbageInventoryQuery.ToEntityArray(Allocator.Temp);
-            var invEntity = inventoryEntities[0];
-
-            if (em.HasComponent<GarbageInventory>(invEntity))
-            {
-                var inventory = em.GetComponentData<GarbageInventory>(invEntity);
-                UpdateGarbageInventoryCounts(inventory.PlasticCount, inventory.PaperCount, inventory.GlassCount, inventory.MetalCount, inventory.OrganicCount, inventory.GarbageCount, inventory.MaxCapacityPerType);
-            }
+            var inventory = em.GetComponentData<GarbageInventory>(entity);
+            UpdateGarbageInventoryCounts(inventory.PlasticCount, inventory.PaperCount, inventory.GlassCount, inventory.MetalCount, inventory.OrganicCount, inventory.GarbageCount, inventory.MaxCapacityPerType);
         }
     }
 
@@ -238,17 +209,20 @@ public class PlayerHUDManager : MonoBehaviour
 
     private void UpdateGlobalData()
     {
-        if (_waveQuery == default || _waveQuery.IsEmptyIgnoreFilter) return;
+        var emClient = _clientWorld.EntityManager;
 
-        var em = _ServerWorld.EntityManager;
-        using var waveEntities = _waveQuery.ToEntityArray(Allocator.Temp);
-
-        var waveData = em.GetComponentData<WaveProperties>(waveEntities[0]);
-        UpdateWaveCount(waveData.WaveCount);
-
+        if (_waveQuery != default && !_waveQuery.IsEmptyIgnoreFilter)
+        {
+            using var waveEntities = _waveQuery.ToEntityArray(Allocator.Temp);
+            if (waveEntities.Length > 0)
+            {
+                var waveData = emClient.GetComponentData<WaveProperties>(waveEntities[0]);
+                UpdateWaveCount(waveData.WaveCount);
+            }
+        }
+        
         if (_eventQuery != default && !_eventQuery.IsEmptyIgnoreFilter)
         {
-            var emClient = _clientWorld.EntityManager;
             using var eventEntities = _eventQuery.ToEntityArray(Allocator.Temp);
             if (eventEntities.Length > 0)
             {

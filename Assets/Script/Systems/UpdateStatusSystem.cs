@@ -170,6 +170,7 @@ public partial struct UpdateStatusJob : IJobEntity
                     if (hasMoveSpeed && (hasPlayerInput || hasMovement))
                     {
                         moveSpeed.maxSpeed += mod.Value;
+                        moveSpeed.currentSpeed += mod.Value;
                         saveMoveSpeed = true;
                     }
                     break;

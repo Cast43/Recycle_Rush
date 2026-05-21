@@ -100,12 +100,14 @@ partial struct ApplyExperienceSystem : ISystem
                         {
                             var ms = state.EntityManager.GetComponentData<MoveSpeed>(entity);
                             ms.maxSpeed += mod.Value * lvl;
+                            ms.currentSpeed += mod.Value * lvl;
                             ECB.SetComponent(entity, ms);
                         }
                         if (state.EntityManager.HasComponent<Movement>(entity))
                         {
                             var ms = state.EntityManager.GetComponentData<MoveSpeed>(entity);
                             ms.maxSpeed += mod.Value * lvl;
+                            ms.currentSpeed += mod.Value * lvl;
                             ECB.SetComponent(entity, ms);
                         }
                         break;
