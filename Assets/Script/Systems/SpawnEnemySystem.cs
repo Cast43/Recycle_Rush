@@ -10,11 +10,13 @@ using UnityEngine;
 public partial struct SpawnEnemySystem : ISystem
 {
     private EntityQuery aliveEnemiesQuery;
+    private EntityQuery activeEventsQuery;
 
     [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
         aliveEnemiesQuery = SystemAPI.QueryBuilder().WithAll<Enemy>().Build();
+        activeEventsQuery = SystemAPI.QueryBuilder().WithAll<EventActiveTag>().Build();
 
         // Garante que o sistema só rode se existir um gerenciador de partida
         state.RequireForUpdate<MatchStateComponent>();
@@ -83,13 +85,17 @@ public partial struct SpawnEnemySystem : ISystem
             {
                 if (minionSpawnAspect.WaveCount != 0)
                 {
-                    float3 centro = float3.zero; // Posição base
+                    // Verifica se a query está vazia, ou seja, se NÃO EXISTE nenhum evento rodando
+                    if (activeEventsQuery.IsEmpty)
+                    {
+                        float3 centro = float3.zero; // Posição base
 
-                    SpawnEvent(ref state, centro, 15f);
+                        SpawnEvent(ref state, centro, 15f); 
 
-                    // 4. ATUALIZA O ESTADO: Salva que já geramos o evento desta wave!
-                    // Assim, mesmo que o evento seja destruído, este 'if' não será verdadeiro de novo.
-                    spawnerState.ValueRW.LastWaveSpawned = minionSpawnAspect.WaveCount;
+                        // 4. ATUALIZA O ESTADO: Salva que já geramos o evento desta wave!
+                        // Assim, mesmo que o evento seja destruído, este 'if' não será verdadeiro de novo.
+                        spawnerState.ValueRW.LastWaveSpawned = minionSpawnAspect.WaveCount;
+                    }
                 }
             }
         }

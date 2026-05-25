@@ -8,4 +8,5 @@ public class UpgradeUIInfoSO : ScriptableObject
     public string description;
     public Sprite image;
     public UpgradeType type;
+    public UpgradeAperance upgradeLevel;
 }

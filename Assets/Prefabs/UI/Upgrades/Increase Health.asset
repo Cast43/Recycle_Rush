@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Increase Health
   m_EditorClassIdentifier: 
   upgradeName: Increase Health
-  description: 
-  image: {fileID: 0}
+  description: +++ Max health
+  image: {fileID: 21300000, guid: 1378ae2a36eae634a8d4ab81241d5309, type: 3}
   type: 0

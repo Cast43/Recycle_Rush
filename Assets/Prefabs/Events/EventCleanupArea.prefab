@@ -182,5 +182,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 525650597af66644984cdf5682d24859, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxTime: 50
+  targetValue: 51
   radius: 5
+  timeLimit: 90

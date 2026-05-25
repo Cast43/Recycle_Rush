@@ -5,25 +5,26 @@ using Unity.NetCode;
 
 public class EventsAuthoring : MonoBehaviour
 {
-    public int maxEnergy;
-    public int startEnergy = 100;
-    public float energyRestoreCooldown = 1;
-    public int energyRestoreAmount = 5;
+    public EventType eventType = EventType.Cleanup;
+    public float targetValue = 10f;
+    public float timeLimit = 120f;
+    public float eventRadius = 15f;
 
     public class Baker : Baker<EventsAuthoring>
     {
         public override void Bake(EventsAuthoring authoring)
         {
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
-            AddComponent(entity, new EventPendingTag { });
+            AddComponent(entity, new EventActiveTag { });
             AddComponent(entity, new EventObjective
             {
-                Type = EventType.Cleanup,
+                Type = authoring.eventType,
                 Progress = 0,
-                TargetValue = 10
+                TargetValue = authoring.targetValue,
+                TimeLimit = authoring.timeLimit,
+                TimeRemaining = authoring.timeLimit
             });
-
-            AddBuffer<GetEnergyThisTick>(entity);
+            AddComponent(entity, new EventAreaRadius { value = authoring.eventRadius });
         }
     }
 }

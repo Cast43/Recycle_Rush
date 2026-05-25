@@ -53,6 +53,14 @@ partial struct AddUpgradeSystem : ISystem
 
                                 pendingBuffer.RemoveAt(0);
                                 ECB.AppendToBuffer(localPlayer, new EffectPrefab { Prefab = upgrades[i].Prefab, name = upgrades[i].Name });
+
+                                // Se ainda tem melhoria na fila, manda o servidor devolver um RPC na mesma hora
+                                if (pendingBuffer.Length > 0)
+                                {
+                                    var rpcEntityResp = ECB.CreateEntity();
+                                    ECB.AddComponent(rpcEntityResp, new ShowUpgradesRPC { ClientNetId = sourceNetId, upgradeLevel = pendingBuffer[0].upgradeLevel });
+                                    ECB.AddComponent(rpcEntityResp, new SendRpcCommandRequest { TargetConnection = receiveRpcCommandRequest.ValueRO.SourceConnection });
+                                }
                             }
                         }
                     }
@@ -99,6 +107,14 @@ partial struct AddUpgradeSystem : ISystem
                                     }
                                 }
                                 ECB.AddComponent<UpdateStatus>(localPlayer);
+
+                                // Se ainda tem melhoria na fila, manda o servidor devolver um RPC na mesma hora
+                                if (pendingBuffer.Length > 0)
+                                {
+                                    var rpcEntityResp = ECB.CreateEntity();
+                                    ECB.AddComponent(rpcEntityResp, new ShowUpgradesRPC { ClientNetId = sourceNetId, upgradeLevel = pendingBuffer[0].upgradeLevel });
+                                    ECB.AddComponent(rpcEntityResp, new SendRpcCommandRequest { TargetConnection = receiveRpcCommandRequest.ValueRO.SourceConnection });
+                                }
                             }
                         }
                     }
@@ -153,6 +169,14 @@ partial struct AddUpgradeSystem : ISystem
                                     }
                                 }
                                 ECB.AddComponent<AddTech>(localPlayer);
+
+                                // Se ainda tem melhoria na fila, manda o servidor devolver um RPC na mesma hora
+                                if (pendingBuffer.Length > 0)
+                                {
+                                    var rpcEntityResp = ECB.CreateEntity();
+                                    ECB.AddComponent(rpcEntityResp, new ShowUpgradesRPC { ClientNetId = sourceNetId, upgradeLevel = pendingBuffer[0].upgradeLevel });
+                                    ECB.AddComponent(rpcEntityResp, new SendRpcCommandRequest { TargetConnection = receiveRpcCommandRequest.ValueRO.SourceConnection });
+                                }
                             }
                         }
                     }

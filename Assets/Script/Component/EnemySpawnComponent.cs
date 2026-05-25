@@ -21,6 +21,7 @@ public struct EnemiesSpawnTimers : IComponentData
     public float timeToNextEnemy;
 }
 
+[GhostComponent]
 public struct WaveProperties : IComponentData
 {
     [GhostField] public int WaveCount;

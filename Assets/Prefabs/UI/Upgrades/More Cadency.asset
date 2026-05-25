@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: More Cadency
   m_EditorClassIdentifier: 
   upgradeName: More Cadency
-  description: 
-  image: {fileID: 0}
+  description: '+ Range
+
+    - Shoot time'
+  image: {fileID: 21300000, guid: 90a4e16db8212e34193fe54a84c8dabf, type: 3}
   type: 0

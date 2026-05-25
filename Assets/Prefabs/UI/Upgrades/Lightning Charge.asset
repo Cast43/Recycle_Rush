@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Lightning Charge
   m_EditorClassIdentifier: 
   upgradeName: Lightning Charge
-  description: 
-  image: {fileID: 0}
+  description: Damaging enemies now trigger a chain damagin other enemies
+  image: {fileID: 21300000, guid: 3d2bf6dddc51a6643be8c6fa78e3364f, type: 3}
   type: 2
+  upgradeLevel: 1

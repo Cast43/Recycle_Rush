@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Turbo Mode
   m_EditorClassIdentifier: 
   upgradeName: Turbo Mode
-  description: 
-  image: {fileID: 0}
+  description: +++ Dash speed
+  image: {fileID: 21300000, guid: 686efe850345461459256c0d7f965d1d, type: 3}
   type: 2

@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: Shooting Far
   m_EditorClassIdentifier: 
   upgradeName: Shooting Far
-  description: 
-  image: {fileID: 0}
+  description: '+ Shoting distance
+
+    + Damage'
+  image: {fileID: 21300000, guid: 25b2289655d7b874e9834776134a79ee, type: 3}
   type: 0

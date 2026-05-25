@@ -50,7 +50,7 @@ public partial class ClientUpgradeWatcherSystem : SystemBase
                 if (indexToRead >= atualFilaServidor) indexToRead = atualFilaServidor - 1;
                 if (indexToRead < 0) indexToRead = 0;
 
-                UpgradeLevel currentLevel = pendingBuffer[indexToRead].upgradeLevel;
+                UpgradeAperance currentLevel = pendingBuffer[indexToRead].upgradeLevel;
 
                 AddUpgradesUIManager.Instance.ShowUpgrades(currentLevel);
                 

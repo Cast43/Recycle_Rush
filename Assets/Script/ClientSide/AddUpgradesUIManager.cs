@@ -12,8 +12,7 @@ public class AddUpgradesUIManager : MonoBehaviour
     public GameObject[] GOUpgradesUI;
 
     [SerializeField]
-    public UpgradeUIInfoSO[] upgradesUIInfo;
-    public UpgradeUIInfoSO[] coreUpgradesUIInfo;
+    public UpgradeUIInfoSO[] allUpgradesUIInfo;
 
     [Header("Visual Upgrades HUD")]
     [SerializeField] private GameObject visualUpgradePrefab;
@@ -21,7 +20,7 @@ public class AddUpgradesUIManager : MonoBehaviour
 
     private Dictionary<string, (GameObject go, int count)> activeVisualUpgrades = new Dictionary<string, (GameObject go, int count)>();
 
-    public UpgradeLevel currentUpgradeLevel = UpgradeLevel.Commum;
+    public UpgradeAperance currentUpgradeLevel = UpgradeAperance.LevelUp;
 
     public static AddUpgradesUIManager Instance { get; private set; }
 
@@ -38,7 +37,7 @@ public class AddUpgradesUIManager : MonoBehaviour
         gameObject.SetActive(false);
     }
 
-    public void ShowUpgrades(UpgradeLevel level)
+    public void ShowUpgrades(UpgradeAperance level)
     {
         gameObject.SetActive(true);
         currentUpgradeLevel = level;
@@ -158,7 +157,7 @@ public class AddUpgradesUIManager : MonoBehaviour
                 if (globalEffectName == playerEffect.name)
                 {
                     addThisEffect = false;
-                    continue;
+                    break;
                 }
             }
             if (addThisEffect)
@@ -174,26 +173,13 @@ public class AddUpgradesUIManager : MonoBehaviour
             }
             if (addThisEffect)
             {
-                if (currentUpgradeLevel == UpgradeLevel.Commum)
+                foreach (var item in allUpgradesUIInfo)
                 {
-                    foreach (var item in upgradesUIInfo)
+                    // Puxa a carta se o nome e o tipo do Level solicitados pelo servidor forem os mesmos!
+                    if (item.upgradeName == globalEffectName && item.upgradeLevel == currentUpgradeLevel)
                     {
-                        if (item.upgradeName == globalEffectName)
-                        {
-                            addEffectUI = item;
-                            break;
-                        }
-                    }
-                }
-                else
-                {
-                    foreach (var item in coreUpgradesUIInfo)
-                    {
-                        if (item.upgradeName == globalEffectName)
-                        {
-                            addEffectUI = item;
-                            break;
-                        }
+                        addEffectUI = item;
+                        break;
                     }
                 }
             }

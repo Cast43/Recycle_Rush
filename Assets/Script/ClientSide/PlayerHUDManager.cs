@@ -14,7 +14,6 @@ public class PlayerHUDManager : MonoBehaviour
     private EntityQuery _waveQuery;
     private EntityQuery _networkTimeQuery;
     private EntityQuery _tickRateQuery;
-    private EntityQuery _eventQuery;
 
     [SerializeField] private UnityEngine.UI.Slider energyPercentageSlider;
     [SerializeField] private UnityEngine.UI.Slider robotHealthPercentageSlider;
@@ -31,15 +30,6 @@ public class PlayerHUDManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI metalText;
     [SerializeField] private TextMeshProUGUI organicText;
     [SerializeField] private TextMeshProUGUI totalGarbageText;
-
-    [Header("Event UI")]
-    [SerializeField] private GameObject eventPanel;
-    [SerializeField] private TextMeshProUGUI eventNameText;
-    [SerializeField] private UnityEngine.UI.Slider eventProgressSlider;
-    [SerializeField] private TextMeshProUGUI eventProgressText;
-
-    [Header("Event Texts Config")]
-    [SerializeField] private EventUIInfoSO[] eventUIInfos;
 
     private void Awake()
     {
@@ -79,7 +69,6 @@ public class PlayerHUDManager : MonoBehaviour
                 _networkTimeQuery = em.CreateEntityQuery(typeof(NetworkTime));
                 _tickRateQuery = em.CreateEntityQuery(typeof(ClientServerTickRate));
 
-                _eventQuery = em.CreateEntityQuery(ComponentType.ReadOnly<EventObjective>(), ComponentType.ReadOnly<EventActiveTag>());
                 _waveQuery = em.CreateEntityQuery(ComponentType.ReadOnly<WaveProperties>());
 
                 break;
@@ -219,53 +208,6 @@ public class PlayerHUDManager : MonoBehaviour
                 var waveData = emClient.GetComponentData<WaveProperties>(waveEntities[0]);
                 UpdateWaveCount(waveData.WaveCount);
             }
-        }
-        
-        if (_eventQuery != default && !_eventQuery.IsEmptyIgnoreFilter)
-        {
-            using var eventEntities = _eventQuery.ToEntityArray(Allocator.Temp);
-            if (eventEntities.Length > 0)
-            {
-                var eventObjective = emClient.GetComponentData<EventObjective>(eventEntities[0]);
-                
-                if (eventPanel != null && !eventPanel.activeSelf) eventPanel.SetActive(true);
-                
-                if (eventNameText != null) 
-                {
-                    eventNameText.text = "Evento Ativo"; // Valor padrão
-                    foreach (var info in eventUIInfos)
-                    {
-                        if (info != null && info.eventType == eventObjective.Type)
-                        {
-                            eventNameText.text = info.eventName;
-                            break;
-                        }
-                    }
-                }
-
-                if (eventProgressSlider != null)
-                {
-                    eventProgressSlider.maxValue = eventObjective.TargetValue;
-                    eventProgressSlider.value = eventObjective.Progress;
-                }
-
-                if (eventProgressText != null)
-                {
-                    eventProgressText.text = "Complete o objetivo do evento!"; // Valor padrão
-                    foreach (var info in eventUIInfos)
-                    {
-                        if (info != null && info.eventType == eventObjective.Type)
-                        {
-                            eventProgressText.text = info.eventDescription;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-        else
-        {
-            if (eventPanel != null && eventPanel.activeSelf) eventPanel.SetActive(false);
         }
     }
 

@@ -12,7 +12,7 @@ public struct GlobalUpgradesPrefab : IBufferElementData
 public struct ShowUpgradesRPC : IRpcCommand
 {
     public int ClientNetId;
-    public UpgradeLevel upgradeLevel;
+    public UpgradeAperance upgradeLevel;
 }
 public struct AddEffectRpc : IRpcCommand
 {

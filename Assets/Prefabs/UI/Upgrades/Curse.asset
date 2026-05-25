@@ -16,3 +16,4 @@ MonoBehaviour:
   description: 
   image: {fileID: 0}
   type: 2
+  upgradeLevel: 1

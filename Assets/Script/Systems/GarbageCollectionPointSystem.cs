@@ -28,6 +28,7 @@ public partial struct TrashDepositPhysicsSystem : ISystem
         {
             InventoryLookup = SystemAPI.GetComponentLookup<GarbageInventory>(false),
             BinLookup = SystemAPI.GetComponentLookup<RecyclingBinData>(true),
+            ExperienceLookup = SystemAPI.GetBufferLookup<ExperienceBufferElement>(true),
             ECB = ecb
         };
 
@@ -39,6 +40,7 @@ public partial struct TrashDepositPhysicsSystem : ISystem
     {
         public ComponentLookup<GarbageInventory> InventoryLookup;
         [ReadOnly] public ComponentLookup<RecyclingBinData> BinLookup;
+        [ReadOnly] public BufferLookup<ExperienceBufferElement> ExperienceLookup;
 
         // A declaração do ECB aqui dentro para podermos usá-lo
         public EntityCommandBuffer ECB;
@@ -109,7 +111,12 @@ public partial struct TrashDepositPhysicsSystem : ISystem
                 // Devolve os dados modificados para o inventário do robô
                 inventory.GarbageCount -= amountDeposited;
                 InventoryLookup[robotEntity] = inventory;
-                ECB.AppendToBuffer(robotEntity, new ExperienceBufferElement { value = amountDeposited });
+                
+                // Só tenta adicionar a experiência se o robô tiver o buffer correto para isso!
+                if (ExperienceLookup.HasBuffer(robotEntity))
+                {
+                    ECB.AppendToBuffer(robotEntity, new ExperienceBufferElement { value = amountDeposited });
+                }
             }
         }
     }

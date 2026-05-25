@@ -14,4 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   eventType: 0
   eventName: Cleanup Event
-  eventDescription: Clean the dirty zone somewhere in the map to recieve a reward.
+  eventDescription: Clean the dirty zone somewhere in the map to recieve a energy
+    upgrade.

@@ -5,8 +5,9 @@ public enum UpgradeType
     Tech
 }
 
-public enum UpgradeLevel
+public enum UpgradeAperance
 {
-    Commum,
-    Core
+    LevelUp,
+    Boss,
+    Event
 }

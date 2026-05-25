@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Shoot Time
   m_EditorClassIdentifier: 
   upgradeName: Shoot Time
-  description: 
-  image: {fileID: 0}
+  description: --- Shoot time
+  image: {fileID: 21300000, guid: a7cee08dcd6df1449a4c1663c409d842, type: 3}
   type: 0

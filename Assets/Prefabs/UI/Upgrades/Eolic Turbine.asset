@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Eolic Turbine
   m_EditorClassIdentifier: 
   upgradeName: Eolic Turbine
-  description: 
-  image: {fileID: 21300000, guid: f5c1317ada7ee5843bd4384e2ef8cc5d, type: 3}
+  description: Moving now gives energy
+  image: {fileID: 21300000, guid: 535536f399d7e044e805c9114c30263b, type: 3}
   type: 2
+  upgradeLevel: 2

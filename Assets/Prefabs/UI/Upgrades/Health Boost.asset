@@ -10,9 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5fc7f2b0b8c47b140ad7611b5ab53756, type: 3}
-  m_Name: Irrigation
+  m_Name: Health Boost
   m_EditorClassIdentifier: 
-  upgradeName: Irrigation
-  description: 
-  image: {fileID: 0}
+  upgradeName: Health Boost
+  description: '+ Max health
+
+    + Health regen'
+  image: {fileID: 21300000, guid: 646d79c2e7e2ed7409639d9f7f849b7a, type: 3}
   type: 0

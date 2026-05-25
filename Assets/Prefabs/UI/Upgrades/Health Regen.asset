@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5fc7f2b0b8c47b140ad7611b5ab53756, type: 3}
-  m_Name: BootsTurbine
+  m_Name: Health Regen
   m_EditorClassIdentifier: 
-  upgradeName: BootsTurbine
-  description: 
-  image: {fileID: 0}
-  type: 2
+  upgradeName: Health Regen
+  description: +++ Health regen
+  image: {fileID: 21300000, guid: 83b2308ba2082f847be453bb5021c654, type: 3}
+  type: 0

@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5fc7f2b0b8c47b140ad7611b5ab53756, type: 3}
   m_Name: BiomassEnergy
   m_EditorClassIdentifier: 
-  upgradeName: BiomassEnergy
-  description: 
-  image: {fileID: 0}
+  upgradeName: Biomass Energy
+  description: Collecting organic materials now give energy
+  image: {fileID: 21300000, guid: f11c9833e026af742be0b9430f01efa4, type: 3}
   type: 2
+  upgradeLevel: 2

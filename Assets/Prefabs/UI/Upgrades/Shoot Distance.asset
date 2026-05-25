@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Shoot Distance
   m_EditorClassIdentifier: 
   upgradeName: Shoot Distance
-  description: 
-  image: {fileID: 0}
+  description: +++ Range
+  image: {fileID: 21300000, guid: 210cdf71ec9927c4983818592aa1010d, type: 3}
   type: 0

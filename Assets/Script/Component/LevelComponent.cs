@@ -39,7 +39,7 @@ public struct CurrentExperience : IComponentData
 }
 public struct UpgradesPending : IBufferElementData
 {
-    [GhostField] public UpgradeLevel upgradeLevel;
+    [GhostField] public UpgradeAperance upgradeLevel;
 }
 public struct LevelUpTag : IComponentData { }
 public struct GiveExperience : IComponentData

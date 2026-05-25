@@ -28,6 +28,8 @@ public struct EventObjective : IComponentData
     [GhostField] public EventType Type;
     [GhostField] public float Progress;      // 0.0 a 1.0
     [GhostField] public float TargetValue;   // Tempo necessário ou quantidade de inimigos
+    [GhostField] public float TimeLimit;     // Tempo máximo configurado no Inspector
+    [GhostField] public float TimeRemaining; // Tempo restante sincronizado para a HUD
 }
 
 // Componentes Específicos de cada Evento

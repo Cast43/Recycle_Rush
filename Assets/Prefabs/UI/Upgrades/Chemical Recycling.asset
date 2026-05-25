@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Chemical Recycling
   m_EditorClassIdentifier: 
   upgradeName: Chemical Recycling
-  description: 
-  image: {fileID: 0}
+  description: Damaging enemies now create a damage zone around them.
+  image: {fileID: 21300000, guid: b1164a342381ebb42b440a0d3d5699fd, type: 3}
   type: 1
+  upgradeLevel: 1

@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: Precision
   m_EditorClassIdentifier: 
   upgradeName: Precision
-  description: 
-  image: {fileID: 0}
+  description: '+ Damage
+
+    - Shoot time'
+  image: {fileID: 21300000, guid: 2d1141da6653c424f8c0c8cf8917c39f, type: 3}
   type: 0

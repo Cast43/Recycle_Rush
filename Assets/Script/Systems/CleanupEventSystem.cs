@@ -39,6 +39,9 @@ public partial struct CleanupEventSystem : ISystem
         var players = playerQuery.ToEntityArray(Allocator.Temp);
         var playerTransforms = playerQuery.ToComponentDataArray<LocalTransform>(Allocator.Temp);
 
+        var connectionLookup = SystemAPI.GetComponentLookup<ConnectionEntity>(true);
+        var networkIdLookup = SystemAPI.GetComponentLookup<NetworkId>(true);
+
         // Procura eventos Ativos e que não estejam Concluídos
         foreach (var (objective, transform, radius, entity) in 
                  SystemAPI.Query<RefRW<EventObjective>, RefRO<LocalTransform>, RefRO<EventAreaRadius>>()
@@ -49,6 +52,18 @@ public partial struct CleanupEventSystem : ISystem
             // Só processamos eventos do tipo Limpeza (Cleanup) ou Rei do Pedaço
             if (objective.ValueRO.Type != EventType.Cleanup && objective.ValueRO.Type != EventType.KingOfTheHill) 
                 continue;
+
+            // Decresce o tempo restante se houver algum limite configurado
+            if (objective.ValueRO.TimeLimit > 0)
+            {
+                objective.ValueRW.TimeRemaining -= deltaTime;
+                if (objective.ValueRO.TimeRemaining <= 0)
+                {
+                    ecb.RemoveComponent<EventActiveTag>(entity);
+                    ecb.AddComponent<DestroyEntityTag>(entity); // O evento expirou, destrói e ignora recompensa
+                    continue;
+                }
+            }
 
             float distanceWalkedInZone = 0f;
             bool playerInZone = false;
@@ -102,6 +117,25 @@ public partial struct CleanupEventSystem : ISystem
                     ecb.AddComponent<EventCompletedTag>(entity);
                     ecb.RemoveComponent<EventActiveTag>(entity);
                     ecb.AddComponent<DestroyEntityTag>(entity); // Destrói o evento ao acabar
+
+                    // Recompensa do Evento: Envia a melhoria de Energia (Core) para todos os jogadores!
+                    for (int i = 0; i < players.Length; i++)
+                    {
+                        Entity playerEntity = players[i];
+                        ecb.AppendToBuffer(playerEntity, new UpgradesPending { upgradeLevel = UpgradeAperance.Event });
+
+                        if (connectionLookup.HasComponent(playerEntity))
+                        {
+                            var connEntity = connectionLookup[playerEntity].Value;
+                            if (networkIdLookup.HasComponent(connEntity))
+                            {
+                                var netId = networkIdLookup[connEntity].Value;
+                                var rpcEntity = ecb.CreateEntity();
+                                ecb.AddComponent(rpcEntity, new ShowUpgradesRPC { ClientNetId = netId, upgradeLevel = UpgradeAperance.Event });
+                                ecb.AddComponent(rpcEntity, new SendRpcCommandRequest { TargetConnection = connEntity });
+                            }
+                        }
+                    }
                 }
             }
         }

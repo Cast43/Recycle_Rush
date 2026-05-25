@@ -21,6 +21,8 @@ partial struct ApplyExperienceSystem : ISystem
     {
         NetworkTick currentTick = SystemAPI.GetSingleton<NetworkTime>().ServerTick;
         EntityCommandBuffer ECB = new EntityCommandBuffer(Allocator.Temp);
+        var connectionLookup = SystemAPI.GetComponentLookup<ConnectionEntity>(true);
+        var networkIdLookup = SystemAPI.GetComponentLookup<NetworkId>(true);
 
         foreach (var (currentExperience, maxExperience, level, buffUpgradesPending, getExperienceThisTickBuffer, entity) in
             SystemAPI.Query<RefRW<CurrentExperience>, RefRW<MaxExperience>, RefRW<Level>, DynamicBuffer<UpgradesPending>
@@ -44,11 +46,23 @@ partial struct ApplyExperienceSystem : ISystem
             {
                 level.ValueRW.previous = level.ValueRO.current;
                 ECB.AddComponent<LevelUpTag>(entity);
-                // ECB.AddComponent<RequestChooseUpgrade>(entity);
                 ECB.AppendToBuffer<UpgradesPending>(entity, new UpgradesPending
                 {
-                    upgradeLevel = UpgradeLevel.Commum
+                    upgradeLevel = UpgradeAperance.LevelUp
                 });
+
+                // Envia o RPC de abrir a UI instantaneamente na hora que passa de nível!
+                if (connectionLookup.HasComponent(entity))
+                {
+                    var connEntity = connectionLookup[entity].Value;
+                    if (networkIdLookup.HasComponent(connEntity))
+                    {
+                        var netId = networkIdLookup[connEntity].Value;
+                        var rpcEntity = ECB.CreateEntity();
+                        ECB.AddComponent(rpcEntity, new ShowUpgradesRPC { ClientNetId = netId, upgradeLevel = UpgradeAperance.LevelUp });
+                        ECB.AddComponent(rpcEntity, new SendRpcCommandRequest { TargetConnection = connEntity });
+                    }
+                }
             }
         }
 
@@ -117,59 +131,6 @@ partial struct ApplyExperienceSystem : ISystem
             ECB.RemoveComponent<LevelUpTag>(entity);
         }
 
-        // foreach (var (buffUpgradesPending, entity) in SystemAPI.Query<DynamicBuffer<UpgradesPending>>().WithAll<PlayerInput>().WithEntityAccess())
-        // {
-
-        //     // manda um rpc para o player escolher os efeitos a adição de efeitos
-        //     // Enviar RPC para esse cliente
-        //     //arrumar outro método pra achar o mundo do cliente esse está dando bug na build
-        //     // Pega o NetworkId do cliente local
-        //     //essa parte não é do inimigo apenas do player
-
-        //     if (buffUpgradesPending.IsEmpty)
-        //     {
-        //         //     ECB.RemoveComponent<RequestChooseUpgrade>(entity);
-        //         continue;
-        //     }
-
-        //     var lookupConnection = SystemAPI.GetComponentLookup<ConnectionEntity>(true);
-        //     if (!lookupConnection.HasComponent(entity))
-        //         continue; // sem conexão vinculada a essa entidade, pula
-
-        //     var connection = lookupConnection[entity]; // ConnectionEntity { Value = connectionEntity }
-
-        //     // pega o NetworkId da entidade de conexão (server tem vários NetworkId)
-        //     var networkIdLookup = SystemAPI.GetComponentLookup<NetworkId>(true);
-        //     if (!networkIdLookup.HasComponent(connection.Value))
-        //         continue; // conexão sem NetworkId? pula
-
-        //     var netId = networkIdLookup[connection.Value];
-
-        //     // cria RPC e envia para a conexão correta
-        //     var rpc = new ShowUpgradesRPC();
-
-        //     if (buffUpgradesPending[0].upgradeLevel == UpgradeLevel.Commum)
-        //     {
-        //         rpc = new ShowUpgradesRPC
-        //         {
-        //             ClientNetId = netId.Value,
-        //             upgradeLevel = UpgradeLevel.Commum
-        //         };
-        //     }
-        //     else
-        //     {
-        //         rpc = new ShowUpgradesRPC
-        //         {
-        //             ClientNetId = netId.Value,
-        //             upgradeLevel = UpgradeLevel.Core
-        //         };
-        //     }
-
-
-        //     var rpcEntity = ECB.CreateEntity();
-        //     ECB.AddComponent(rpcEntity, rpc);
-        //     ECB.AddComponent(rpcEntity, new SendRpcCommandRequest { TargetConnection = connection.Value });
-        // }
 
         ECB.Playback(state.EntityManager);
         ECB.Dispose();

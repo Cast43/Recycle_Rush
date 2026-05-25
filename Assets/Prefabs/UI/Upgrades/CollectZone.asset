@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: CollectZone
   m_EditorClassIdentifier: 
   upgradeName: CollectZone
-  description: 
-  image: {fileID: 0}
+  description: + Collecting area
+  image: {fileID: 21300000, guid: c7ca23b1b3b2bb146ab9344718fe44f3, type: 3}
   type: 0

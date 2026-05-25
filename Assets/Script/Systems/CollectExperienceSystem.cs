@@ -78,7 +78,7 @@ public partial struct CollectExperienceSystem : ISystem
                             // ECB.AppendToBuffer(entity, new CoreUpgradeCount { });
                             ECB.AppendToBuffer<UpgradesPending>(entity, new UpgradesPending
                             {
-                                upgradeLevel = UpgradeLevel.Core
+                                upgradeLevel = UpgradeAperance.Boss
                             });
                         }
                         ECB.AppendToBuffer(entity, new AlreadyGiveExperienceEntity { value = hit.Entity });

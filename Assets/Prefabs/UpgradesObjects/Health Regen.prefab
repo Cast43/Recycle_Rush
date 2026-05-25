@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 5018896479082204183}
   - component: {fileID: 5212776920544212417}
   m_Layer: 0
-  m_Name: Nitrogen
+  m_Name: Health Regen
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -63,7 +63,7 @@ MonoBehaviour:
   OptimizationMode: 0
   Importance: 50
   MaxSendRate: 0
-  prefabId: a700194ed824a71429e81e8c58d5c39e
+  prefabId: f97eab114954b9e4394533f85f1b562f
   HasOwner: 0
   SupportAutoCommandTarget: 1
   TrackInterpolationDelay: 0
@@ -85,7 +85,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   modifiers:
-  - type: 0
-    value: 1
   - type: 6
-    value: 1
+    value: 2

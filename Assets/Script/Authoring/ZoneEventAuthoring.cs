@@ -5,8 +5,9 @@ using Unity.NetCode;
 
 public class ZoneEventAuthoring : MonoBehaviour
 {
-    public float maxTime = 100;
+    public float targetValue = 0;
     public float radius = 5f; // Adiciona o raio do evento
+    public float timeLimit = 120f; // Adiciona o tempo limite de duração global do evento
 
     public class Baker : Baker<ZoneEventAuthoring>
     {
@@ -19,7 +20,9 @@ public class ZoneEventAuthoring : MonoBehaviour
             {
                 Type = EventType.Cleanup,
                 Progress = 0,
-                TargetValue = authoring.maxTime,
+                TargetValue = authoring.targetValue,
+                TimeLimit = authoring.timeLimit,
+                TimeRemaining = authoring.timeLimit
             });
             
             AddComponent(entity, new EventAreaRadius
